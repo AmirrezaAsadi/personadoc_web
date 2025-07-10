@@ -11,16 +11,23 @@ export async function GET() {
       return NextResponse.json([])
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    })
+    // For credentials provider, use the session user ID directly
+    let userId = (session.user as any).id
 
-    if (!user) {
+    // For OAuth providers, find user by email
+    if (!userId) {
+      const user = await prisma.user.findUnique({
+        where: { email: session.user.email },
+      })
+      userId = user?.id
+    }
+
+    if (!userId) {
       return NextResponse.json([])
     }
 
     const personas = await prisma.persona.findMany({
-      where: { createdBy: user.id },
+      where: { createdBy: userId },
       orderBy: { createdAt: 'desc' },
       take: 50,
     })
@@ -41,15 +48,21 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     
-    // Find or create user
-    const user = await prisma.user.upsert({
-      where: { email: session.user.email },
-      update: { name: session.user.name },
-      create: {
-        email: session.user.email,
-        name: session.user.name,
-      },
-    })
+    // For credentials provider, use the session user ID directly
+    let userId = (session.user as any).id
+
+    // For OAuth providers, find or create user by email
+    if (!userId) {
+      const user = await prisma.user.upsert({
+        where: { email: session.user.email },
+        update: { name: session.user.name },
+        create: {
+          email: session.user.email,
+          name: session.user.name,
+        },
+      })
+      userId = user.id
+    }
     
     const persona = await prisma.persona.create({
       data: {
@@ -61,7 +74,7 @@ export async function POST(request: NextRequest) {
         personalityTraits: body.personalityTraits || [],
         interests: body.interests || [],
         gadgets: body.gadgets || [],
-        createdBy: user.id,
+        createdBy: userId,
       },
     })
 

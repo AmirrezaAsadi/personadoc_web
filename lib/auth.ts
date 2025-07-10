@@ -1,31 +1,94 @@
 import NextAuth from "next-auth"
+import { NextAuthOptions } from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 import GitHubProvider from "next-auth/providers/github"
+import CredentialsProvider from "next-auth/providers/credentials"
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 
-export const authOptions = {
+export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
+    // Google OAuth for production
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
     }),
+    
+    // GitHub OAuth for production
     GitHubProvider({
-      clientId: process.env.GITHUB_ID!,
-      clientSecret: process.env.GITHUB_SECRET!,
+      clientId: process.env.GITHUB_ID || "",
+      clientSecret: process.env.GITHUB_SECRET || "",
+    }),
+    
+    // Email/Password for local testing
+    CredentialsProvider({
+      id: "credentials",
+      name: "Email and Password",
+      credentials: {
+        email: { 
+          label: "Email", 
+          type: "email", 
+          placeholder: "test@example.com" 
+        },
+        password: { 
+          label: "Password", 
+          type: "password" 
+        }
+      },
+      async authorize(credentials) {
+        // For local testing - hardcoded credentials
+        if (process.env.NODE_ENV === 'development') {
+          if (
+            credentials?.email === "test@example.com" && 
+            credentials?.password === "password123"
+          ) {
+            return {
+              id: "local-test-user",
+              email: "test@example.com",
+              name: "Test User",
+              image: null,
+            }
+          }
+          
+          // Additional test users
+          if (
+            credentials?.email === "admin@test.com" && 
+            credentials?.password === "admin123"
+          ) {
+            return {
+              id: "local-admin-user",
+              email: "admin@test.com",
+              name: "Admin User",
+              image: null,
+            }
+          }
+        }
+        
+        // Return null if user data could not be retrieved
+        return null
+      }
     }),
   ],
+  pages: {
+    signIn: '/auth/signin',
+  },
+  session: {
+    strategy: "jwt",
+  },
   callbacks: {
-    session: async ({ session, user }) => {
-      if (session?.user) {
-        session.user.id = user.id
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id
+      }
+      return token
+    },
+    async session({ session, token }) {
+      if (session?.user && token?.id) {
+        (session.user as any).id = token.id as string
       }
       return session
     },
-  },
-  pages: {
-    signIn: '/auth/signin',
   },
 }
 

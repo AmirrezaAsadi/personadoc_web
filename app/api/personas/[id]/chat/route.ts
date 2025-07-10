@@ -11,17 +11,30 @@ export async function POST(
   try {
     // Check authentication
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
+    if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { message } = await request.json()
     const { id } = await params
     
+    // Get user ID (handle both credentials and OAuth providers)
+    let userId = (session.user as any).id
+    if (!userId && session.user.email) {
+      const user = await prisma.user.findUnique({
+        where: { email: session.user.email },
+      })
+      userId = user?.id
+    }
+
+    if (!userId) {
+      return NextResponse.json({ error: 'User not found' }, { status: 401 })
+    }
+    
     const persona = await prisma.persona.findUnique({
       where: { 
         id,
-        createdBy: session.user.id // Ensure the persona belongs to the authenticated user
+        createdBy: userId // Ensure the persona belongs to the authenticated user
       },
     })
 
@@ -52,7 +65,7 @@ User: ${message}`
     await prisma.interaction.create({
       data: {
         personaId: id,
-        userId: session.user.id,
+        userId: userId,
         content: message,
         response: response,
       },
