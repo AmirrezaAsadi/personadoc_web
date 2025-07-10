@@ -84,11 +84,16 @@ export class ResearchRAGService {
   async createEmbeddings(chunks: DocumentChunk[]): Promise<any[]> {
     const texts = chunks.map(chunk => chunk.text)
     
+    console.log(`🔄 Creating embeddings for ${texts.length} text chunks...`)
+    console.log(`📝 Sample text (first 100 chars): "${texts[0]?.substring(0, 100)}..."`)
+    
     try {
       const response = await openaiEmbeddings.embeddings.create({
         model: 'text-embedding-ada-002',
         input: texts
       })
+
+      console.log(`✅ Successfully created ${response.data.length} embeddings`)
 
       return response.data.map((embedding: any, index: number) => ({
         id: chunks[index].id,
@@ -99,24 +104,46 @@ export class ResearchRAGService {
         }
       }))
     } catch (error) {
-      console.error('Error creating embeddings:', error)
+      console.error('❌ Error creating embeddings:', error)
+      console.error('🔍 Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        hasApiKey: !!(process.env.OPENAI_EMBEDDINGS_API_KEY || process.env.OPENAI_API_KEY),
+        apiKeyPrefix: (process.env.OPENAI_EMBEDDINGS_API_KEY || process.env.OPENAI_API_KEY)?.substring(0, 10) + '...',
+        textCount: texts.length,
+        totalChars: texts.join('').length
+      })
       throw error
     }
   }
 
   // Process and store research documents for a persona
   async processPersonaResearch(personaId: string, researchData: any) {
-    if (!this.index) await this.initialize()
+    console.log(`🔍 Starting research processing for persona ${personaId}`)
+    console.log('📊 Research data:', JSON.stringify(researchData, null, 2))
+    console.log('🔑 API Keys status:', {
+      hasOpenAIEmbeddings: !!process.env.OPENAI_EMBEDDINGS_API_KEY,
+      hasOpenAIFallback: !!process.env.OPENAI_API_KEY,
+      hasPineconeKey: !!process.env.PINECONE_API_KEY,
+      pineconeKeyPrefix: process.env.PINECONE_API_KEY?.substring(0, 8) + '...'
+    })
+    
+    if (!this.index) {
+      console.log('🔄 Initializing Pinecone index...')
+      await this.initialize()
+    }
 
     const allChunks: DocumentChunk[] = []
 
     // Process uploaded files
     if (researchData.uploadedFiles?.length) {
+      console.log(`Processing ${researchData.uploadedFiles.length} uploaded files`)
       for (const file of researchData.uploadedFiles) {
         try {
+          console.log(`Processing file: ${file.name}`)
           const text = await this.extractTextFromFile(file)
           if (text.trim()) {
             const chunks = this.chunkText(text)
+            console.log(`Extracted ${chunks.length} chunks from ${file.name}`)
             chunks.forEach((chunkText, index) => {
               allChunks.push({
                 id: `${personaId}-${file.name}-${index}`,
@@ -130,6 +157,8 @@ export class ResearchRAGService {
                 }
               })
             })
+          } else {
+            console.log(`No text extracted from ${file.name}`)
           }
         } catch (error) {
           console.error(`Error processing file ${file.name}:`, error)
@@ -139,7 +168,9 @@ export class ResearchRAGService {
 
     // Process manual knowledge
     if (researchData.manualKnowledge?.trim()) {
+      console.log('Processing manual knowledge...')
       const chunks = this.chunkText(researchData.manualKnowledge)
+      console.log(`Created ${chunks.length} chunks from manual knowledge`)
       chunks.forEach((chunkText, index) => {
         allChunks.push({
           id: `${personaId}-manual-${index}`,
@@ -155,17 +186,30 @@ export class ResearchRAGService {
       })
     }
 
+    console.log(`Total chunks to process: ${allChunks.length}`)
+
     // Create embeddings and store in Pinecone
     if (allChunks.length > 0) {
-      const embeddings = await this.createEmbeddings(allChunks)
-      
-      // Store in batches of 100
-      for (let i = 0; i < embeddings.length; i += 100) {
-        const batch = embeddings.slice(i, i + 100)
-        await this.index.upsert(batch)
-      }
+      try {
+        console.log('Creating embeddings...')
+        const embeddings = await this.createEmbeddings(allChunks)
+        console.log(`Created ${embeddings.length} embeddings`)
+        
+        // Store in batches of 100
+        for (let i = 0; i < embeddings.length; i += 100) {
+          const batch = embeddings.slice(i, i + 100)
+          console.log(`Storing batch ${Math.floor(i/100) + 1} with ${batch.length} embeddings`)
+          const result = await this.index.upsert(batch)
+          console.log('Upsert result:', result)
+        }
 
-      console.log(`Processed ${allChunks.length} chunks for persona ${personaId}`)
+        console.log(`Successfully processed ${allChunks.length} chunks for persona ${personaId}`)
+      } catch (error) {
+        console.error('Error during embedding/storage process:', error)
+        throw error
+      }
+    } else {
+      console.log('No chunks to process - no research data provided')
     }
 
     return allChunks.length
@@ -176,11 +220,15 @@ export class ResearchRAGService {
     if (!this.index) await this.initialize()
 
     try {
+      console.log(`Searching for persona ${personaId} with query: "${query}"`)
+      
       // Create embedding for the query
       const queryEmbedding = await openaiEmbeddings.embeddings.create({
         model: 'text-embedding-ada-002',
         input: query
       })
+
+      console.log('Query embedding created successfully')
 
       // Search Pinecone
       const searchResults = await this.index.query({
@@ -190,10 +238,16 @@ export class ResearchRAGService {
         includeMetadata: true
       })
 
+      console.log(`Found ${searchResults.matches?.length || 0} matches`)
+      console.log('Search results:', JSON.stringify(searchResults, null, 2))
+
       // Extract relevant text chunks
-      return searchResults.matches
-        .filter((match: any) => match.score > 0.7) // Filter by relevance threshold
-        .map((match: any) => match.metadata.text)
+      const relevantTexts = searchResults.matches
+        ?.filter((match: any) => match.score > 0.7) // Filter by relevance threshold
+        .map((match: any) => match.metadata.text) || []
+      
+      console.log(`Returning ${relevantTexts.length} relevant texts`)
+      return relevantTexts
     } catch (error) {
       console.error('Error searching research content:', error)
       return []
