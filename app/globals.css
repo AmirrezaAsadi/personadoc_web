@@ -41,3 +41,183 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* Animated Sea Wave Background */
+.sea-waves {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #475569 75%, #64748b 100%);
+  overflow: hidden;
+}
+
+.wave {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    90deg, 
+    transparent, 
+    rgba(59, 130, 246, 0.03), 
+    rgba(59, 130, 246, 0.06), 
+    rgba(59, 130, 246, 0.03), 
+    transparent
+  );
+  animation: wave-movement 25s ease-in-out infinite;
+}
+
+.wave:nth-child(2) {
+  animation-delay: -8s;
+  animation-duration: 30s;
+  background: linear-gradient(
+    90deg, 
+    transparent, 
+    rgba(147, 197, 253, 0.02), 
+    rgba(147, 197, 253, 0.05), 
+    rgba(147, 197, 253, 0.02), 
+    transparent
+  );
+}
+
+.wave:nth-child(3) {
+  animation-delay: -16s;
+  animation-duration: 35s;
+  background: linear-gradient(
+    90deg, 
+    transparent, 
+    rgba(37, 99, 235, 0.02), 
+    rgba(37, 99, 235, 0.04), 
+    rgba(37, 99, 235, 0.02), 
+    transparent
+  );
+}
+
+.wave:nth-child(4) {
+  animation-delay: -24s;
+  animation-duration: 20s;
+  background: linear-gradient(
+    90deg, 
+    transparent, 
+    rgba(96, 165, 250, 0.01), 
+    rgba(96, 165, 250, 0.03), 
+    rgba(96, 165, 250, 0.01), 
+    transparent
+  );
+}
+
+@keyframes wave-movement {
+  0%, 100% {
+    transform: translateX(0) translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateX(25%) translateY(-2%) rotate(1deg);
+  }
+  50% {
+    transform: translateX(50%) translateY(1%) rotate(-0.5deg);
+  }
+  75% {
+    transform: translateX(75%) translateY(-1%) rotate(0.8deg);
+  }
+}
+
+/* Floating Animation for Persona Cards */
+.floating {
+  animation: float 6s ease-in-out infinite;
+}
+
+.floating:nth-child(odd) {
+  animation-delay: -2s;
+  animation-duration: 7s;
+}
+
+.floating:nth-child(even) {
+  animation-delay: -4s;
+  animation-duration: 8s;
+}
+
+.floating:nth-child(3n) {
+  animation-delay: -1s;
+  animation-duration: 6.5s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  25% {
+    transform: translateY(-8px) scale(1.01);
+  }
+  50% {
+    transform: translateY(4px) scale(0.99);
+  }
+  75% {
+    transform: translateY(-4px) scale(1.005);
+  }
+}
+
+/* Gentle bobbing for search bar */
+.search-float {
+  animation: search-bob 4s ease-in-out infinite;
+}
+
+@keyframes search-bob {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+/* Breathing effect for header */
+.breathing {
+  animation: breathe 8s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 1;
+  }
+}
+
+/* Underwater glow effect */
+.underwater-glow {
+  box-shadow: 
+    0 0 20px rgba(59, 130, 246, 0.1),
+    0 0 40px rgba(147, 197, 253, 0.05),
+    inset 0 0 20px rgba(59, 130, 246, 0.05);
+}
+
+/* Ripple effect on hover */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.1);
+  transform: translate(-50%, -50%);
+  transition: width 0.8s, height 0.8s;
+}
+
+.ripple:hover::before {
+  width: 300px;
+  height: 300px;
+}

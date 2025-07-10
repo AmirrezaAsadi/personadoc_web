@@ -66,10 +66,18 @@ export default function Home() {
   // Show loading screen while checking auth
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-400 mx-auto"></div>
-          <p className="mt-4 text-blue-200">Loading PersonaDoc...</p>
+      <div className="min-h-screen relative">
+        <div className="sea-waves">
+          <div className="wave"></div>
+          <div className="wave"></div>
+          <div className="wave"></div>
+          <div className="wave"></div>
+        </div>
+        <div className="relative z-10 flex items-center justify-center min-h-screen">
+          <div className="text-center floating">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-cyan-400 mx-auto underwater-glow"></div>
+            <p className="mt-4 text-cyan-200">Loading PersonaDoc...</p>
+          </div>
         </div>
       </div>
     )
@@ -148,13 +156,21 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
+    <div className="min-h-screen relative">
+      {/* Animated Sea Wave Background */}
+      <div className="sea-waves">
+        <div className="wave"></div>
+        <div className="wave"></div>
+        <div className="wave"></div>
+        <div className="wave"></div>
+      </div>
+
       {/* Header */}
-      <div className="border-b border-blue-800/30 bg-black/20 backdrop-blur-sm">
+      <div className="border-b border-blue-800/30 bg-black/20 backdrop-blur-sm breathing underwater-glow relative z-10">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center shadow-lg ripple">
                 {session?.user?.image ? (
                   <img 
                     src={session.user.image} 
@@ -166,12 +182,12 @@ export default function Home() {
                 )}
               </div>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-300 via-cyan-300 to-blue-400 bg-clip-text text-transparent">
                   PersonaDoc
                 </h1>
-                <p className="text-blue-200 flex items-center gap-2">
+                <p className="text-blue-200/80 flex items-center gap-2">
                   Welcome back, {session?.user?.name}! 
-                  <span className="flex items-center gap-1 text-sm bg-blue-900/50 px-3 py-1 rounded-full border border-blue-500/30">
+                  <span className="flex items-center gap-1 text-sm bg-blue-900/30 px-3 py-1 rounded-full border border-cyan-500/30 underwater-glow">
                     <Users className="w-3 h-3" />
                     {personas.length} persona{personas.length !== 1 ? 's' : ''}
                   </span>
@@ -182,7 +198,7 @@ export default function Home() {
             <div className="flex gap-3">
               <Button 
                 onClick={createPersona} 
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg flex items-center gap-2"
+                className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white border-0 shadow-lg ripple underwater-glow flex items-center gap-2 transition-all duration-300"
               >
                 <Plus className="w-4 h-4" />
                 Create New Persona
@@ -190,7 +206,7 @@ export default function Home() {
               <Button 
                 onClick={() => signOut()} 
                 variant="outline" 
-                className="border-blue-500/50 text-blue-200 hover:bg-blue-900/50 flex items-center gap-2"
+                className="border-cyan-500/50 text-cyan-200 hover:bg-cyan-900/30 ripple underwater-glow flex items-center gap-2"
               >
                 <LogOut className="w-4 h-4" />
                 Sign Out
@@ -201,55 +217,58 @@ export default function Home() {
       </div>
 
       {/* Search and Filter Section */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8 relative z-10">
         <div className="mb-8">
-          <div className="relative max-w-2xl mx-auto">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-300 w-5 h-5" />
+          <div className="relative max-w-2xl mx-auto search-float">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-cyan-300 w-5 h-5" />
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search personas by name, occupation, traits, or interests..."
-              className="pl-12 py-4 text-lg bg-black/30 border-blue-500/30 text-blue-100 placeholder-blue-300 focus:border-blue-400 focus:ring-blue-400/30 rounded-xl"
+              className="pl-12 py-4 text-lg bg-black/30 border-cyan-500/30 text-cyan-100 placeholder-cyan-300/70 focus:border-cyan-400 focus:ring-cyan-400/30 rounded-xl underwater-glow backdrop-blur-sm"
             />
           </div>
         </div>
 
         {/* Personas Grid */}
         {filteredPersonas.length === 0 && personas.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="w-24 h-24 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl">
+          <div className="text-center py-16 floating">
+            <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl underwater-glow ripple">
               <Users className="w-12 h-12 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-blue-100 mb-4">No Personas Yet</h2>
-            <p className="text-blue-300 mb-8 max-w-md mx-auto">
+            <h2 className="text-2xl font-bold text-cyan-100 mb-4">No Personas Yet</h2>
+            <p className="text-cyan-300/80 mb-8 max-w-md mx-auto">
               Create your first persona to start building rich, interactive character profiles for research and development.
             </p>
             <Button 
               onClick={createPersona}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg"
+              className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white border-0 shadow-lg underwater-glow ripple"
             >
               <Plus className="w-4 h-4 mr-2" />
               Create Your First Persona
             </Button>
           </div>
         ) : filteredPersonas.length === 0 ? (
-          <div className="text-center py-16">
-            <Search className="w-16 h-16 text-blue-300 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-blue-100 mb-2">No Results Found</h2>
-            <p className="text-blue-300">Try adjusting your search terms</p>
+          <div className="text-center py-16 floating">
+            <Search className="w-16 h-16 text-cyan-300 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-cyan-100 mb-2">No Results Found</h2>
+            <p className="text-cyan-300/80">Try adjusting your search terms</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredPersonas.map((persona) => (
+            {filteredPersonas.map((persona, index) => (
               <Card
                 key={persona.id}
-                className="group bg-black/40 border-blue-500/30 hover:border-blue-400/60 transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-2xl backdrop-blur-sm"
+                className="group bg-black/30 border-cyan-500/30 hover:border-cyan-400/60 transition-all duration-500 cursor-pointer hover:scale-105 hover:shadow-2xl backdrop-blur-sm floating underwater-glow ripple"
                 onClick={() => handlePersonaClick(persona.id)}
+                style={{
+                  animationDelay: `${index * 0.1}s`
+                }}
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-center space-x-3 mb-3">
                     <div className="relative">
-                      <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+                      <div className="w-16 h-16 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full flex items-center justify-center shadow-lg underwater-glow">
                         {persona.avatarUrl ? (
                           <img 
                             src={persona.avatarUrl} 
@@ -260,15 +279,15 @@ export default function Home() {
                           <User className="w-8 h-8 text-white" />
                         )}
                       </div>
-                      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-gray-900 flex items-center justify-center">
+                      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full border-2 border-gray-900 flex items-center justify-center underwater-glow">
                         <Eye className="w-3 h-3 text-white" />
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <CardTitle className="text-blue-100 text-lg font-bold truncate">
+                      <CardTitle className="text-cyan-100 text-lg font-bold truncate">
                         {persona.name}
                       </CardTitle>
-                      <div className="flex items-center gap-2 text-sm text-blue-300">
+                      <div className="flex items-center gap-2 text-sm text-cyan-300/80">
                         {persona.age && (
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
@@ -286,7 +305,7 @@ export default function Home() {
                   </div>
                   
                   {persona.occupation && (
-                    <div className="text-sm text-blue-200 mb-3 font-medium">
+                    <div className="text-sm text-cyan-200/90 mb-3 font-medium">
                       {persona.occupation}
                     </div>
                   )}
@@ -294,7 +313,7 @@ export default function Home() {
                 
                 <CardContent className="pt-0">
                   {persona.introduction && (
-                    <p className="text-blue-200 text-sm mb-4 line-clamp-2">
+                    <p className="text-cyan-200/80 text-sm mb-4 line-clamp-2">
                       {persona.introduction}
                     </p>
                   )}
@@ -304,15 +323,15 @@ export default function Home() {
                       <Badge 
                         key={index} 
                         variant="secondary" 
-                        className="bg-blue-900/50 text-blue-200 border-blue-500/30 text-xs px-2 py-1"
+                        className="bg-cyan-900/30 text-cyan-200 border-cyan-500/30 text-xs px-2 py-1 underwater-glow"
                       >
                         {trait}
                       </Badge>
                     ))}
                   </div>
                   
-                  <div className="flex items-center justify-between pt-3 border-t border-blue-500/20">
-                    <div className="flex items-center gap-3 text-xs text-blue-300">
+                  <div className="flex items-center justify-between pt-3 border-t border-cyan-500/20">
+                    <div className="flex items-center gap-3 text-xs text-cyan-300/80">
                       <span className="flex items-center gap-1">
                         <MessageCircle className="w-3 h-3" />
                         Interview
@@ -338,14 +357,14 @@ export default function Home() {
       {/* Persona Wizard Modal */}
       {showWizard && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-900 border border-blue-500/30 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
-            <div className="flex items-center justify-between p-6 border-b border-blue-500/30">
-              <h2 className="text-xl font-semibold text-blue-100">Create New Persona</h2>
+          <div className="bg-gray-900/90 border border-cyan-500/30 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl underwater-glow backdrop-blur-md">
+            <div className="flex items-center justify-between p-6 border-b border-cyan-500/30">
+              <h2 className="text-xl font-semibold text-cyan-100">Create New Persona</h2>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleWizardCancel}
-                className="border-blue-500/50 text-blue-200 hover:bg-blue-900/50"
+                className="border-cyan-500/50 text-cyan-200 hover:bg-cyan-900/30 ripple"
               >
                 <X className="h-4 w-4" />
               </Button>
