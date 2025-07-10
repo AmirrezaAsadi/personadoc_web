@@ -70,6 +70,7 @@ model Persona {
   personalityTraits Json?
   interests        Json?
   gadgets          Json?
+  metadata         Json?  // Extended persona data from wizard
   
   createdAt DateTime @default(now())
   createdBy String

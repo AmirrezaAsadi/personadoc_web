@@ -5,9 +5,10 @@ import { useSession, signOut } from 'next-auth/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { MessageCircle, Send, Plus, User, LogOut } from 'lucide-react'
+import { MessageCircle, Send, Plus, User, LogOut, X } from 'lucide-react'
 import SignInPage from '@/components/sign-in-page'
 import UserDashboard from '@/components/user-dashboard'
+import PersonaWizard from '@/components/persona-wizard'
 
 interface Persona {
   id: string
@@ -33,6 +34,7 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputMessage, setInputMessage] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showWizard, setShowWizard] = useState(false)
 
   useEffect(() => {
     if (session) {
@@ -81,29 +83,34 @@ export default function Home() {
   }
 
   const createDemoPersona = async () => {
-    const demoPersona = {
-      name: "Sarah Chen",
-      age: 29,
-      occupation: "UX Designer",
-      location: "San Francisco, CA",
-      introduction: "I'm a creative UX designer who loves solving user problems and creating beautiful, intuitive interfaces.",
-      personalityTraits: ["Creative", "Empathetic", "Detail-oriented"],
-      interests: ["Design", "Psychology", "Photography", "Hiking"]
-    }
+    setShowWizard(true)
+  }
 
+  const handleWizardComplete = async (personaData: any) => {
     try {
       const response = await fetch('/api/personas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(demoPersona),
+        body: JSON.stringify(personaData),
       })
+
+      if (!response.ok) {
+        throw new Error('Failed to create persona')
+      }
+
       const newPersona = await response.json()
       setPersonas(prev => [newPersona, ...prev])
       setSelectedPersona(newPersona)
       setMessages([])
+      setShowWizard(false)
     } catch (error) {
       console.error('Failed to create persona:', error)
+      // You could add error state management here
     }
+  }
+
+  const handleWizardCancel = () => {
+    setShowWizard(false)
   }
 
   const sendMessage = async () => {
@@ -275,6 +282,30 @@ export default function Home() {
             )}
           </div>
         </div>
+
+        {/* Persona Wizard Modal */}
+        {showWizard && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+              <div className="flex items-center justify-between p-4 border-b">
+                <h2 className="text-xl font-semibold">Create New Persona</h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleWizardCancel}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="max-h-[calc(90vh-80px)] overflow-y-auto">
+                <PersonaWizard
+                  onComplete={handleWizardComplete}
+                  onCancel={handleWizardCancel}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

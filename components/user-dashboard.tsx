@@ -3,7 +3,7 @@
 import { useSession, signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { User, LogOut, MessageCircle, Users } from 'lucide-react'
+import { User, LogOut, MessageCircle, Users, Plus } from 'lucide-react'
 
 interface UserDashboardProps {
   personaCount: number
@@ -41,8 +41,8 @@ export default function UserDashboard({ personaCount, onCreateDemo }: UserDashbo
       
       <div className="flex gap-2">
         <Button onClick={onCreateDemo} className="flex items-center gap-2">
-          <MessageCircle className="w-4 h-4" />
-          Create Demo Persona
+          <Plus className="w-4 h-4" />
+          Create New Persona
         </Button>
         <Button onClick={() => signOut()} variant="outline" className="flex items-center gap-2">
           <LogOut className="w-4 h-4" />

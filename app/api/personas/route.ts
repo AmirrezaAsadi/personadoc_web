@@ -74,6 +74,8 @@ export async function POST(request: NextRequest) {
         personalityTraits: body.personalityTraits || [],
         interests: body.interests || [],
         gadgets: body.gadgets || [],
+        // Store extended persona data in metadata field as JSON
+        metadata: body.metadata || {},
         createdBy: userId,
       },
     })
