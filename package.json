@@ -34,6 +34,7 @@
     "@types/pdf-parse": "^1.1.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "ignore-loader": "^0.1.2",
     "tailwindcss": "^4",
     "tsx": "^4.0.0",
     "typescript": "^5"
