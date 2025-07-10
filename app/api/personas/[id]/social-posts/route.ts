@@ -8,101 +8,145 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
     const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.email) {
+    if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await request.json()
-    const { productDescription, platforms, campaignGoal, targetAudience, toneOfVoice } = body
+    const { id } = await params
+    const { product, platform, goals, tone, targetAudience } = await request.json()
 
-    // Get persona data
-    const persona = await prisma.persona.findFirst({
-      where: { id: id },
+    // Get the persona with metadata
+    const persona = await prisma.persona.findUnique({
+      where: { id },
     })
 
     if (!persona) {
       return NextResponse.json({ error: 'Persona not found' }, { status: 404 })
     }
 
-    // Generate posts for each platform
-    const posts = await Promise.all(platforms.map(async (platform: string) => {
-      const prompt = createSocialPostPrompt(persona, productDescription, platform, {
-        campaignGoal,
-        targetAudience,
-        toneOfVoice
-      })
+    // Parse metadata to get persona details
+    const personaWithMetadata = persona as any // Cast to avoid TypeScript issues
+    const metadata = typeof personaWithMetadata.metadata === 'string' 
+      ? JSON.parse(personaWithMetadata.metadata) 
+      : personaWithMetadata.metadata || {}
 
-      // Call AI service (using existing chat endpoint for now)
-      const response = await fetch(`${process.env.NEXTAUTH_URL}/api/personas/${id}/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: prompt }),
-      })
+    // Safe parsing of JSON fields
+    const personalityTraits = Array.isArray(persona.personalityTraits) 
+      ? persona.personalityTraits as string[]
+      : persona.personalityTraits 
+        ? (Array.isArray((persona.personalityTraits as unknown)) ? (persona.personalityTraits as unknown as string[]) : [])
+        : []
+    
+    const interests = Array.isArray(persona.interests) 
+      ? persona.interests as string[]
+      : persona.interests 
+        ? (Array.isArray((persona.interests as unknown)) ? (persona.interests as unknown as string[]) : [])
+        : []
 
-      const data = await response.json()
-      
-      // Parse the response to extract content and reasoning
-      const responseText = data.response || ''
-      const [contentPart, reasoningPart] = responseText.split('REASONING:')
-      const content = contentPart.replace('POST:', '').trim()
-      const reasoning = reasoningPart?.trim() || 'Generated based on persona traits and preferences'
+    // Create enhanced prompt for social posts
+    const prompt = `You are ${persona.name}, a ${metadata.demographics?.age || persona.age || 'adult'}-year-old ${metadata.demographics?.occupation || persona.occupation} living in ${metadata.demographics?.location || persona.location}.
 
-      // Extract hashtags if present
-      const hashtagMatches = content.match(/#\w+/g) || []
-      const hashtags = hashtagMatches.map((tag: string) => tag.substring(1))
+PERSONALITY TRAITS: ${metadata.personality?.traits?.join(', ') || personalityTraits.join(', ') || 'creative, authentic'}
+INTERESTS: ${metadata.personality?.interests?.join(', ') || interests.join(', ') || 'technology, lifestyle'}
+BEHAVIORAL SCORES:
+- Tech Savvy: ${metadata.personality?.behaviorScores?.techSavvy || 7}/10
+- Socialness: ${metadata.personality?.behaviorScores?.socialness || 6}/10
+- Creativity: ${metadata.personality?.behaviorScores?.creativity || 8}/10
 
-      return {
-        id: `${platform}-${Date.now()}`,
-        platform,
-        content,
-        reasoning,
-        hashtags
+COMMUNICATION STYLE: ${metadata.technology?.communicationPreferences?.join(', ') || 'authentic, engaging'}
+
+Task: Create a ${platform} post about "${product}" from your perspective as ${persona.name}.
+
+Campaign Goals: ${goals}
+Target Audience: ${targetAudience}
+Tone: ${tone}
+
+Requirements:
+1. Write in first person as ${persona.name}
+2. Reflect your personality traits and interests
+3. Use language and style appropriate for ${platform}
+4. Include relevant hashtags for ${platform}
+5. Make it authentic to your character
+
+Generate 3 different post variations, each with a brief explanation of why this approach fits your personality.
+
+Format your response as JSON:
+{
+  "posts": [
+    {
+      "content": "post content with hashtags",
+      "reasoning": "why this post fits the persona",
+      "engagement_prediction": "high/medium/low",
+      "platform_optimization": "platform-specific notes"
+    }
+  ]
+}`
+
+    // Call Grok API
+    const response = await fetch(process.env.OPENAI_BASE_URL + '/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'grok-beta',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a social media expert helping personas create authentic posts. Always respond with valid JSON.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.8,
+        max_tokens: 1500,
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Grok API error: ${response.status}`)
+    }
+
+    const data = await response.json()
+    let socialPosts
+
+    try {
+      // Try to parse JSON response
+      const content = data.choices[0]?.message?.content
+      socialPosts = JSON.parse(content)
+    } catch (parseError) {
+      // Fallback if not proper JSON
+      const content = data.choices[0]?.message?.content
+      socialPosts = {
+        posts: [{
+          content: content,
+          reasoning: "Generated from persona perspective",
+          engagement_prediction: "medium",
+          platform_optimization: `Optimized for ${platform}`
+        }]
       }
-    }))
+    }
 
-    return NextResponse.json({ posts })
+    return NextResponse.json({
+      success: true,
+      data: socialPosts,
+      persona: {
+        name: persona.name,
+        platform,
+        goals,
+        tone
+      }
+    })
+
   } catch (error) {
-    console.error('Error generating social posts:', error)
-    return NextResponse.json({ error: 'Failed to generate posts' }, { status: 500 })
+    console.error('Social posts generation error:', error)
+    return NextResponse.json({
+      error: 'Failed to generate social posts',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
-}
-
-function createSocialPostPrompt(persona: any, productDescription: string, platform: string, context: any) {
-  const behaviorScores = persona.metadata?.personality || {}
-  
-  const platformGuidelines = {
-    instagram: "Visual-focused, use emojis, 1-2 sentences, include relevant hashtags",
-    linkedin: "Professional tone, longer format, focus on business value and insights",
-    twitter: "Concise (under 280 chars), engaging, can use threads for longer thoughts",
-    facebook: "Conversational, can be longer, focus on community and discussion"
-  }
-
-  return `You are ${persona.name}, a ${persona.age}-year-old ${persona.occupation} with the following traits:
-
-PERSONALITY: ${persona.personalityTraits?.join(', ') || 'Not specified'}
-INTERESTS: ${persona.interests?.join(', ') || 'Not specified'}
-BEHAVIORAL TRAITS:
-- Tech Savvy: ${behaviorScores.techSavvy || 5}/10
-- Socialness: ${behaviorScores.socialness || 5}/10
-- Creativity: ${behaviorScores.creativity || 5}/10
-
-BACKGROUND: ${persona.introduction}
-
-Create a ${platform} post about: ${productDescription}
-
-CONTEXT:
-- Campaign Goal: ${context.campaignGoal || 'General awareness'}
-- Target Audience: ${context.targetAudience || 'General audience'}
-- Tone of Voice: ${context.toneOfVoice || 'Natural'}
-
-PLATFORM GUIDELINES: ${platformGuidelines[platform as keyof typeof platformGuidelines]}
-
-Write as ${persona.name} would naturally post on ${platform}, incorporating your personality and communication style. Be authentic and engaging.
-
-Format your response as:
-POST: [Your social media post content]
-REASONING: [Brief explanation of why you wrote it this way based on your personality and the platform]`
 }

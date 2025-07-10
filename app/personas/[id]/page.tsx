@@ -114,11 +114,14 @@ export default function PersonaDetailPage() {
   }
 
   const renderTabContent = () => {
+    const personaId = Array.isArray(params.id) ? params.id[0] : params.id
+    if (!personaId) return null
+    
     switch (activeTab) {
       case 'interview':
         return <InterviewTab persona={persona} />
       case 'social':
-        return <SocialPostsTab persona={persona} />
+        return <SocialPostsTab personaId={personaId} persona={persona} />
       case 'circle':
         return <SocialCircleTab persona={persona} />
       case 'narrative':

@@ -1,343 +1,269 @@
 'use client'
 
 import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { Share2, Instagram, Linkedin, Twitter, Facebook, Target, Palette, Copy, RefreshCw, Brain } from 'lucide-react'
+import { Copy, Sparkles, Instagram, Linkedin, Twitter } from 'lucide-react'
 
-interface Persona {
-  id: string
-  name: string
-  age?: number
-  occupation?: string
-  location?: string
-  introduction?: string
-  personalityTraits?: string[]
-  interests?: string[]
-  metadata?: any
+interface SocialPost {
+  content: string
+  reasoning: string
+  engagement_prediction: 'high' | 'medium' | 'low'
+  platform_optimization: string
 }
 
 interface SocialPostsTabProps {
-  persona: Persona
+  personaId: string
+  persona: any
 }
 
-interface GeneratedPost {
-  id: string
-  platform: string
-  content: string
-  reasoning: string
-  hashtags?: string[]
-}
-
-const PLATFORMS = [
-  { id: 'instagram', name: 'Instagram', icon: Instagram, color: 'bg-gradient-to-r from-purple-500 to-pink-500' },
-  { id: 'linkedin', name: 'LinkedIn', icon: Linkedin, color: 'bg-blue-600' },
-  { id: 'twitter', name: 'Twitter/X', icon: Twitter, color: 'bg-black' },
-  { id: 'facebook', name: 'Facebook', icon: Facebook, color: 'bg-blue-500' }
-]
-
-const CAMPAIGN_GOALS = [
-  'Brand Awareness',
-  'Product Launch',
-  'Community Building',
-  'Thought Leadership',
-  'User Generated Content',
-  'Sales Conversion'
-]
-
-const TONE_OPTIONS = [
-  'Professional',
-  'Casual',
-  'Humorous',
-  'Inspirational',
-  'Educational',
-  'Conversational'
-]
-
-export default function SocialPostsTab({ persona }: SocialPostsTabProps) {
-  const [productDescription, setProductDescription] = useState('')
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['instagram'])
-  const [campaignGoal, setCampaignGoal] = useState('')
+export default function SocialPostsTab({ personaId, persona }: SocialPostsTabProps) {
+  const [product, setProduct] = useState('')
+  const [platform, setPlatform] = useState('instagram')
+  const [goals, setGoals] = useState('')
+  const [tone, setTone] = useState('')
   const [targetAudience, setTargetAudience] = useState('')
-  const [toneOfVoice, setToneOfVoice] = useState('')
-  const [generatedPosts, setGeneratedPosts] = useState<GeneratedPost[]>([])
+  const [posts, setPosts] = useState<SocialPost[]>([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const togglePlatform = (platformId: string) => {
-    setSelectedPlatforms(prev => 
-      prev.includes(platformId) 
-        ? prev.filter(p => p !== platformId)
-        : [...prev, platformId]
-    )
-  }
+  const platforms = [
+    { id: 'instagram', name: 'Instagram', icon: Instagram, color: 'bg-pink-500' },
+    { id: 'linkedin', name: 'LinkedIn', icon: Linkedin, color: 'bg-blue-600' },
+    { id: 'twitter', name: 'Twitter', icon: Twitter, color: 'bg-blue-400' },
+    { id: 'facebook', name: 'Facebook', icon: Instagram, color: 'bg-blue-700' }
+  ]
 
   const generatePosts = async () => {
-    if (!productDescription.trim() || selectedPlatforms.length === 0) return
+    if (!product.trim()) {
+      setError('Please enter a product or service description')
+      return
+    }
 
     setLoading(true)
+    setError('')
+    setPosts([])
+
     try {
-      const response = await fetch(`/api/personas/${persona.id}/social-posts`, {
+      const response = await fetch(`/api/personas/${personaId}/social-posts`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          productDescription,
-          platforms: selectedPlatforms,
-          campaignGoal,
-          targetAudience,
-          toneOfVoice
+          product,
+          platform,
+          goals: goals || 'Increase engagement and awareness',
+          tone: tone || 'authentic and engaging',
+          targetAudience: targetAudience || 'general audience'
         }),
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        setGeneratedPosts(data.posts)
+      const data = await response.json()
+
+      if (data.success) {
+        setPosts(data.data.posts || [])
+      } else {
+        setError(data.error || 'Failed to generate posts')
       }
-    } catch (error) {
-      console.error('Failed to generate posts:', error)
+    } catch (err) {
+      setError('Network error. Please try again.')
+      console.error('Social posts error:', err)
     } finally {
       setLoading(false)
     }
   }
 
-  const copyToClipboard = (content: string) => {
-    navigator.clipboard.writeText(content)
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
   }
 
-  const getPlatformIcon = (platformId: string) => {
-    const platform = PLATFORMS.find(p => p.id === platformId)
-    return platform ? platform.icon : Share2
-  }
-
-  const getPlatformColor = (platformId: string) => {
-    const platform = PLATFORMS.find(p => p.id === platformId)
-    return platform ? platform.color : 'bg-gray-500'
+  const getEngagementColor = (prediction: string) => {
+    switch (prediction) {
+      case 'high': return 'bg-green-500'
+      case 'medium': return 'bg-yellow-500'
+      case 'low': return 'bg-red-500'
+      default: return 'bg-gray-500'
+    }
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-white mb-2">Social Posts Generator</h2>
+        <p className="text-cyan-200">Generate authentic social media content from {persona?.name}'s perspective</p>
+      </div>
+
       {/* Input Form */}
-      <div className="lg:col-span-1 space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Share2 className="h-5 w-5" />
-              Product/Service Input
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+      <Card className="bg-white/5 backdrop-blur-lg border-cyan-200/20">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-cyan-400" />
+            Content Parameters
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Product Description */}
+          <div>
+            <Label htmlFor="product" className="text-white">Product/Service Description *</Label>
+            <Textarea
+              id="product"
+              placeholder="Describe the product, service, or topic you want to create content about..."
+              value={product}
+              onChange={(e) => setProduct(e.target.value)}
+              className="bg-white/10 border-cyan-200/30 text-white placeholder-cyan-200/60"
+              rows={3}
+            />
+          </div>
+
+          {/* Platform Selection */}
+          <div>
+            <Label className="text-white mb-3 block">Social Media Platform</Label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {platforms.map((p) => {
+                const Icon = p.icon
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => setPlatform(p.id)}
+                    className={`flex items-center gap-2 p-3 rounded-lg border-2 transition-all ${
+                      platform === p.id
+                        ? `${p.color} border-white text-white`
+                        : 'bg-white/10 border-cyan-200/30 text-cyan-200 hover:bg-white/20'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="text-sm font-medium">{p.name}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Additional Parameters */}
+          <div className="grid md:grid-cols-3 gap-4">
             <div>
-              <Label htmlFor="product-description">Product/Service Description</Label>
-              <Textarea
-                id="product-description"
-                placeholder="Describe your product, service, or content you want to promote..."
-                value={productDescription}
-                onChange={(e) => setProductDescription(e.target.value)}
-                className="min-h-[100px]"
+              <Label htmlFor="goals" className="text-white">Campaign Goals</Label>
+              <Input
+                id="goals"
+                placeholder="e.g., Increase sales, Build awareness"
+                value={goals}
+                onChange={(e) => setGoals(e.target.value)}
+                className="bg-white/10 border-cyan-200/30 text-white placeholder-cyan-200/60"
               />
             </div>
-
             <div>
-              <Label>Target Platforms</Label>
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                {PLATFORMS.map((platform) => {
-                  const Icon = platform.icon
-                  return (
-                    <div
-                      key={platform.id}
-                      className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                        selectedPlatforms.includes(platform.id)
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                      onClick={() => togglePlatform(platform.id)}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className={`w-8 h-8 rounded-full ${platform.color} flex items-center justify-center`}>
-                          <Icon className="w-4 h-4 text-white" />
-                        </div>
-                        <span className="text-sm font-medium">{platform.name}</span>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="campaign-goal">Campaign Goal</Label>
-              <select
-                id="campaign-goal"
-                value={campaignGoal}
-                onChange={(e) => setCampaignGoal(e.target.value)}
-                className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-              >
-                <option value="">Select a goal...</option>
-                {CAMPAIGN_GOALS.map(goal => (
-                  <option key={goal} value={goal}>{goal}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <Label htmlFor="target-audience">Target Audience</Label>
+              <Label htmlFor="tone" className="text-white">Tone of Voice</Label>
               <Input
-                id="target-audience"
-                placeholder="e.g., Tech professionals, young parents..."
+                id="tone"
+                placeholder="e.g., Professional, Casual, Humorous"
+                value={tone}
+                onChange={(e) => setTone(e.target.value)}
+                className="bg-white/10 border-cyan-200/30 text-white placeholder-cyan-200/60"
+              />
+            </div>
+            <div>
+              <Label htmlFor="audience" className="text-white">Target Audience</Label>
+              <Input
+                id="audience"
+                placeholder="e.g., Young professionals, Tech enthusiasts"
                 value={targetAudience}
                 onChange={(e) => setTargetAudience(e.target.value)}
+                className="bg-white/10 border-cyan-200/30 text-white placeholder-cyan-200/60"
               />
             </div>
+          </div>
 
-            <div>
-              <Label htmlFor="tone-of-voice">Tone of Voice</Label>
-              <select
-                id="tone-of-voice"
-                value={toneOfVoice}
-                onChange={(e) => setToneOfVoice(e.target.value)}
-                className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-              >
-                <option value="">Select tone...</option>
-                {TONE_OPTIONS.map(tone => (
-                  <option key={tone} value={tone}>{tone}</option>
-                ))}
-              </select>
-            </div>
+          {/* Generate Button */}
+          <Button
+            onClick={generatePosts}
+            disabled={loading || !product.trim()}
+            className="w-full bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-500 hover:to-blue-600 text-white font-medium py-3"
+          >
+            {loading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Generating Posts...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4 mr-2" />
+                Generate Social Posts
+              </>
+            )}
+          </Button>
 
-            <Button
-              onClick={generatePosts}
-              disabled={loading || !productDescription.trim() || selectedPlatforms.length === 0}
-              className="w-full"
-            >
-              {loading ? (
-                <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Generating Posts...
-                </>
-              ) : (
-                <>
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Generate Posts
-                </>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Persona Context */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5" />
-              {persona.name}'s Perspective
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <Label className="text-xs text-gray-600">Personality Influence</Label>
-              <div className="flex flex-wrap gap-1 mt-1">
-                {persona.personalityTraits?.slice(0, 4).map((trait, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs">
-                    {trait}
-                  </Badge>
-                ))}
-              </div>
+          {error && (
+            <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm">
+              {error}
             </div>
-            <div>
-              <Label className="text-xs text-gray-600">Interests</Label>
-              <div className="flex flex-wrap gap-1 mt-1">
-                {persona.interests?.slice(0, 3).map((interest, index) => (
-                  <Badge key={index} variant="outline" className="text-xs">
-                    {interest}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-            <div className="text-xs text-gray-600">
-              Posts will reflect {persona.name}'s communication style and preferences
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Generated Posts */}
-      <div className="lg:col-span-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Palette className="h-5 w-5" />
-              Generated Social Posts
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {generatedPosts.length === 0 ? (
-              <div className="text-center text-gray-500 py-12">
-                <Share2 className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                <p className="text-lg mb-2">No posts generated yet</p>
-                <p className="text-sm">Fill out the form and click "Generate Posts" to see {persona.name}'s social content</p>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {generatedPosts.map((post) => {
-                  const Icon = getPlatformIcon(post.platform)
-                  return (
-                    <div key={post.id} className="border rounded-lg p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-full ${getPlatformColor(post.platform)} flex items-center justify-center`}>
-                            <Icon className="w-5 h-5 text-white" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold capitalize">{post.platform}</h3>
-                            <p className="text-sm text-gray-600">Posted as {persona.name}</p>
-                          </div>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => copyToClipboard(post.content)}
-                        >
-                          <Copy className="w-4 h-4 mr-2" />
-                          Copy
-                        </Button>
-                      </div>
+      {posts.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-xl font-semibold text-white">Generated Posts ({posts.length})</h3>
+          
+          {posts.map((post, index) => (
+            <Card key={index} className="bg-white/5 backdrop-blur-lg border-cyan-200/20">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-white text-lg">Post Variation {index + 1}</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Badge className={`${getEngagementColor(post.engagement_prediction)} text-white`}>
+                      {post.engagement_prediction} engagement
+                    </Badge>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => copyToClipboard(post.content)}
+                      className="border-cyan-200/30 text-cyan-200 hover:bg-cyan-500/20"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Post Content */}
+                <div className="p-4 bg-white/10 rounded-lg">
+                  <p className="text-white whitespace-pre-wrap">{post.content}</p>
+                </div>
 
-                      <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                        <p className="whitespace-pre-wrap">{post.content}</p>
-                        {post.hashtags && post.hashtags.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-3">
-                            {post.hashtags.map((hashtag, index) => (
-                              <span key={index} className="text-blue-600 text-sm">
-                                #{hashtag}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                {/* Reasoning */}
+                <div className="p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-lg">
+                  <h4 className="text-cyan-300 font-medium mb-1">Why this works for {persona?.name}:</h4>
+                  <p className="text-cyan-100 text-sm">{post.reasoning}</p>
+                </div>
 
-                      {/* AI Reasoning */}
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <div className="flex items-start gap-2">
-                          <Brain className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                          <div>
-                            <p className="text-sm font-medium text-blue-900 mb-1">
-                              Why {persona.name} would post this:
-                            </p>
-                            <p className="text-sm text-blue-800">{post.reasoning}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
+                {/* Platform Optimization */}
+                <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                  <h4 className="text-blue-300 font-medium mb-1">Platform Optimization:</h4>
+                  <p className="text-blue-100 text-sm">{post.platform_optimization}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Empty State */}
+      {posts.length === 0 && !loading && (
+        <Card className="bg-white/5 backdrop-blur-lg border-cyan-200/20">
+          <CardContent className="text-center py-12">
+            <Sparkles className="w-12 h-12 text-cyan-400 mx-auto mb-4" />
+            <h3 className="text-white text-lg font-medium mb-2">Ready to Generate Social Posts</h3>
+            <p className="text-cyan-200">Enter a product description and generate authentic social media content from {persona?.name}'s perspective</p>
           </CardContent>
         </Card>
-      </div>
+      )}
     </div>
   )
 }
