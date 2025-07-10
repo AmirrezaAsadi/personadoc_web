@@ -4,13 +4,14 @@ import { grok } from '@/lib/grok'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { message } = await request.json()
+    const { id } = await params
     
     const persona = await prisma.persona.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!persona) {
@@ -19,8 +20,8 @@ export async function POST(
 
     const prompt = `You are ${persona.name}, a ${persona.age}-year-old ${persona.occupation} from ${persona.location}.
 
-Your personality: ${persona.personalityTraits?.join(', ') || 'Friendly and helpful'}
-Your interests: ${persona.interests?.join(', ') || 'Various topics'}
+Your personality: ${Array.isArray(persona.personalityTraits) ? persona.personalityTraits.join(', ') : 'Friendly and helpful'}
+Your interests: ${Array.isArray(persona.interests) ? persona.interests.join(', ') : 'Various topics'}
 Background: ${persona.introduction || 'I enjoy conversations and helping people'}
 
 Respond as ${persona.name} would. Keep it conversational and under 150 words.
@@ -38,7 +39,7 @@ User: ${message}`
 
     await prisma.interaction.create({
       data: {
-        personaId: params.id,
+        personaId: id,
         userId: 'user-1',
         content: message,
         response: response,
