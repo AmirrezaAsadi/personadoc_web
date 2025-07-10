@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PersonaDoc - AI Persona Chat",
-  description: "Create and chat with AI personas powered by Grok AI",
+  title: "PersonaDock - UX Research Studio",
+  description: "Currate your UX data as Personas, Copyright for Amir Reza Asadi 2025",
 };
 
 export default function RootLayout({
