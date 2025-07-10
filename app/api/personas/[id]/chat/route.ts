@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { grok } from '@/lib/grok'
+import { researchRAG } from '@/lib/research-rag'
 
 export async function POST(
   request: NextRequest,
@@ -97,6 +98,22 @@ REASONING: [Brief explanation of why you responded this way based on your person
       role: "user" as const,
       content: message
     })
+
+    // Search relevant research content using RAG
+    let researchContext = ''
+    try {
+      const relevantContent = await researchRAG.searchResearchContent(id, message, 3)
+      if (relevantContent.length > 0) {
+        researchContext = `\n\nRELEVANT RESEARCH CONTEXT:\n${relevantContent.join('\n\n')}`
+      }
+    } catch (error) {
+      console.error('Error searching research content:', error)
+    }
+
+    // Add research context to the system message if found
+    if (researchContext) {
+      conversationMessages[0].content += researchContext
+    }
 
     const completion = await grok.chat.completions.create({
       model: "grok-4-0709",

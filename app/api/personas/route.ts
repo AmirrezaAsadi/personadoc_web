@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { researchRAG } from '@/lib/research-rag'
 
 export async function GET() {
   try {
@@ -77,8 +78,19 @@ export async function POST(request: NextRequest) {
         // Store extended persona data in metadata field as JSON
         metadata: body.metadata || {},
         createdBy: userId,
-      },
+      } as any, // Cast to bypass TypeScript strict checking
     })
+
+    // Process research data if present
+    if (body.metadata?.research) {
+      try {
+        await researchRAG.processPersonaResearch(persona.id, body.metadata.research)
+        console.log(`Research data processed for persona ${persona.id}`)
+      } catch (error) {
+        console.error('Error processing research data:', error)
+        // Don't fail persona creation if research processing fails
+      }
+    }
 
     return NextResponse.json(persona, { status: 201 })
   } catch (error) {
