@@ -4,9 +4,14 @@ import pdfParse from 'pdf-parse'
 import * as mammoth from 'mammoth'
 
 // Separate OpenAI client for embeddings (uses real OpenAI API)
+if (!process.env.OPENAI_EMBEDDINGS_API_KEY) {
+  throw new Error('OPENAI_EMBEDDINGS_API_KEY is required for RAG functionality')
+}
+
 const openaiEmbeddings = new OpenAI({
-  apiKey: process.env.OPENAI_EMBEDDINGS_API_KEY || process.env.OPENAI_API_KEY,
-  // Don't set baseURL here - use default OpenAI endpoint for embeddings
+  apiKey: process.env.OPENAI_EMBEDDINGS_API_KEY,
+  // Explicitly use OpenAI endpoint (not Grok)
+  baseURL: 'https://api.openai.com/v1'
 })
 
 export interface DocumentChunk {
