@@ -15,7 +15,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { message } = await request.json()
+    const { message, conversationHistory } = await request.json()
     const { id } = await params
     
     // Get user ID (handle both credentials and OAuth providers)
@@ -42,19 +42,65 @@ export async function POST(
       return NextResponse.json({ error: 'Persona not found' }, { status: 404 })
     }
 
-    const prompt = `You are ${persona.name}, a ${persona.age}-year-old ${persona.occupation} from ${persona.location}.
+    // Parse metadata for enhanced personality info
+    const personaWithMetadata = persona as any // Cast to access metadata field
+    const metadata = typeof personaWithMetadata.metadata === 'string' 
+      ? JSON.parse(personaWithMetadata.metadata) 
+      : personaWithMetadata.metadata || {}
 
-Your personality: ${Array.isArray(persona.personalityTraits) ? persona.personalityTraits.join(', ') : 'Friendly and helpful'}
-Your interests: ${Array.isArray(persona.interests) ? persona.interests.join(', ') : 'Various topics'}
-Background: ${persona.introduction || 'I enjoy conversations and helping people'}
+    // Build conversation messages for context
+    const conversationMessages: any[] = []
+    
+    // System message with persona context
+    const systemPrompt = `You are ${persona.name}, a ${metadata.demographics?.age || persona.age || 'adult'}-year-old ${metadata.demographics?.occupation || persona.occupation} living in ${metadata.demographics?.location || persona.location}.
 
-Respond as ${persona.name} would. Keep it conversational and under 150 words.
+PERSONALITY TRAITS: ${metadata.personality?.traits?.join(', ') || (Array.isArray(persona.personalityTraits) ? persona.personalityTraits.join(', ') : 'Friendly and helpful')}
+INTERESTS: ${metadata.personality?.interests?.join(', ') || (Array.isArray(persona.interests) ? persona.interests.join(', ') : 'Various topics')}
+BEHAVIORAL SCORES:
+- Tech Savvy: ${metadata.personality?.behaviorScores?.techSavvy || 7}/10
+- Socialness: ${metadata.personality?.behaviorScores?.socialness || 6}/10
+- Creativity: ${metadata.personality?.behaviorScores?.creativity || 8}/10
 
-User: ${message}`
+BACKGROUND: ${persona.introduction || 'I enjoy conversations and helping people'}
+
+Respond naturally as ${persona.name}, incorporating your personality and background. Keep responses conversational and authentic. Provide a brief reasoning for your response if appropriate.
+
+Format your response as:
+RESPONSE: [Your natural response as ${persona.name}]
+REASONING: [Brief explanation of why you responded this way based on your personality]`
+
+    conversationMessages.push({
+      role: "system" as const,
+      content: systemPrompt
+    })
+
+    // Add conversation history for context (last 10 messages)
+    if (conversationHistory && Array.isArray(conversationHistory)) {
+      const recentHistory = conversationHistory.slice(-10)
+      recentHistory.forEach((msg: any) => {
+        if (msg.type === 'user') {
+          conversationMessages.push({
+            role: "user" as const,
+            content: msg.content
+          })
+        } else if (msg.type === 'persona') {
+          conversationMessages.push({
+            role: "assistant" as const,
+            content: msg.content
+          })
+        }
+      })
+    }
+
+    // Add current user message
+    conversationMessages.push({
+      role: "user" as const,
+      content: message
+    })
 
     const completion = await grok.chat.completions.create({
       model: "grok-4-0709",
-      messages: [{ role: "user", content: prompt }],
+      messages: conversationMessages,
       max_tokens: 300,
       temperature: 0.8,
     })

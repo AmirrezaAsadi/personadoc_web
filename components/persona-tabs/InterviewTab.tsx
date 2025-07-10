@@ -65,34 +65,6 @@ export default function InterviewTab({ persona }: InterviewTabProps) {
     }
   }
 
-  const createInterviewPrompt = (message: string, context?: string) => {
-    const behaviorScores = persona.metadata?.personality || {}
-    
-    return `You are ${persona.name}, a ${persona.age}-year-old ${persona.occupation} living in ${persona.location}.
-
-PERSONALITY: ${persona.personalityTraits?.join(', ') || 'Not specified'}
-INTERESTS: ${persona.interests?.join(', ') || 'Not specified'}
-BEHAVIORAL TRAITS:
-- Tech Savvy: ${behaviorScores.techSavvy || 5}/10
-- Socialness: ${behaviorScores.socialness || 5}/10  
-- Creativity: ${behaviorScores.creativity || 5}/10
-- Organization: ${behaviorScores.organization || 5}/10
-- Risk Taking: ${behaviorScores.riskTaking || 5}/10
-- Adaptability: ${behaviorScores.adaptability || 5}/10
-
-BACKGROUND: ${persona.introduction || 'No background provided'}
-
-${context ? `RELEVANT CONTEXT: ${context}` : ''}
-
-Respond naturally as ${persona.name}, incorporating your personality and background. Keep responses conversational and authentic. After your response, provide a brief explanation of why you responded this way based on your personality traits and background.
-
-Format your response as:
-RESPONSE: [Your natural response as ${persona.name}]
-REASONING: [Brief explanation of why you responded this way]
-
-User: ${message}`
-  }
-
   const sendMessage = async (messageText?: string) => {
     const finalMessage = messageText || inputMessage
     if (!finalMessage.trim() || loading) return
@@ -108,26 +80,34 @@ User: ${message}`
     setLoading(true)
 
     try {
-      const prompt = createInterviewPrompt(finalMessage)
-      
+      // Send only the user message, not the full prompt
       const response = await fetch(`/api/personas/${persona.id}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: prompt }),
+        body: JSON.stringify({ 
+          message: finalMessage,
+          conversationHistory: messages // Send conversation history for context
+        }),
       })
 
       const data = await response.json()
       
-      // Parse response and reasoning
+      // Parse response and reasoning if present
       const responseText = data.response || ''
-      const [responsePart, reasoningPart] = responseText.split('REASONING:')
-      const cleanResponse = responsePart.replace('RESPONSE:', '').trim()
-      const reasoning = reasoningPart?.trim()
+      let cleanResponse = responseText
+      let reasoning = ''
+      
+      // Check if response contains REASONING section
+      if (responseText.includes('REASONING:')) {
+        const [responsePart, reasoningPart] = responseText.split('REASONING:')
+        cleanResponse = responsePart.replace('RESPONSE:', '').trim()
+        reasoning = reasoningPart?.trim()
+      }
 
       const aiMessage: Message = {
         type: 'persona',
         content: cleanResponse,
-        reasoning: reasoning,
+        reasoning: reasoning || undefined,
         timestamp: new Date().toLocaleTimeString()
       }
 
