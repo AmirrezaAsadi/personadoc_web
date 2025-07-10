@@ -287,7 +287,7 @@ export default function Home() {
                       <CardTitle className="text-cyan-100 text-lg font-bold truncate">
                         {persona.name}
                       </CardTitle>
-                      <div className="flex items-center gap-2 text-sm text-cyan-300/80">
+                      <div className="flex items-center gap-2 text-sm text-cyan-800/80">
                         {persona.age && (
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
