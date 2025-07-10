@@ -29,7 +29,7 @@ Respond as ${persona.name} would. Keep it conversational and under 150 words.
 User: ${message}`
 
     const completion = await grok.chat.completions.create({
-      model: "grok-beta",
+      model: "grok-4-0709",
       messages: [{ role: "user", content: prompt }],
       max_tokens: 300,
       temperature: 0.8,
