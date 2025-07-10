@@ -284,7 +284,7 @@ export default function Home() {
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <CardTitle className="text-cyan-300 text-lg font-bold truncate">
+                      <CardTitle className="text-cyan-400 text-lg font-bold truncate">
                         {persona.name}
                       </CardTitle>
                       <div className="flex items-center gap-2 text-sm text-cyan-800/80">
@@ -305,7 +305,7 @@ export default function Home() {
                   </div>
                   
                   {persona.occupation && (
-                    <div className="text-sm text-cyan-200/90 mb-3 font-medium">
+                    <div className="text-sm text-cyan-400/90 mb-3 font-medium">
                       {persona.occupation}
                     </div>
                   )}
@@ -313,7 +313,7 @@ export default function Home() {
                 
                 <CardContent className="pt-0">
                   {persona.introduction && (
-                    <p className="text-cyan-200/80 text-sm mb-4 line-clamp-2">
+                    <p className="text-cyan-400/80 text-sm mb-4 line-clamp-2">
                       {persona.introduction}
                     </p>
                   )}
