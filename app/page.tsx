@@ -268,7 +268,7 @@ export default function Home() {
                 <CardHeader className="pb-3">
                   <div className="flex items-center space-x-3 mb-3">
                     <div className="relative">
-                      <div className="w-16 h-16 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full flex items-center justify-center shadow-lg underwater-glow">
+                      <div className="w-16 h-16 bg-gradient-to-r from-blue-400 to-cyan-600 rounded-full flex items-center justify-center shadow-lg underwater-glow">
                         {persona.avatarUrl ? (
                           <img 
                             src={persona.avatarUrl} 
@@ -284,7 +284,7 @@ export default function Home() {
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <CardTitle className="text-cyan-100 text-lg font-bold truncate">
+                      <CardTitle className="text-cyan-300 text-lg font-bold truncate">
                         {persona.name}
                       </CardTitle>
                       <div className="flex items-center gap-2 text-sm text-cyan-800/80">
