@@ -71,10 +71,11 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   pages: {
-    signIn: '/auth/signin',
+    signIn: '/',
+    error: '/',
   },
   session: {
-    strategy: "jwt",
+    strategy: process.env.NODE_ENV === 'production' ? "database" : "jwt",
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -83,13 +84,22 @@ export const authOptions: NextAuthOptions = {
       }
       return token
     },
-    async session({ session, token }) {
-      if (session?.user && token?.id) {
-        (session.user as any).id = token.id as string
+    async session({ session, token, user }) {
+      if (process.env.NODE_ENV === 'production') {
+        // Database sessions - user is available
+        if (session?.user && user) {
+          (session.user as any).id = user.id
+        }
+      } else {
+        // JWT sessions - use token
+        if (session?.user && token?.id) {
+          (session.user as any).id = token.id as string
+        }
       }
       return session
     },
   },
+  debug: process.env.NODE_ENV === 'development',
 }
 
 export default NextAuth(authOptions)
