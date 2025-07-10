@@ -78,7 +78,30 @@ export default function PersonaWizard({ onComplete, onCancel }: PersonaWizardPro
     }
   }
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    // Convert uploaded files to base64 for API transmission
+    const processedFiles = await Promise.all(
+      (personaData.researchFiles || []).map(async (file: File) => {
+        const base64Content = await new Promise<string>((resolve) => {
+          const reader = new FileReader()
+          reader.onload = () => {
+            const result = reader.result as string
+            // Remove the data URL prefix (e.g., "data:application/pdf;base64,")
+            const base64 = result.split(',')[1]
+            resolve(base64)
+          }
+          reader.readAsDataURL(file)
+        })
+
+        return {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          content: base64Content
+        }
+      })
+    )
+
     // Transform data to match your existing persona structure
     const transformedData = {
       name: personaData.name,
@@ -116,6 +139,7 @@ export default function PersonaWizard({ onComplete, onCancel }: PersonaWizardPro
           dataSourceTypes: personaData.dataSourceTypes,
           manualKnowledge: personaData.manualKnowledge,
           researchMethodology: personaData.researchMethodology,
+          uploadedFiles: processedFiles
         }
       }
     }
