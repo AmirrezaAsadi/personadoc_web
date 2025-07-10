@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { grok } from '@/lib/grok'
 
@@ -7,11 +9,20 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { message } = await request.json()
     const { id } = await params
     
     const persona = await prisma.persona.findUnique({
-      where: { id },
+      where: { 
+        id,
+        createdBy: session.user.id // Ensure the persona belongs to the authenticated user
+      },
     })
 
     if (!persona) {
@@ -37,20 +48,11 @@ User: ${message}`
 
     const response = completion.choices[0]?.message?.content || "I'm not sure how to respond to that."
 
-    // Ensure a default user exists
-    const defaultUser = await prisma.user.upsert({
-      where: { email: 'default@personadoc.com' },
-      update: {},
-      create: {
-        email: 'default@personadoc.com',
-        name: 'Default User',
-      },
-    })
-
+    // Create interaction record for the authenticated user
     await prisma.interaction.create({
       data: {
         personaId: id,
-        userId: defaultUser.id,
+        userId: session.user.id,
         content: message,
         response: response,
       },

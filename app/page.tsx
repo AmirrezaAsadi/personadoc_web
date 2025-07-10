@@ -1,10 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession, signOut } from 'next-auth/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { MessageCircle, Send, Plus, User } from 'lucide-react'
+import { MessageCircle, Send, Plus, User, LogOut } from 'lucide-react'
+import SignInPage from '@/components/sign-in-page'
+import UserDashboard from '@/components/user-dashboard'
 
 interface Persona {
   id: string
@@ -24,6 +27,7 @@ interface Message {
 }
 
 export default function Home() {
+  const { data: session, status } = useSession()
   const [personas, setPersonas] = useState<Persona[]>([])
   const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
@@ -31,8 +35,27 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    loadPersonas()
-  }, [])
+    if (session) {
+      loadPersonas()
+    }
+  }, [session])
+
+  // Show loading screen while checking auth
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show sign-in page if not authenticated
+  if (!session) {
+    return <SignInPage />
+  }
 
   const loadPersonas = async () => {
     try {
@@ -122,13 +145,10 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">PersonaDoc</h1>
-          <Button onClick={createDemoPersona}>
-            <Plus className="w-4 h-4 mr-2" />
-            Create Demo Persona
-          </Button>
-        </div>
+        <UserDashboard 
+          personaCount={personas.length} 
+          onCreateDemo={createDemoPersona}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1">
