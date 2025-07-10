@@ -9,13 +9,25 @@ export async function GET() {
     })
     return NextResponse.json(personas)
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch personas' }, { status: 500 })
+    console.error('Database error:', error)
+    // Return empty array instead of error object to prevent frontend crash
+    return NextResponse.json([])
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    
+    // Ensure a default user exists
+    const defaultUser = await prisma.user.upsert({
+      where: { email: 'default@personadoc.com' },
+      update: {},
+      create: {
+        email: 'default@personadoc.com',
+        name: 'Default User',
+      },
+    })
     
     const persona = await prisma.persona.create({
       data: {
@@ -27,12 +39,16 @@ export async function POST(request: NextRequest) {
         personalityTraits: body.personalityTraits || [],
         interests: body.interests || [],
         gadgets: body.gadgets || [],
-        createdBy: 'user-1',
+        createdBy: defaultUser.id,
       },
     })
 
     return NextResponse.json(persona, { status: 201 })
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to create persona' }, { status: 500 })
+    console.error('Error creating persona:', error)
+    return NextResponse.json({ 
+      error: 'Failed to create persona', 
+      details: error instanceof Error ? error.message : 'Unknown error' 
+    }, { status: 500 })
   }
 }

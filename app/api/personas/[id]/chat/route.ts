@@ -37,10 +37,20 @@ User: ${message}`
 
     const response = completion.choices[0]?.message?.content || "I'm not sure how to respond to that."
 
+    // Ensure a default user exists
+    const defaultUser = await prisma.user.upsert({
+      where: { email: 'default@personadoc.com' },
+      update: {},
+      create: {
+        email: 'default@personadoc.com',
+        name: 'Default User',
+      },
+    })
+
     await prisma.interaction.create({
       data: {
         personaId: id,
-        userId: 'user-1',
+        userId: defaultUser.id,
         content: message,
         response: response,
       },

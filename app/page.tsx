@@ -37,11 +37,23 @@ export default function Home() {
   const loadPersonas = async () => {
     try {
       const response = await fetch('/api/personas')
+      if (!response.ok) {
+        console.error('Failed to fetch personas:', response.status)
+        setPersonas([])
+        return
+      }
       const data = await response.json()
-      setPersonas(data)
-      if (data.length > 0) setSelectedPersona(data[0])
+      // Ensure data is an array
+      if (Array.isArray(data)) {
+        setPersonas(data)
+        if (data.length > 0) setSelectedPersona(data[0])
+      } else {
+        console.error('API returned non-array:', data)
+        setPersonas([])
+      }
     } catch (error) {
       console.error('Failed to load personas:', error)
+      setPersonas([])
     }
   }
 
