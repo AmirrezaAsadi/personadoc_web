@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { useSession, signOut } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { MessageCircle, Send, Plus, User, LogOut, X } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Search, Plus, User, LogOut, X, MessageCircle, Users, Eye, Calendar, MapPin, Brain, Heart, Star } from 'lucide-react'
 import SignInPage from '@/components/sign-in-page'
-import UserDashboard from '@/components/user-dashboard'
 import PersonaWizard from '@/components/persona-wizard'
 
 interface Persona {
@@ -19,21 +20,22 @@ interface Persona {
   introduction?: string
   personalityTraits?: string[]
   interests?: string[]
-}
-
-interface Message {
-  type: 'user' | 'persona'
-  content: string
-  timestamp: string
+  avatarUrl?: string
+  createdAt?: string
+  metadata?: {
+    demographics?: any
+    personality?: any
+    technology?: any
+    research?: any
+  }
 }
 
 export default function Home() {
   const { data: session, status } = useSession()
+  const router = useRouter()
   const [personas, setPersonas] = useState<Persona[]>([])
-  const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null)
-  const [messages, setMessages] = useState<Message[]>([])
-  const [inputMessage, setInputMessage] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [filteredPersonas, setFilteredPersonas] = useState<Persona[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
   const [showWizard, setShowWizard] = useState(false)
 
   useEffect(() => {
@@ -42,13 +44,32 @@ export default function Home() {
     }
   }, [session])
 
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredPersonas(personas)
+    } else {
+      const filtered = personas.filter(persona => 
+        persona.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        persona.occupation?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        persona.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        persona.personalityTraits?.some(trait => 
+          trait.toLowerCase().includes(searchQuery.toLowerCase())
+        ) ||
+        persona.interests?.some(interest => 
+          interest.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      )
+      setFilteredPersonas(filtered)
+    }
+  }, [searchQuery, personas])
+
   // Show loading screen while checking auth
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-400 mx-auto"></div>
+          <p className="mt-4 text-blue-200">Loading PersonaDoc...</p>
         </div>
       </div>
     )
@@ -71,7 +92,6 @@ export default function Home() {
       // Ensure data is an array
       if (Array.isArray(data)) {
         setPersonas(data)
-        if (data.length > 0) setSelectedPersona(data[0])
       } else {
         console.error('API returned non-array:', data)
         setPersonas([])
@@ -82,7 +102,7 @@ export default function Home() {
     }
   }
 
-  const createDemoPersona = async () => {
+  const createPersona = async () => {
     setShowWizard(true)
   }
 
@@ -100,12 +120,11 @@ export default function Home() {
 
       const newPersona = await response.json()
       setPersonas(prev => [newPersona, ...prev])
-      setSelectedPersona(newPersona)
-      setMessages([])
       setShowWizard(false)
+      // Navigate to the new persona
+      router.push(`/personas/${newPersona.id}`)
     } catch (error) {
       console.error('Failed to create persona:', error)
-      // You could add error state management here
     }
   }
 
@@ -113,200 +132,233 @@ export default function Home() {
     setShowWizard(false)
   }
 
-  const sendMessage = async () => {
-    if (!inputMessage.trim() || !selectedPersona || loading) return
+  const handlePersonaClick = (personaId: string) => {
+    router.push(`/personas/${personaId}`)
+  }
 
-    const userMessage: Message = {
-      type: 'user',
-      content: inputMessage,
-      timestamp: new Date().toLocaleTimeString()
+  const getPersonaTraits = (persona: Persona) => {
+    const traits = []
+    if (persona.personalityTraits?.length) {
+      traits.push(...persona.personalityTraits.slice(0, 3))
     }
-
-    setMessages(prev => [...prev, userMessage])
-    setInputMessage('')
-    setLoading(true)
-
-    try {
-      const response = await fetch(`/api/personas/${selectedPersona.id}/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: inputMessage }),
-      })
-
-      const data = await response.json()
-      
-      const aiMessage: Message = {
-        type: 'persona',
-        content: data.response,
-        timestamp: new Date().toLocaleTimeString()
-      }
-
-      setMessages(prev => [...prev, aiMessage])
-    } catch (error) {
-      console.error('Failed to send message:', error)
-    } finally {
-      setLoading(false)
+    if (persona.interests?.length) {
+      traits.push(...persona.interests.slice(0, 2))
     }
+    return traits.slice(0, 4)
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <div className="max-w-6xl mx-auto">
-        <UserDashboard 
-          personaCount={personas.length} 
-          onCreateDemo={createDemoPersona}
-        />
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle>Personas ({personas.length})</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {personas.length === 0 ? (
-                  <p className="text-gray-500 text-center py-4">
-                    No personas yet. Create one to get started!
-                  </p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
+      {/* Header */}
+      <div className="border-b border-blue-800/30 bg-black/20 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+                {session?.user?.image ? (
+                  <img 
+                    src={session.user.image} 
+                    alt={session.user.name || 'User'} 
+                    className="w-10 h-10 rounded-full"
+                  />
                 ) : (
-                  <div className="space-y-3">
-                    {personas.map((persona) => (
-                      <div
-                        key={persona.id}
-                        className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                          selectedPersona?.id === persona.id
-                            ? 'bg-blue-100 border border-blue-300'
-                            : 'bg-gray-50 hover:bg-gray-100'
-                        }`}
-                        onClick={() => {
-                          setSelectedPersona(persona)
-                          setMessages([])
-                        }}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                            <User className="w-4 h-4 text-white" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold">{persona.name}</h3>
-                            <p className="text-sm text-gray-600">
-                              {persona.occupation} • {persona.location}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <User className="w-6 h-6 text-white" />
                 )}
-              </CardContent>
-            </Card>
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  PersonaDoc
+                </h1>
+                <p className="text-blue-200 flex items-center gap-2">
+                  Welcome back, {session?.user?.name}! 
+                  <span className="flex items-center gap-1 text-sm bg-blue-900/50 px-3 py-1 rounded-full border border-blue-500/30">
+                    <Users className="w-3 h-3" />
+                    {personas.length} persona{personas.length !== 1 ? 's' : ''}
+                  </span>
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-3">
+              <Button 
+                onClick={createPersona} 
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Create New Persona
+              </Button>
+              <Button 
+                onClick={() => signOut()} 
+                variant="outline" 
+                className="border-blue-500/50 text-blue-200 hover:bg-blue-900/50 flex items-center gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </Button>
+            </div>
           </div>
+        </div>
+      </div>
 
-          <div className="lg:col-span-2">
-            {selectedPersona ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <MessageCircle className="w-5 h-5 mr-2" />
-                    Chat with {selectedPersona.name}
-                  </CardTitle>
-                  {selectedPersona.introduction && (
-                    <p className="text-sm text-gray-600">{selectedPersona.introduction}</p>
-                  )}
-                </CardHeader>
-                <CardContent>
-                  <div className="h-96 overflow-y-auto border rounded-lg p-4 mb-4 bg-gray-50">
-                    {messages.length === 0 ? (
-                      <div className="text-center text-gray-500 py-8">
-                        <MessageCircle className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                        <p>Start a conversation with {selectedPersona.name}!</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {messages.map((msg, index) => (
-                          <div
-                            key={index}
-                            className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                          >
-                            <div
-                              className={`max-w-xs px-4 py-2 rounded-lg ${
-                                msg.type === 'user'
-                                  ? 'bg-blue-500 text-white'
-                                  : 'bg-white border'
-                              }`}
-                            >
-                              <p className="text-sm">{msg.content}</p>
-                              <p className={`text-xs mt-1 ${
-                                msg.type === 'user' ? 'text-blue-100' : 'text-gray-500'
-                              }`}>
-                                {msg.timestamp}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    
-                    {loading && (
-                      <div className="flex justify-start">
-                        <div className="bg-white border rounded-lg px-4 py-2">
-                          <p className="text-sm text-gray-500">{selectedPersona.name} is typing...</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex space-x-2">
-                    <Input
-                      value={inputMessage}
-                      onChange={(e) => setInputMessage(e.target.value)}
-                      placeholder={`Message ${selectedPersona.name}...`}
-                      onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                      disabled={loading}
-                    />
-                    <Button onClick={sendMessage} disabled={!inputMessage.trim() || loading}>
-                      <Send className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card>
-                <CardContent className="flex items-center justify-center h-96">
-                  <div className="text-center text-gray-500">
-                    <MessageCircle className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                    <p>Select a persona to start chatting</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+      {/* Search and Filter Section */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="mb-8">
+          <div className="relative max-w-2xl mx-auto">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-300 w-5 h-5" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search personas by name, occupation, traits, or interests..."
+              className="pl-12 py-4 text-lg bg-black/30 border-blue-500/30 text-blue-100 placeholder-blue-300 focus:border-blue-400 focus:ring-blue-400/30 rounded-xl"
+            />
           </div>
         </div>
 
-        {/* Persona Wizard Modal */}
-        {showWizard && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
-              <div className="flex items-center justify-between p-4 border-b">
-                <h2 className="text-xl font-semibold">Create New Persona</h2>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleWizardCancel}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="max-h-[calc(90vh-80px)] overflow-y-auto">
-                <PersonaWizard
-                  onComplete={handleWizardComplete}
-                  onCancel={handleWizardCancel}
-                />
-              </div>
+        {/* Personas Grid */}
+        {filteredPersonas.length === 0 && personas.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="w-24 h-24 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl">
+              <Users className="w-12 h-12 text-white" />
             </div>
+            <h2 className="text-2xl font-bold text-blue-100 mb-4">No Personas Yet</h2>
+            <p className="text-blue-300 mb-8 max-w-md mx-auto">
+              Create your first persona to start building rich, interactive character profiles for research and development.
+            </p>
+            <Button 
+              onClick={createPersona}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Your First Persona
+            </Button>
+          </div>
+        ) : filteredPersonas.length === 0 ? (
+          <div className="text-center py-16">
+            <Search className="w-16 h-16 text-blue-300 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-blue-100 mb-2">No Results Found</h2>
+            <p className="text-blue-300">Try adjusting your search terms</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredPersonas.map((persona) => (
+              <Card
+                key={persona.id}
+                className="group bg-black/40 border-blue-500/30 hover:border-blue-400/60 transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-2xl backdrop-blur-sm"
+                onClick={() => handlePersonaClick(persona.id)}
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="relative">
+                      <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+                        {persona.avatarUrl ? (
+                          <img 
+                            src={persona.avatarUrl} 
+                            alt={persona.name} 
+                            className="w-14 h-14 rounded-full object-cover"
+                          />
+                        ) : (
+                          <User className="w-8 h-8 text-white" />
+                        )}
+                      </div>
+                      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-gray-900 flex items-center justify-center">
+                        <Eye className="w-3 h-3 text-white" />
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="text-blue-100 text-lg font-bold truncate">
+                        {persona.name}
+                      </CardTitle>
+                      <div className="flex items-center gap-2 text-sm text-blue-300">
+                        {persona.age && (
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {persona.age}
+                          </span>
+                        )}
+                        {persona.location && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            {persona.location}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {persona.occupation && (
+                    <div className="text-sm text-blue-200 mb-3 font-medium">
+                      {persona.occupation}
+                    </div>
+                  )}
+                </CardHeader>
+                
+                <CardContent className="pt-0">
+                  {persona.introduction && (
+                    <p className="text-blue-200 text-sm mb-4 line-clamp-2">
+                      {persona.introduction}
+                    </p>
+                  )}
+                  
+                  <div className="flex flex-wrap gap-1 mb-4">
+                    {getPersonaTraits(persona).map((trait, index) => (
+                      <Badge 
+                        key={index} 
+                        variant="secondary" 
+                        className="bg-blue-900/50 text-blue-200 border-blue-500/30 text-xs px-2 py-1"
+                      >
+                        {trait}
+                      </Badge>
+                    ))}
+                  </div>
+                  
+                  <div className="flex items-center justify-between pt-3 border-t border-blue-500/20">
+                    <div className="flex items-center gap-3 text-xs text-blue-300">
+                      <span className="flex items-center gap-1">
+                        <MessageCircle className="w-3 h-3" />
+                        Interview
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Brain className="w-3 h-3" />
+                        Analytics
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Heart className="w-3 h-3" />
+                        Social
+                      </span>
+                    </div>
+                    <Star className="w-4 h-4 text-yellow-400 group-hover:scale-110 transition-transform" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         )}
       </div>
+
+      {/* Persona Wizard Modal */}
+      {showWizard && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-900 border border-blue-500/30 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
+            <div className="flex items-center justify-between p-6 border-b border-blue-500/30">
+              <h2 className="text-xl font-semibold text-blue-100">Create New Persona</h2>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleWizardCancel}
+                className="border-blue-500/50 text-blue-200 hover:bg-blue-900/50"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="max-h-[calc(90vh-80px)] overflow-y-auto">
+              <PersonaWizard
+                onComplete={handleWizardComplete}
+                onCancel={handleWizardCancel}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
