@@ -70,10 +70,6 @@ export const authOptions: NextAuthOptions = {
       }
     }),
   ],
-  pages: {
-    signIn: '/',
-    error: '/',
-  },
   session: {
     strategy: process.env.NODE_ENV === 'production' ? "database" : "jwt",
   },
