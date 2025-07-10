@@ -20,15 +20,17 @@ export default function SignInPage() {
       const result = await signIn('credentials', {
         email,
         password,
-        redirect: false,
+        redirect: true, // Enable automatic redirect on success
+        callbackUrl: '/', // Redirect to home page
       })
       
+      // This won't execute if redirect is true and login is successful
       if (result?.error) {
         alert('Invalid credentials')
+        setLoading(false)
       }
     } catch (error) {
       console.error('Sign in error:', error)
-    } finally {
       setLoading(false)
     }
   }
