@@ -3,8 +3,10 @@ import { pinecone, PINECONE_INDEX_NAME, initializePineconeIndex } from './pineco
 import pdfParse from 'pdf-parse'
 import * as mammoth from 'mammoth'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+// Separate OpenAI client for embeddings (uses real OpenAI API)
+const openaiEmbeddings = new OpenAI({
+  apiKey: process.env.OPENAI_EMBEDDINGS_API_KEY || process.env.OPENAI_API_KEY,
+  // Don't set baseURL here - use default OpenAI endpoint for embeddings
 })
 
 export interface DocumentChunk {
@@ -83,12 +85,12 @@ export class ResearchRAGService {
     const texts = chunks.map(chunk => chunk.text)
     
     try {
-      const response = await openai.embeddings.create({
+      const response = await openaiEmbeddings.embeddings.create({
         model: 'text-embedding-ada-002',
         input: texts
       })
 
-      return response.data.map((embedding, index) => ({
+      return response.data.map((embedding: any, index: number) => ({
         id: chunks[index].id,
         values: embedding.embedding,
         metadata: {
@@ -175,7 +177,7 @@ export class ResearchRAGService {
 
     try {
       // Create embedding for the query
-      const queryEmbedding = await openai.embeddings.create({
+      const queryEmbedding = await openaiEmbeddings.embeddings.create({
         model: 'text-embedding-ada-002',
         input: query
       })
