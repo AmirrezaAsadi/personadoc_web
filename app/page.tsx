@@ -76,7 +76,7 @@ export default function Home() {
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <div className="text-center floating">
             <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-cyan-400 mx-auto underwater-glow"></div>
-            <p className="mt-4 text-cyan-200">Loading PersonaDoc...</p>
+            <p className="mt-4 text-cyan-200">Loading PersonaDock...</p>
           </div>
         </div>
       </div>
@@ -183,7 +183,7 @@ export default function Home() {
               </div>
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-300 via-cyan-300 to-blue-400 bg-clip-text text-transparent">
-                  PersonaDoc
+                  PersonaDock
                 </h1>
                 <p className="text-blue-200/80 flex items-center gap-2">
                   Welcome back, {session?.user?.name}! 
