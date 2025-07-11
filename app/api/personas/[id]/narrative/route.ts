@@ -27,20 +27,8 @@ export async function POST(
       return NextResponse.json({ error: 'Persona not found' }, { status: 404 })
     }
 
-    // Generate journey narrative
-    const prompt = createJourneyPrompt(fullPersona, scenario)
-
-    // Call AI service (using existing chat endpoint for now)
-    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/personas/${id}/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: prompt }),
-    })
-
-    const data = await response.json()
-    
-    // Parse the journey steps from the response
-    const journeySteps = parseJourneyResponse(data.response || '')
+    // Generate journey narrative using OpenAI
+    const journeySteps = await generateJourneyWithOpenAI(fullPersona, scenario)
 
     return NextResponse.json({ journeySteps })
   } catch (error) {
@@ -49,50 +37,175 @@ export async function POST(
   }
 }
 
-function createJourneyPrompt(persona: any, scenario: any) {
+async function generateJourneyWithOpenAI(persona: any, scenario: any) {
+  try {
+    const prompt = createEnhancedJourneyPrompt(persona, scenario)
+    
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert UX researcher creating detailed customer journey maps. Generate structured, realistic journey steps with clear emotions and decision points.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000,
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`)
+    }
+
+    const data = await response.json()
+    const aiResponse = data.choices[0]?.message?.content || ''
+    
+    // Try to parse the structured response
+    let journeySteps = parseJourneyResponse(aiResponse)
+    
+    // If parsing fails, generate fallback steps
+    if (journeySteps.length === 0) {
+      journeySteps = generateFallbackJourney(persona, scenario)
+    }
+
+    return journeySteps
+  } catch (error) {
+    console.error('OpenAI error:', error)
+    // Return fallback journey on error
+    return generateFallbackJourney(persona, scenario)
+  }
+}
+
+function createEnhancedJourneyPrompt(persona: any, scenario: any) {
   const behaviorScores = persona.metadata?.personality || {}
   
-  return `You are ${persona.name}, a ${persona.age}-year-old ${persona.occupation} with these characteristics:
+  return `Create a detailed customer journey map for ${persona.name} in this scenario:
 
-PERSONALITY: ${persona.personalityTraits?.join(', ') || 'Not specified'}
-INTERESTS: ${persona.interests?.join(', ') || 'Not specified'}
-BEHAVIORAL TRAITS:
+PERSONA DETAILS:
+- Name: ${persona.name}
+- Age: ${persona.age}
+- Occupation: ${persona.occupation}
+- Background: ${persona.introduction}
+- Personality: ${persona.personalityTraits?.join(', ') || 'Not specified'}
+- Interests: ${persona.interests?.join(', ') || 'Not specified'}
+
+BEHAVIORAL SCORES:
 - Tech Savvy: ${behaviorScores.techSavvy || 5}/10
-- Socialness: ${behaviorScores.socialness || 5}/10
-- Creativity: ${behaviorScores.creativity || 5}/10
-- Organization: ${behaviorScores.organization || 5}/10
+- Social: ${behaviorScores.socialness || 5}/10
+- Creative: ${behaviorScores.creativity || 5}/10
+- Organized: ${behaviorScores.organization || 5}/10
 - Risk Taking: ${behaviorScores.riskTaking || 5}/10
-- Adaptability: ${behaviorScores.adaptability || 5}/10
+- Adaptable: ${behaviorScores.adaptability || 5}/10
 
-BACKGROUND: ${persona.introduction}
+SCENARIO:
+- Context: ${scenario.where}
+- Method: ${scenario.how}
+- Companions: ${scenario.withWho}
+- Timing: ${scenario.when}
+- Goal: ${scenario.why}
 
-SCENARIO: You are experiencing this journey:
-- WHERE: ${scenario.where}
-- HOW: ${scenario.how}
-- WITH WHO: ${scenario.withWho}
-- WHEN: ${scenario.when}
-- WHY: ${scenario.why}
+Generate a journey map with 4-6 realistic steps that show how ${persona.name} would experience this scenario. Consider their personality traits and behavioral scores.
 
-Create a detailed journey map with 4-6 steps showing how you would experience this scenario. For each step, include:
-1. What happens
-2. Your emotional state (use emojis: 😊 happy, 😐 neutral, 😟 concerned, 😤 frustrated, 😡 angry, 🤔 confused, 😍 delighted)
-3. Key decision points
-4. Your internal thoughts
+For each step, provide:
+1. A clear step title
+2. What specifically happens
+3. An appropriate emotion emoji (😊😐😟😤😡🤔😍)
+4. Key decision points they face
+5. Their internal thoughts
 
-Format your response as:
-STEP 1: [Title]
-DESCRIPTION: [What happens in this step]
-EMOTION: [Emoji representing your emotional state]
-DECISIONS: [Key decisions you face, separated by |]
-THOUGHTS: [Your internal thoughts and reasoning]
+Format each step exactly like this:
 
-STEP 2: [Title]
-DESCRIPTION: [What happens in this step]
-EMOTION: [Emoji representing your emotional state]
-DECISIONS: [Key decisions you face, separated by |]
-THOUGHTS: [Your internal thoughts and reasoning]
+STEP 1: [Clear step title]
+DESCRIPTION: [Detailed description of what happens]
+EMOTION: [Single emoji]
+DECISIONS: [Decision 1|Decision 2|Decision 3]
+THOUGHTS: [Their internal monologue and reasoning]
 
-Continue for all steps...`
+STEP 2: [Clear step title]
+DESCRIPTION: [Detailed description of what happens]
+EMOTION: [Single emoji]
+DECISIONS: [Decision 1|Decision 2|Decision 3]
+THOUGHTS: [Their internal monologue and reasoning]
+
+Continue for all steps. Make sure each step flows logically to the next and reflects ${persona.name}'s unique perspective.`
+}
+
+function generateFallbackJourney(persona: any, scenario: any) {
+  const steps = [
+    {
+      id: 'step-1',
+      title: `${persona.name} Starts the Journey`,
+      description: `${persona.name} begins their experience with ${scenario.why} at ${scenario.where}. They ${scenario.how} ${scenario.withWho !== 'Alone' ? `with ${scenario.withWho}` : 'by themselves'}.`,
+      emotion: '🤔',
+      decisionPoints: [
+        'Choose the best approach',
+        'Consider available options',
+        'Plan the next steps'
+      ],
+      personaThoughts: `I need to ${scenario.why}. Let me think about the best way to approach this given my current situation.`
+    },
+    {
+      id: 'step-2',
+      title: 'Initial Exploration',
+      description: `${persona.name} explores the available options and starts to understand what's involved in achieving their goal.`,
+      emotion: '😐',
+      decisionPoints: [
+        'Evaluate different choices',
+        'Compare options',
+        'Seek more information'
+      ],
+      personaThoughts: 'There are several ways I could do this. I need to weigh the pros and cons carefully.'
+    },
+    {
+      id: 'step-3',
+      title: 'Decision Making',
+      description: `Based on their personality and preferences, ${persona.name} makes key decisions about how to proceed.`,
+      emotion: '😊',
+      decisionPoints: [
+        'Choose the preferred method',
+        'Commit to a course of action',
+        'Prepare for implementation'
+      ],
+      personaThoughts: 'This feels like the right choice for me. It aligns with my values and capabilities.'
+    },
+    {
+      id: 'step-4',
+      title: 'Taking Action',
+      description: `${persona.name} implements their chosen approach, drawing on their experience and skills.`,
+      emotion: '😊',
+      decisionPoints: [
+        'Execute the plan',
+        'Monitor progress',
+        'Adjust if needed'
+      ],
+      personaThoughts: 'I\'m making good progress. This approach is working well for my situation.'
+    },
+    {
+      id: 'step-5',
+      title: 'Completion and Reflection',
+      description: `${persona.name} completes their journey and reflects on the experience, considering what they learned.`,
+      emotion: '😍',
+      decisionPoints: [
+        'Evaluate the outcome',
+        'Document lessons learned',
+        'Plan for future similar situations'
+      ],
+      personaThoughts: 'That went well! I\'m satisfied with how I handled this and what I accomplished.'
+    }
+  ]
+
+  return steps
 }
 
 function parseJourneyResponse(response: string) {
