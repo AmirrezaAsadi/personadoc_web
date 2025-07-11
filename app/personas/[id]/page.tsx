@@ -208,11 +208,11 @@ export default function PersonaDetailPage() {
             <CardContent className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <h3 className="font-semibold text-cyan-100 mb-2">Background</h3>
+                  <h3 className="font-semibold text-cyan-400 mb-2">Background</h3>
                   <p className="text-sm text-cyan-200">{persona.introduction}</p>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-cyan-100 mb-2">Personality Traits</h3>
+                  <h3 className="font-semibold text-cyan-400 mb-2">Personality Traits</h3>
                   <div className="flex flex-wrap gap-1">
                     {persona.personalityTraits?.map((trait, index) => (
                       <span key={index} className="px-2 py-1 bg-cyan-600/50 text-cyan-100 text-xs rounded border border-cyan-400/30">
@@ -222,7 +222,7 @@ export default function PersonaDetailPage() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-cyan-100 mb-2">Interests</h3>
+                  <h3 className="font-semibold text-cyan-400 mb-2">Interests</h3>
                   <div className="flex flex-wrap gap-1">
                     {persona.interests?.map((interest, index) => (
                       <span key={index} className="px-2 py-1 bg-emerald-600/50 text-emerald-100 text-xs rounded border border-emerald-400/30">
