@@ -236,7 +236,7 @@ export default function PersonaDetailPage() {
               {/* Behavioral Scores */}
               {persona.metadata?.personality && (
                 <div className="mt-6 pt-6 border-t border-cyan-400/30">
-                  <h3 className="font-semibold text-cyan-100 mb-4">Behavioral Profile</h3>
+                  <h3 className="font-semibold text-cyan-400 mb-4">Behavioral Profile</h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                     {[
                       { key: 'techSavvy', label: 'Tech Savvy' },
