@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Users, Heart, Briefcase, Home, Globe, MessageCircle, Plus, Settings, Send, X, Sparkles, Bot } from 'lucide-react'
+import { Users, Heart, Briefcase, Home, Globe, MessageCircle, Plus, Settings, Send, X, Sparkles, Bot, Trash2, Edit } from 'lucide-react'
 
 interface Persona {
   id: string
@@ -55,6 +55,7 @@ export default function SocialCircleTab({ persona }: SocialCircleTabProps) {
   const [chatWithConnection, setChatWithConnection] = useState<string | null>(null)
   const [aiSuggestions, setAiSuggestions] = useState<any[]>([])
   const [loadingSuggestions, setLoadingSuggestions] = useState(false)
+  const [editingConnection, setEditingConnection] = useState<SocialConnection | null>(null)
 
   useEffect(() => {
     loadSocialConnections()
@@ -115,6 +116,103 @@ export default function SocialCircleTab({ persona }: SocialCircleTabProps) {
       })
     } catch (error) {
       console.error('Failed to save connection:', error)
+    }
+  }
+
+  const deleteConnection = async (connectionId: string) => {
+    const connectionToDelete = connections.find(c => c.id === connectionId)
+    if (!connectionToDelete) return
+
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${connectionToDelete.name}" from ${persona.name}'s social circle?`
+    )
+
+    if (!confirmed) return
+
+    try {
+      // Remove from local state first
+      const updatedConnections = connections.filter(c => c.id !== connectionId)
+      setConnections(updatedConnections)
+      
+      // Clear selection if deleting the currently selected connection
+      if (selectedConnection?.id === connectionId) {
+        setSelectedConnection(null)
+      }
+
+      // Delete from API
+      await fetch(`/api/personas/${persona.id}/social-circle`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ connectionId }),
+      })
+
+      console.log(`Connection "${connectionToDelete.name}" deleted successfully`)
+    } catch (error) {
+      console.error('Failed to delete connection:', error)
+      // Revert local state on error
+      loadSocialConnections()
+      alert('Failed to delete connection. Please try again.')
+    }
+  }
+
+  const editConnection = async (connectionId: string, updatedData: Partial<SocialConnection>) => {
+    try {
+      // If this is a new connection (from suggestion), add it instead of updating
+      if (!connections.find(c => c.id === connectionId)) {
+        const newConnection: SocialConnection = {
+          id: Date.now().toString(),
+          name: updatedData.name || '',
+          relationshipType: updatedData.relationshipType || 'friend',
+          connectionStrength: updatedData.connectionStrength || 5,
+          influenceLevel: updatedData.influenceLevel || 5,
+          description: updatedData.description || '',
+          isProtopersona: false
+        }
+        
+        const updatedConnections = [...connections, newConnection]
+        setConnections(updatedConnections)
+        setEditingConnection(null)
+        
+        // Save to API
+        await fetch(`/api/personas/${persona.id}/social-circle`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ connections: updatedConnections }),
+        })
+        
+        console.log('New connection added successfully')
+        return
+      }
+
+      // Update existing connection
+      const updatedConnections = connections.map(c => 
+        c.id === connectionId 
+          ? { ...c, ...updatedData }
+          : c
+      )
+      
+      // Update local state
+      setConnections(updatedConnections)
+      setEditingConnection(null)
+      
+      // Update selected connection if it's the one being edited
+      if (selectedConnection?.id === connectionId) {
+        setSelectedConnection({ ...selectedConnection, ...updatedData })
+      }
+
+      // Save to API
+      await fetch(`/api/personas/${persona.id}/social-circle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ connections: updatedConnections }),
+      })
+
+      console.log('Connection updated successfully')
+    } catch (error) {
+      console.error('Failed to update connection:', error)
+      // Revert local state on error
+      loadSocialConnections()
+      alert('Failed to update connection. Please try again.')
     }
   }
 
@@ -268,12 +366,11 @@ export default function SocialCircleTab({ persona }: SocialCircleTabProps) {
                 return (
                   <div
                     key={connection.id}
-                    className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
+                    className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group"
                     style={{
                       left: `calc(50% + ${x}px)`,
                       top: `calc(50% + ${y}px)`
                     }}
-                    onClick={() => setSelectedConnection(connection)}
                   >
                     {/* Connection Line */}
                     <div
@@ -287,9 +384,36 @@ export default function SocialCircleTab({ persona }: SocialCircleTabProps) {
                     />
                     
                     {/* Node */}
-                    <div className={`w-12 h-12 ${relationshipInfo.color} rounded-full flex items-center justify-center border-2 border-white shadow-md hover:scale-110 transition-transform ${getStrengthColor(connection.connectionStrength)}`}>
+                    <div 
+                      className={`w-12 h-12 ${relationshipInfo.color} rounded-full flex items-center justify-center border-2 border-white shadow-md hover:scale-110 transition-transform ${getStrengthColor(connection.connectionStrength)}`}
+                      onClick={() => setSelectedConnection(connection)}
+                    >
                       <Icon className="w-5 h-5 text-white" />
                     </div>
+
+                    {/* Edit and Delete buttons - appear on hover */}
+                    <button
+                      className="absolute -top-1 -left-1 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-blue-600"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setEditingConnection(connection)
+                      }}
+                      title={`Edit ${connection.name}`}
+                    >
+                      <Edit className="w-3 h-3" />
+                    </button>
+
+                    <button
+                      className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        deleteConnection(connection.id)
+                      }}
+                      title={`Delete ${connection.name}`}
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+
                     <p className="text-center text-xs mt-1 max-w-16 leading-tight">
                       {connection.name}
                     </p>
@@ -387,6 +511,15 @@ export default function SocialCircleTab({ persona }: SocialCircleTabProps) {
                   <MessageCircle className="w-4 h-4 mr-2" />
                   Chat with {selectedConnection.name}
                 </Button>
+
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setEditingConnection(selectedConnection)}
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Connection
+                </Button>
                 
                 {!selectedConnection.isProtopersona ? (
                   <Button 
@@ -403,6 +536,15 @@ export default function SocialCircleTab({ persona }: SocialCircleTabProps) {
                     Protopersona Created
                   </Button>
                 )}
+
+                <Button 
+                  variant="outline" 
+                  className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+                  onClick={() => deleteConnection(selectedConnection.id)}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Connection
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -487,8 +629,7 @@ export default function SocialCircleTab({ persona }: SocialCircleTabProps) {
                   AI Suggestions
                 </div>
                 {aiSuggestions.map((suggestion, index) => (
-                  <div key={index} className="p-3 border border-blue-200 rounded-lg hover:bg-blue-50 cursor-pointer bg-white transition-colors"
-                    onClick={() => addSuggestionAsConnection(suggestion)}>
+                  <div key={index} className="p-3 border border-blue-200 rounded-lg bg-white transition-colors">
                     <div className="font-medium text-sm text-slate-800">{suggestion.name}</div>
                     <div className="text-xs text-slate-600">{suggestion.description}</div>
                     <div className="flex items-center gap-2 mt-2">
@@ -498,6 +639,35 @@ export default function SocialCircleTab({ persona }: SocialCircleTabProps) {
                       <span className="text-xs text-slate-500">
                         Strength: {suggestion.strength}/10 | Influence: {suggestion.influence}/10
                       </span>
+                    </div>
+                    <div className="flex gap-2 mt-3">
+                      <Button 
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-xs py-1 h-7"
+                        onClick={() => addSuggestionAsConnection(suggestion)}
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        Add
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="flex-1 text-xs py-1 h-7"
+                        onClick={() => {
+                          // Convert suggestion to connection format for editing
+                          const connectionToEdit: SocialConnection = {
+                            id: Date.now().toString(),
+                            name: suggestion.name,
+                            relationshipType: suggestion.type,
+                            connectionStrength: suggestion.strength,
+                            influenceLevel: suggestion.influence,
+                            description: suggestion.description,
+                            isProtopersona: false
+                          }
+                          setEditingConnection(connectionToEdit)
+                        }}
+                      >
+                        <Edit className="w-3 h-3 mr-1" />
+                        Customize
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -509,6 +679,15 @@ export default function SocialCircleTab({ persona }: SocialCircleTabProps) {
 
       {/* Add Connection Form Modal */}
       {showAddForm && <AddConnectionForm onAdd={addConnection} onCancel={() => setShowAddForm(false)} />}
+
+      {/* Edit Connection Form Modal */}
+      {editingConnection && (
+        <EditConnectionForm 
+          connection={editingConnection}
+          onSave={(updatedData) => editConnection(editingConnection.id, updatedData)}
+          onCancel={() => setEditingConnection(null)}
+        />
+      )}
 
       {/* Chat Modal */}
       {chatWithConnection && (
@@ -610,6 +789,106 @@ function AddConnectionForm({ onAdd, onCancel }: {
 
           <div className="flex gap-2">
             <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">Add Connection</Button>
+            <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// Edit Connection Form Component
+function EditConnectionForm({ 
+  connection, 
+  onSave, 
+  onCancel 
+}: { 
+  connection: SocialConnection
+  onSave: (data: Partial<SocialConnection>) => void
+  onCancel: () => void 
+}) {
+  const [formData, setFormData] = useState({
+    name: connection.name,
+    relationshipType: connection.relationshipType,
+    connectionStrength: connection.connectionStrength,
+    influenceLevel: connection.influenceLevel,
+    description: connection.description
+  })
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (formData.name.trim()) {
+      onSave(formData)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md border border-slate-200">
+        <h3 className="text-lg font-semibold mb-4 text-slate-800">Edit Connection</h3>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1 text-slate-700">Name</label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Connection name"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1 text-slate-700">Relationship Type</label>
+            <select
+              value={formData.relationshipType}
+              onChange={(e) => setFormData({ ...formData, relationshipType: e.target.value as any })}
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              {RELATIONSHIP_TYPES.map(type => (
+                <option key={type.id} value={type.id}>{type.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1 text-slate-700">Description</label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="How do you know this person?"
+              rows={3}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1 text-slate-700">Connection Strength: {formData.connectionStrength}/10</label>
+            <input
+              type="range"
+              min="1"
+              max="10"
+              value={formData.connectionStrength}
+              onChange={(e) => setFormData({ ...formData, connectionStrength: parseInt(e.target.value) })}
+              className="w-full accent-blue-600"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1 text-slate-700">Influence Level: {formData.influenceLevel}/10</label>
+            <input
+              type="range"
+              min="1"
+              max="10"
+              value={formData.influenceLevel}
+              onChange={(e) => setFormData({ ...formData, influenceLevel: parseInt(e.target.value) })}
+              className="w-full accent-blue-600"
+            />
+          </div>
+
+          <div className="flex gap-2">
+            <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">Save Changes</Button>
             <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
           </div>
         </form>
