@@ -14,21 +14,29 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), 25000) // 25 second timeout
+  const timeoutId = setTimeout(() => controller.abort(), 28000) // 28 second timeout
   
   try {
+    console.log('=== CHAT API START ===')
     // Check authentication
     const session = await getServerSession(authOptions)
     if (!session?.user) {
+      console.log('❌ No session found')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    console.log('✅ Session found:', session.user.email)
 
     const { message, conversationHistory } = await request.json()
     const { id } = await params
     
+    console.log('📩 Message:', message)
+    console.log('🆔 Persona ID:', id)
+    
     // Get user ID (handle both credentials and OAuth providers)
     let userId = (session.user as any).id
     if (!userId && session.user.email) {
+      console.log('🔍 Looking up user by email...')
       const user = await prisma.user.findUnique({
         where: { email: session.user.email },
       })
@@ -36,8 +44,11 @@ export async function POST(
     }
 
     if (!userId) {
+      console.log('❌ User ID not found')
       return NextResponse.json({ error: 'User not found' }, { status: 401 })
     }
+    
+    console.log('✅ User ID:', userId)
     
     const persona = await prisma.persona.findUnique({
       where: { 
@@ -47,14 +58,24 @@ export async function POST(
     })
 
     if (!persona) {
+      console.log('❌ Persona not found for user')
       return NextResponse.json({ error: 'Persona not found' }, { status: 404 })
     }
 
+    console.log('✅ Persona found:', persona.name)
+
     // Parse metadata for enhanced personality info
     const personaWithMetadata = persona as any // Cast to access metadata field
-    const metadata = typeof personaWithMetadata.metadata === 'string' 
-      ? JSON.parse(personaWithMetadata.metadata) 
-      : personaWithMetadata.metadata || {}
+    let metadata: any = {}
+    try {
+      metadata = typeof personaWithMetadata.metadata === 'string' 
+        ? JSON.parse(personaWithMetadata.metadata) 
+        : personaWithMetadata.metadata || {}
+      console.log('✅ Metadata parsed successfully')
+    } catch (error) {
+      console.log('⚠️ Failed to parse metadata:', error)
+      metadata = {}
+    }
 
     // Build conversation messages for context
     const conversationMessages: any[] = []
@@ -130,19 +151,38 @@ REASONING: [Brief explanation of why you responded this way based on your person
       conversationMessages[0].content += researchContext
     }
 
-    console.log('Calling Grok API...')
-    const completion = await grok.chat.completions.create({
-      model: "grok-4-0709",
-      messages: conversationMessages,
-      max_tokens: 500,
-      temperature: 0.8,
-    }, {
-      signal: controller.signal
-    })
+    console.log('🤖 Calling Grok API...')
+    let response: string
+    
+    try {
+      // Create a timeout specifically for Grok API
+      const grokPromise = grok.chat.completions.create({
+        model: "grok-4-0709",
+        messages: conversationMessages,
+        max_tokens: 300, // Reduced for faster response
+        temperature: 0.8,
+      }, {
+        signal: controller.signal
+      })
+      
+      const grokTimeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Grok API timeout')), 20000) // 20 second timeout for Grok specifically
+      )
+      
+      const completion = await Promise.race([grokPromise, grokTimeoutPromise]) as any
+
+      response = completion.choices[0]?.message?.content || "I'm not sure how to respond to that."
+      console.log('✅ Grok API response received')
+    } catch (grokError) {
+      console.error('❌ Grok API error:', grokError)
+      
+      // Provide a fallback response when Grok fails
+      response = `RESPONSE: Hello! I'm ${persona.name}. I'm having some connectivity issues right now, but I'm here and would love to chat with you. Could you try asking me that again?
+
+REASONING: As ${persona.name}, I want to stay positive and helpful even when experiencing technical difficulties, maintaining my personality while being honest about the issue.`
+    }
 
     clearTimeout(timeoutId)
-    const response = completion.choices[0]?.message?.content || "I'm not sure how to respond to that."
-    console.log('Grok API response received')
 
     // Create interaction record for the authenticated user (async, don't wait)
     prisma.interaction.create({
@@ -152,22 +192,25 @@ REASONING: [Brief explanation of why you responded this way based on your person
         content: message,
         response: response,
       },
-    }).catch(error => console.error('Failed to save interaction:', error))
+    }).catch(error => console.error('⚠️ Failed to save interaction:', error))
 
+    console.log('=== CHAT API SUCCESS ===')
     return NextResponse.json({ response })
   } catch (error) {
     clearTimeout(timeoutId)
-    console.error('Chat error:', error)
+    console.error('❌ Chat error:', error)
     
     // Return different error messages based on the error type
-    if (error instanceof Error && error.name === 'AbortError') {
+    if (error instanceof Error && (error.name === 'AbortError' || error.message.includes('aborted'))) {
+      console.log('⏰ Request timed out')
       return NextResponse.json({ 
-        error: 'Request timed out. Please try again with a shorter message.' 
+        error: 'The AI is taking longer than usual to respond. Please try again with a shorter message or switch to Simple mode.' 
       }, { status: 408 })
     }
     
+    console.log('💥 General error occurred')
     return NextResponse.json({ 
-      error: 'I apologize, but I encountered an error while processing your message. Please try again.' 
+      error: 'I apologize, but I encountered an error while processing your message. Please try again or switch to Simple mode.' 
     }, { status: 500 })
   }
 }
