@@ -38,17 +38,29 @@ export async function POST(
 }
 
 async function generateJourneyWithOpenAI(persona: any, scenario: any) {
+  console.log('🤖 Starting AI Journey Generation...')
+  console.log('📝 Persona:', persona.name)
+  console.log('🎯 Scenario:', scenario.emoji, scenario.why)
+  console.log('🔑 OpenAI Key available:', !!process.env.OPENAI_API_KEY)
+  
   try {
+    if (!process.env.OPENAI_API_KEY) {
+      console.log('❌ No OpenAI API key found, using fallback')
+      return generateFallbackJourney(persona, scenario)
+    }
+
     const prompt = createEnhancedJourneyPrompt(persona, scenario)
+    console.log('📋 Generated prompt length:', prompt.length)
     
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    console.log('🚀 Calling Grok API...')
+    const response = await fetch('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'grok-3',
         messages: [
           {
             role: 'system',
@@ -64,24 +76,35 @@ async function generateJourneyWithOpenAI(persona: any, scenario: any) {
       }),
     })
 
+    console.log('📡 Grok API Response status:', response.status)
+
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`)
+      const errorText = await response.text()
+      console.log('❌ Grok API error:', response.status, errorText)
+      throw new Error(`Grok API error: ${response.status} - ${errorText}`)
     }
 
     const data = await response.json()
     const aiResponse = data.choices[0]?.message?.content || ''
+    console.log('✅ AI Response received, length:', aiResponse.length)
+    console.log('🔍 AI Response preview:', aiResponse.substring(0, 200) + '...')
     
     // Try to parse the structured response
     let journeySteps = parseJourneyResponse(aiResponse)
+    console.log('📊 Parsed steps count:', journeySteps.length)
     
     // If parsing fails, generate fallback steps
     if (journeySteps.length === 0) {
+      console.log('⚠️ Parsing failed, using fallback')
       journeySteps = generateFallbackJourney(persona, scenario)
+    } else {
+      console.log('🎉 Successfully generated AI journey with', journeySteps.length, 'steps')
     }
 
     return journeySteps
   } catch (error) {
-    console.error('OpenAI error:', error)
+    console.error('❌ Grok API error:', error)
+    console.log('🔄 Falling back to generated journey')
     // Return fallback journey on error
     return generateFallbackJourney(persona, scenario)
   }
