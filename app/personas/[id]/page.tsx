@@ -5,12 +5,13 @@ import { useParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { MessageCircle, Share2, Users, Map, User, ArrowLeft } from 'lucide-react'
+import { MessageCircle, Share2, Users, Map, User, ArrowLeft, Database } from 'lucide-react'
 import Link from 'next/link'
 import InterviewTab from '@/components/persona-tabs/InterviewTab'
 import SocialPostsTab from '@/components/persona-tabs/SocialPostsTab'
 import SocialCircleTab from '@/components/persona-tabs/SocialCircleTab'
 import NarrativeTab from '@/components/persona-tabs/NarrativeTab'
+import { KnowledgeManagementTab } from '@/components/persona-tabs/KnowledgeManagementTab'
 
 interface Persona {
   id: string
@@ -62,7 +63,8 @@ const TABS = [
   { id: 'interview', label: 'Interview', icon: MessageCircle, description: 'Enhanced chat with conversation starters' },
   { id: 'social', label: 'Social Posts', icon: Share2, description: 'Generate social media content' },
   { id: 'circle', label: 'Social Circle', icon: Users, description: 'Visualize persona connections' },
-  { id: 'narrative', label: 'Journey Map', icon: Map, description: 'Create scenario narratives' }
+  { id: 'narrative', label: 'Journey Map', icon: Map, description: 'Create scenario narratives' },
+  { id: 'knowledge', label: 'Knowledge Management', icon: Database, description: 'Research data, versioning, timeline & export' }
 ]
 
 export default function PersonaDetailPage() {
@@ -151,6 +153,8 @@ export default function PersonaDetailPage() {
         return <SocialCircleTab persona={persona} />
       case 'narrative':
         return <NarrativeTab persona={persona} />
+      case 'knowledge':
+        return <KnowledgeManagementTab personaId={personaId} personaName={persona?.name || 'Unknown'} />
       default:
         return <InterviewTab persona={persona} />
     }
@@ -174,7 +178,7 @@ export default function PersonaDetailPage() {
               <Button 
                 variant="outline" 
                 size="sm"
-                className="bg-cyan-900/50 hover:bg-cyan-800/50 text-cyan-100 border-cyan-400/50 underwater-glow backdrop-blur-sm"
+                className="bg-cyan-900/50 hover:bg-cyan-800/50 text-cyan-400/50 border-cyan-400/50 underwater-glow backdrop-blur-sm"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back
