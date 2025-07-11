@@ -212,7 +212,7 @@ export default function Home() {
               <Button 
                 onClick={() => signOut()} 
                 variant="outline" 
-                className="border-cyan-500/50 text-cyan-200 hover:bg-cyan-900/30 ripple underwater-glow flex items-center gap-2"
+                className="border-cyan-500/50 text-red-400 hover:bg-cyan-900/30 ripple underwater-glow flex items-center gap-2"
               >
                 <LogOut className="w-4 h-4" />
                 Sign Out

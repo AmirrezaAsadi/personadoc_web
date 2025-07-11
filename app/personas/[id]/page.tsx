@@ -5,13 +5,26 @@ import { useParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { MessageCircle, Share2, Users, Map, User, ArrowLeft, Database } from 'lucide-react'
+import { MessageCircle, Share2, Users, Map, User, ArrowLeft, Database, Camera, Clock, ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 import InterviewTab from '@/components/persona-tabs/InterviewTab'
 import SocialPostsTab from '@/components/persona-tabs/SocialPostsTab'
 import SocialCircleTab from '@/components/persona-tabs/SocialCircleTab'
 import NarrativeTab from '@/components/persona-tabs/NarrativeTab'
 import { KnowledgeManagementTab } from '@/components/persona-tabs/KnowledgeManagementTab-Enhanced'
+import MediaTab from '@/components/persona-tabs/MediaTab'
+import { GlobalTimeline } from '@/components/GlobalTimeline'
+
+interface Version {
+  id: string
+  version: string
+  name: string
+  isActive: boolean
+  isDraft: boolean
+  createdAt: string
+  notes?: string
+  metadata?: any
+}
 
 interface Persona {
   id: string
@@ -64,6 +77,7 @@ const TABS = [
   { id: 'social', label: 'Social Posts', icon: Share2, description: 'Generate social media content' },
   { id: 'circle', label: 'Social Circle', icon: Users, description: 'Visualize persona connections' },
   { id: 'narrative', label: 'Journey Map', icon: Map, description: 'Create scenario narratives' },
+  { id: 'media', label: 'Media Gallery', icon: Camera, description: 'Images, videos and social media content' },
   { id: 'knowledge', label: 'Knowledge Management', icon: Database, description: 'Research data, versioning, timeline & export' }
 ]
 
@@ -73,10 +87,16 @@ export default function PersonaDetailPage() {
   const [persona, setPersona] = useState<Persona | null>(null)
   const [activeTab, setActiveTab] = useState('interview')
   const [loading, setLoading] = useState(true)
+  
+  // Global timeline state
+  const [versions, setVersions] = useState<Version[]>([])
+  const [currentVersion, setCurrentVersion] = useState<Version | null>(null)
+  const [showTimeline, setShowTimeline] = useState(true)
 
   useEffect(() => {
     if (params.id && session) {
       loadPersona()
+      fetchVersions()
     }
   }, [params.id, session])
 
@@ -89,6 +109,43 @@ export default function PersonaDetailPage() {
       }
     } catch (error) {
       console.error('Failed to load persona:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchVersions = async () => {
+    try {
+      const response = await fetch(`/api/personas/${params.id}/versions`)
+      if (response.ok) {
+        const data = await response.json()
+        setVersions(data.versions || [])
+        const active = data.versions?.find((v: Version) => v.isActive)
+        setCurrentVersion(active || null)
+      }
+    } catch (error) {
+      console.error('Failed to fetch versions:', error)
+    }
+  }
+
+  const switchToVersion = async (versionId: string) => {
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/personas/${params.id}/versions`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          versionId,
+          action: 'activate'
+        })
+      })
+      
+      if (response.ok) {
+        await fetchVersions()
+        await loadPersona() // Reload persona data
+      }
+    } catch (error) {
+      console.error('Failed to switch version:', error)
     } finally {
       setLoading(false)
     }
@@ -153,8 +210,10 @@ export default function PersonaDetailPage() {
         return <SocialCircleTab persona={persona} />
       case 'narrative':
         return <NarrativeTab persona={persona} />
+      case 'media':
+        return <MediaTab personaId={personaId} personaName={persona?.name || 'Unknown'} />
       case 'knowledge':
-        return <KnowledgeManagementTab personaId={personaId} personaName={persona?.name || 'Unknown'} />
+        return <KnowledgeManagementTab personaId={personaId} personaName={persona?.name || 'Unknown'} globalTimelineVisible={showTimeline} />
       default:
         return <InterviewTab persona={persona} />
     }
@@ -303,11 +362,24 @@ export default function PersonaDetailPage() {
 
         {/* Tab Content */}
         <div className="min-h-[600px]">
-          <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-6 underwater-glow border border-cyan-200/30">
+          <div className={`bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-6 underwater-glow border border-cyan-200/30 ${showTimeline ? 'mb-32' : ''}`}>
             {renderTabContent()}
           </div>
         </div>
       </div>
+
+      {/* Global Timeline */}
+      <GlobalTimeline
+        versions={versions}
+        currentVersion={currentVersion}
+        showTimeline={showTimeline}
+        onToggleTimeline={() => setShowTimeline(!showTimeline)}
+        onSwitchVersion={switchToVersion}
+        onCreateVersion={() => {
+          // TODO: Implement create version functionality
+          console.log('Create new version')
+        }}
+      />
     </div>
   )
 }
