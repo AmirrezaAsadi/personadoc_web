@@ -42,3 +42,31 @@ export async function GET(
     return NextResponse.json({ error: 'Failed to load conversations' }, { status: 500 })
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const session = await getServerSession(authOptions)
+    
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Delete all interactions for this persona
+    const deletedInteractions = await prisma.interaction.deleteMany({
+      where: { personaId: id }
+    })
+
+    return NextResponse.json({ 
+      success: true, 
+      message: `Deleted ${deletedInteractions.count} conversation(s)`,
+      deletedCount: deletedInteractions.count 
+    })
+  } catch (error) {
+    console.error('Error deleting conversations:', error)
+    return NextResponse.json({ error: 'Failed to delete conversations' }, { status: 500 })
+  }
+}

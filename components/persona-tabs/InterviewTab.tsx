@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { MessageCircle, Send, Lightbulb, Brain, History, Search } from 'lucide-react'
+import { MessageCircle, Send, Lightbulb, Brain, History, Search, Trash2 } from 'lucide-react'
 
 interface Persona {
   id: string
@@ -48,6 +48,27 @@ export default function InterviewTab({ persona }: InterviewTabProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [showReasoning, setShowReasoning] = useState(false)
   const [useSimpleMode, setUseSimpleMode] = useState(false)
+
+  // Load conversation history on component mount
+  useEffect(() => {
+    const loadConversationHistory = async () => {
+      try {
+        const response = await fetch(`/api/personas/${persona.id}/conversations`)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.messages) {
+            setMessages(data.messages)
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load conversation history:', error)
+      }
+    }
+
+    if (persona.id) {
+      loadConversationHistory()
+    }
+  }, [persona.id])
 
   useEffect(() => {
     // Load conversation history
@@ -149,6 +170,32 @@ export default function InterviewTab({ persona }: InterviewTabProps) {
     searchTerm === '' || 
     msg.content.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  const clearChatHistory = async () => {
+    if (window.confirm('Are you sure you want to permanently delete all chat history? This action cannot be undone.')) {
+      try {
+        // Clear from frontend immediately
+        setMessages([])
+        
+        // Also clear from server/database
+        const response = await fetch(`/api/personas/${persona.id}/conversations`, { 
+          method: 'DELETE' 
+        })
+        
+        if (response.ok) {
+          const result = await response.json()
+          console.log(`Successfully deleted ${result.deletedCount} conversation(s)`)
+          // You could show a toast notification here if you have a toast system
+        } else {
+          console.error('Failed to delete conversations from server')
+          alert('Chat history cleared locally, but failed to delete from server.')
+        }
+      } catch (error) {
+        console.error('Error deleting chat history:', error)
+        alert('Chat history cleared locally, but there was an error contacting the server.')
+      }
+    }
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -263,6 +310,16 @@ export default function InterviewTab({ persona }: InterviewTabProps) {
                 </div>
                 <Button variant="outline" size="sm" className="border-slate-200">
                   <History className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+                  onClick={clearChatHistory}
+                  disabled={messages.length === 0}
+                  title="Permanently delete all chat history"
+                >
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
             </div>
