@@ -225,36 +225,47 @@ export class ResearchRAGService {
     if (!this.index) await this.initialize()
 
     try {
-      console.log(`Searching for persona ${personaId} with query: "${query}"`)
+      console.log(`[${new Date().toISOString()}] Searching for persona ${personaId} with query: "${query}"`)
       
-      // Create embedding for the query
-      const queryEmbedding = await openaiEmbeddings.embeddings.create({
-        model: 'text-embedding-ada-002',
-        input: query
-      })
+      // Create embedding for the query with timeout
+      console.log(`[${new Date().toISOString()}] Creating query embedding...`)
+      const queryEmbedding = await Promise.race([
+        openaiEmbeddings.embeddings.create({
+          model: 'text-embedding-ada-002',
+          input: query
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Embedding creation timeout')), 10000)
+        )
+      ]) as any
 
-      console.log('Query embedding created successfully')
+      console.log(`[${new Date().toISOString()}] Query embedding created successfully`)
 
-      // Search Pinecone
-      const searchResults = await this.index.query({
-        vector: queryEmbedding.data[0].embedding,
-        filter: { personaId },
-        topK,
-        includeMetadata: true
-      })
+      // Search Pinecone with timeout
+      console.log(`[${new Date().toISOString()}] Querying Pinecone index...`)
+      const searchResults = await Promise.race([
+        this.index.query({
+          vector: queryEmbedding.data[0].embedding,
+          filter: { personaId },
+          topK,
+          includeMetadata: true
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Pinecone search timeout')), 8000)
+        )
+      ]) as any
 
-      console.log(`Found ${searchResults.matches?.length || 0} matches`)
-      console.log('Search results:', JSON.stringify(searchResults, null, 2))
+      console.log(`[${new Date().toISOString()}] Found ${searchResults.matches?.length || 0} matches`)
 
       // Extract relevant text chunks
       const relevantTexts = searchResults.matches
         ?.filter((match: any) => match.score > 0.7) // Filter by relevance threshold
         .map((match: any) => match.metadata.text) || []
       
-      console.log(`Returning ${relevantTexts.length} relevant texts`)
+      console.log(`[${new Date().toISOString()}] Returning ${relevantTexts.length} relevant texts`)
       return relevantTexts
     } catch (error) {
-      console.error('Error searching research content:', error)
+      console.error(`[${new Date().toISOString()}] Error searching research content:`, error)
       return []
     }
   }

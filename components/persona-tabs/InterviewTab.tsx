@@ -47,6 +47,7 @@ export default function InterviewTab({ persona }: InterviewTabProps) {
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [showReasoning, setShowReasoning] = useState(false)
+  const [useSimpleMode, setUseSimpleMode] = useState(false)
 
   useEffect(() => {
     // Load conversation history
@@ -80,8 +81,15 @@ export default function InterviewTab({ persona }: InterviewTabProps) {
     setLoading(true)
 
     try {
+      // Choose endpoint based on mode
+      const endpoint = useSimpleMode 
+        ? `/api/personas/${persona.id}/chat-simple`
+        : `/api/personas/${persona.id}/chat`
+        
+      console.log(`Using ${useSimpleMode ? 'simple' : 'enhanced'} chat mode`)
+      
       // Send only the user message, not the full prompt
-      const response = await fetch(`/api/personas/${persona.id}/chat`, {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -90,7 +98,15 @@ export default function InterviewTab({ persona }: InterviewTabProps) {
         }),
       })
 
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
       const data = await response.json()
+      
+      if (data.error) {
+        throw new Error(data.error)
+      }
       
       // Parse response and reasoning if present
       const responseText = data.response || ''
@@ -114,6 +130,16 @@ export default function InterviewTab({ persona }: InterviewTabProps) {
       setMessages(prev => [...prev, aiMessage])
     } catch (error) {
       console.error('Failed to send message:', error)
+      
+      // Add error message to chat
+      const errorMessage: Message = {
+        type: 'persona',
+        content: error instanceof Error 
+          ? error.message 
+          : 'Sorry, I encountered an error while processing your message. Please try again.',
+        timestamp: new Date().toLocaleTimeString()
+      }
+      setMessages(prev => [...prev, errorMessage])
     } finally {
       setLoading(false)
     }
@@ -197,6 +223,20 @@ export default function InterviewTab({ persona }: InterviewTabProps) {
                 <Brain className="h-3 w-3" />
                 {showReasoning ? 'Hide' : 'Show'} Reasoning
               </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setUseSimpleMode(!useSimpleMode)}
+                className={`flex items-center gap-1 border-slate-200 ${
+                  useSimpleMode 
+                    ? 'bg-green-50 hover:bg-green-100 text-green-700' 
+                    : 'bg-slate-50 hover:bg-blue-50 text-slate-700'
+                }`}
+              >
+                {useSimpleMode ? '⚡' : '🧠'}
+                {useSimpleMode ? 'Simple' : 'Enhanced'}
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -273,11 +313,14 @@ export default function InterviewTab({ persona }: InterviewTabProps) {
               
               {loading && (
                 <div className="flex justify-start">
-                  <div className="bg-white border rounded-lg px-4 py-3 shadow-sm">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="bg-white border rounded-lg px-4 py-3 shadow-sm max-w-xs">
+                    <div className="flex items-center space-x-2">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      </div>
+                      <span className="text-xs text-gray-500">{persona.name} is thinking...</span>
                     </div>
                   </div>
                 </div>

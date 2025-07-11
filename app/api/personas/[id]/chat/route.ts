@@ -5,10 +5,17 @@ import { prisma } from '@/lib/prisma'
 import { grok } from '@/lib/grok'
 import { researchRAG } from '@/lib/research-rag'
 
+// Configure runtime and max duration
+export const runtime = 'nodejs'
+export const maxDuration = 300 // 5 minutes for Vercel Pro
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 25000) // 25 second timeout
+  
   try {
     // Check authentication
     const session = await getServerSession(authOptions)
@@ -53,7 +60,7 @@ export async function POST(
     const conversationMessages: any[] = []
     
     // System message with persona context
-    const systemPrompt = `You are ${persona.name}, a ${metadata.demographics?.age || persona.age || 'adult'}-year-old ${metadata.demographics?.occupation || persona.occupation} living in ${metadata.demographics?.location || persona.location}.
+    const baseSystemPrompt = `You are ${persona.name}, a ${metadata.demographics?.age || persona.age || 'adult'}-year-old ${metadata.demographics?.occupation || persona.occupation} living in ${metadata.demographics?.location || persona.location}.
 
 PERSONALITY TRAITS: ${metadata.personality?.traits?.join(', ') || (Array.isArray(persona.personalityTraits) ? persona.personalityTraits.join(', ') : 'Friendly and helpful')}
 INTERESTS: ${metadata.personality?.interests?.join(', ') || (Array.isArray(persona.interests) ? persona.interests.join(', ') : 'Various topics')}
@@ -64,7 +71,7 @@ BEHAVIORAL SCORES:
 
 BACKGROUND: ${persona.introduction || 'I enjoy conversations and helping people'}
 
-Respond naturally as ${persona.name}, incorporating your personality and background. Keep responses conversational and authentic. Provide a brief reasoning for your response if appropriate.
+Respond naturally as ${persona.name}, incorporating your personality and background. Keep responses conversational and authentic. Be concise but helpful.
 
 Format your response as:
 RESPONSE: [Your natural response as ${persona.name}]
@@ -72,7 +79,7 @@ REASONING: [Brief explanation of why you responded this way based on your person
 
     conversationMessages.push({
       role: "system" as const,
-      content: systemPrompt
+      content: baseSystemPrompt
     })
 
     // Add conversation history for context (last 10 messages)
@@ -99,15 +106,23 @@ REASONING: [Brief explanation of why you responded this way based on your person
       content: message
     })
 
-    // Search relevant research content using RAG
+    // Search relevant research content using RAG with timeout
     let researchContext = ''
     try {
-      const relevantContent = await researchRAG.searchResearchContent(id, message, 3)
+      console.log('Starting RAG search...')
+      const ragPromise = researchRAG.searchResearchContent(id, message, 3)
+      const timeoutPromise = new Promise<string[]>((_, reject) => 
+        setTimeout(() => reject(new Error('RAG search timeout')), 15000)
+      )
+      
+      const relevantContent = await Promise.race([ragPromise, timeoutPromise])
       if (relevantContent.length > 0) {
         researchContext = `\n\nRELEVANT RESEARCH CONTEXT:\n${relevantContent.join('\n\n')}`
+        console.log('RAG search completed successfully')
       }
     } catch (error) {
-      console.error('Error searching research content:', error)
+      console.error('Error searching research content (continuing without RAG):', error)
+      // Continue without RAG context rather than failing
     }
 
     // Add research context to the system message if found
@@ -115,28 +130,44 @@ REASONING: [Brief explanation of why you responded this way based on your person
       conversationMessages[0].content += researchContext
     }
 
+    console.log('Calling Grok API...')
     const completion = await grok.chat.completions.create({
       model: "grok-4-0709",
       messages: conversationMessages,
-      max_tokens: 300,
+      max_tokens: 500,
       temperature: 0.8,
+    }, {
+      signal: controller.signal
     })
 
+    clearTimeout(timeoutId)
     const response = completion.choices[0]?.message?.content || "I'm not sure how to respond to that."
+    console.log('Grok API response received')
 
-    // Create interaction record for the authenticated user
-    await prisma.interaction.create({
+    // Create interaction record for the authenticated user (async, don't wait)
+    prisma.interaction.create({
       data: {
         personaId: id,
         userId: userId,
         content: message,
         response: response,
       },
-    })
+    }).catch(error => console.error('Failed to save interaction:', error))
 
     return NextResponse.json({ response })
   } catch (error) {
+    clearTimeout(timeoutId)
     console.error('Chat error:', error)
-    return NextResponse.json({ error: 'Failed to process chat' }, { status: 500 })
+    
+    // Return different error messages based on the error type
+    if (error instanceof Error && error.name === 'AbortError') {
+      return NextResponse.json({ 
+        error: 'Request timed out. Please try again with a shorter message.' 
+      }, { status: 408 })
+    }
+    
+    return NextResponse.json({ 
+      error: 'I apologize, but I encountered an error while processing your message. Please try again.' 
+    }, { status: 500 })
   }
 }
