@@ -7,9 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Search, Plus, User, LogOut, X, MessageCircle, Users, Eye, Calendar, MapPin, Brain, Heart, Star } from 'lucide-react'
+import { Search, Plus, User, LogOut, X, MessageCircle, Users, Eye, Calendar, MapPin, Brain, Heart, Star, Filter, Globe, Lock, Share, HelpCircle } from 'lucide-react'
 import SignInPage from '@/components/sign-in-page'
 import PersonaWizard from '@/components/persona-wizard'
+import { PersonaTypesGuide } from '@/components/PersonaTypesGuide'
 
 interface Persona {
   id: string
@@ -20,8 +21,14 @@ interface Persona {
   introduction?: string
   personalityTraits?: string[]
   interests?: string[]
-  avatarUrl?: string
+  profileImage?: string
   createdAt?: string
+  isOwner?: boolean
+  accessType?: 'owner' | 'public' | 'shared'
+  creator?: {
+    name: string
+    email: string
+  }
   metadata?: {
     avatar?: {
       name: string
@@ -42,32 +49,23 @@ export default function Home() {
   const [personas, setPersonas] = useState<Persona[]>([])
   const [filteredPersonas, setFilteredPersonas] = useState<Persona[]>([])
   const [searchQuery, setSearchQuery] = useState('')
+  const [filterType, setFilterType] = useState<'all' | 'user' | 'public' | 'shared'>('all')
   const [showWizard, setShowWizard] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [showGuide, setShowGuide] = useState(false)
 
   useEffect(() => {
     if (session) {
-      loadPersonas()
-    }
-  }, [session])
+      // Debounce search to avoid too many API calls
+      const timeoutId = setTimeout(() => {
+        loadPersonas()
+      }, 300) // 300ms delay
 
-  useEffect(() => {
-    if (searchQuery.trim() === '') {
-      setFilteredPersonas(personas)
-    } else {
-      const filtered = personas.filter(persona => 
-        persona.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        persona.occupation?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        persona.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        persona.personalityTraits?.some(trait => 
-          trait.toLowerCase().includes(searchQuery.toLowerCase())
-        ) ||
-        persona.interests?.some(interest => 
-          interest.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-      )
-      setFilteredPersonas(filtered)
+      return () => clearTimeout(timeoutId)
     }
-  }, [searchQuery, personas])
+  }, [session, filterType, searchQuery])
+
+  // Remove the old useEffect for client-side filtering since we're doing it server-side now
 
   // Show loading screen while checking auth
   if (status === 'loading') {
@@ -95,8 +93,19 @@ export default function Home() {
   }
 
   const loadPersonas = async () => {
+    setIsLoading(true)
     try {
-      const response = await fetch('/api/personas')
+      const searchParams = new URLSearchParams({
+        type: filterType,
+        limit: '50'
+      })
+      
+      if (searchQuery.trim()) {
+        searchParams.append('q', searchQuery.trim())
+      }
+      
+      const url = `/api/personas/search?${searchParams.toString()}`
+      const response = await fetch(url)
       if (!response.ok) {
         console.error('Failed to fetch personas:', response.status)
         setPersonas([])
@@ -106,13 +115,18 @@ export default function Home() {
       // Ensure data is an array
       if (Array.isArray(data)) {
         setPersonas(data)
+        setFilteredPersonas(data) // Set filtered personas directly from API
       } else {
         console.error('API returned non-array:', data)
         setPersonas([])
+        setFilteredPersonas([])
       }
     } catch (error) {
       console.error('Failed to load personas:', error)
       setPersonas([])
+      setFilteredPersonas([])
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -195,7 +209,12 @@ export default function Home() {
                   Welcome back, {session?.user?.name}! 
                   <span className="flex items-center gap-1 text-sm bg-blue-900/30 px-3 py-1 rounded-full border border-cyan-500/30 underwater-glow">
                     <Users className="w-3 h-3" />
-                    {personas.length} persona{personas.length !== 1 ? 's' : ''}
+                    {personas.length} persona{personas.length !== 1 ? 's' : ''} 
+                    {filterType !== 'all' && (
+                      <span className="text-cyan-300/70">
+                        ({filterType === 'user' ? 'yours' : filterType})
+                      </span>
+                    )}
                   </span>
                 </p>
               </div>
@@ -225,7 +244,8 @@ export default function Home() {
       {/* Search and Filter Section */}
       <div className="max-w-7xl mx-auto px-6 py-8 relative z-10">
         <div className="mb-8">
-          <div className="relative max-w-2xl mx-auto search-float">
+          {/* Search Bar */}
+          <div className="relative max-w-2xl mx-auto search-float mb-6">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-cyan-300 w-5 h-5" />
             <Input
               value={searchQuery}
@@ -234,10 +254,92 @@ export default function Home() {
               className="pl-12 py-4 text-lg bg-black/30 border-cyan-500/30 text-cyan-100 placeholder-cyan-300/70 focus:border-cyan-400 focus:ring-cyan-400/30 rounded-xl underwater-glow backdrop-blur-sm"
             />
           </div>
+
+          {/* Filter Tabs */}
+          <div className="flex justify-center mb-4">
+            <div className="bg-black/30 border border-cyan-500/30 rounded-xl p-1 backdrop-blur-sm underwater-glow">
+              <div className="flex gap-1">
+                <Button
+                  variant={filterType === 'all' ? 'default' : 'outline'}
+                  onClick={() => setFilterType('all')}
+                  className={`px-4 py-2 text-sm rounded-lg transition-all duration-300 ${
+                    filterType === 'all'
+                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg'
+                      : 'text-cyan-200 hover:text-cyan-100 hover:bg-cyan-900/20 border-cyan-500/30'
+                  }`}
+                >
+                  <Filter className="w-4 h-4 mr-2" />
+                  All Personas
+                </Button>
+                <Button
+                  variant={filterType === 'user' ? 'default' : 'outline'}
+                  onClick={() => setFilterType('user')}
+                  className={`px-4 py-2 text-sm rounded-lg transition-all duration-300 ${
+                    filterType === 'user'
+                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg'
+                      : 'text-cyan-200 hover:text-cyan-100 hover:bg-cyan-900/20 border-cyan-500/30'
+                  }`}
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  My Personas
+                </Button>
+                <Button
+                  variant={filterType === 'public' ? 'default' : 'outline'}
+                  onClick={() => setFilterType('public')}
+                  className={`px-4 py-2 text-sm rounded-lg transition-all duration-300 ${
+                    filterType === 'public'
+                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg'
+                      : 'text-cyan-200 hover:text-cyan-100 hover:bg-cyan-900/20 border-cyan-500/30'
+                  }`}
+                >
+                  <Globe className="w-4 h-4 mr-2" />
+                  Public
+                </Button>
+                <Button
+                  variant={filterType === 'shared' ? 'default' : 'outline'}
+                  onClick={() => setFilterType('shared')}
+                  className={`px-4 py-2 text-sm rounded-lg transition-all duration-300 ${
+                    filterType === 'shared'
+                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg'
+                      : 'text-cyan-200 hover:text-cyan-100 hover:bg-cyan-900/20 border-cyan-500/30'
+                  }`}
+                >
+                  <Share className="w-4 h-4 mr-2" />
+                  Shared with Me
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Filter Description */}
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <p className="text-cyan-300/80 text-sm">
+                {filterType === 'all' && 'Showing all personas you have access to'}
+                {filterType === 'user' && 'Showing personas you created'}
+                {filterType === 'public' && 'Showing publicly shared personas from the community'}
+                {filterType === 'shared' && 'Showing personas that have been privately shared with you'}
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowGuide(true)}
+                className="h-6 px-2 text-xs border-cyan-500/30 text-cyan-300/80 hover:bg-cyan-900/20"
+              >
+                <HelpCircle className="w-3 h-3 mr-1" />
+                Help
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Personas Grid */}
-        {filteredPersonas.length === 0 && personas.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-16 floating">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-cyan-400 mx-auto underwater-glow"></div>
+            <p className="mt-4 text-cyan-200">Loading personas...</p>
+          </div>
+        ) : filteredPersonas.length === 0 && personas.length === 0 ? (
           <div className="text-center py-16 floating">
             <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl underwater-glow ripple">
               <Users className="w-12 h-12 text-white" />
@@ -272,47 +374,78 @@ export default function Home() {
                 }}
               >
                 <CardHeader className="pb-3">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <div className="relative">
-                      <div className="w-16 h-16 bg-gradient-to-r from-blue-400 to-cyan-600 rounded-full flex items-center justify-center shadow-lg underwater-glow">
-                        {persona.avatarUrl || persona.metadata?.avatar?.dataUrl ? (
-                          <img 
-                            src={persona.avatarUrl || persona.metadata?.avatar?.dataUrl} 
-                            alt={persona.name} 
-                            className="w-14 h-14 rounded-full object-cover"
-                          />
-                        ) : (
-                          <User className="w-8 h-8 text-white" />
-                        )}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-3">
+                      <div className="relative">
+                        <div className="w-16 h-16 bg-gradient-to-r from-blue-400 to-cyan-600 rounded-full flex items-center justify-center shadow-lg underwater-glow">
+                          {persona.profileImage || persona.metadata?.avatar?.dataUrl ? (
+                            <img 
+                              src={persona.profileImage || persona.metadata?.avatar?.dataUrl} 
+                              alt={persona.name} 
+                              className="w-14 h-14 rounded-full object-cover"
+                            />
+                          ) : (
+                            <User className="w-8 h-8 text-white" />
+                          )}
+                        </div>
+                        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full border-2 border-gray-900 flex items-center justify-center underwater-glow">
+                          <Eye className="w-3 h-3 text-white" />
+                        </div>
                       </div>
-                      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full border-2 border-gray-900 flex items-center justify-center underwater-glow">
-                        <Eye className="w-3 h-3 text-white" />
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-cyan-400 text-lg font-bold truncate">
+                          {persona.name}
+                        </CardTitle>
+                        <div className="flex items-center gap-2 text-sm text-cyan-800/80">
+                          {persona.age && (
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              {persona.age}
+                            </span>
+                          )}
+                          {persona.location && (
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />
+                              {persona.location}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <CardTitle className="text-cyan-400 text-lg font-bold truncate">
-                        {persona.name}
-                      </CardTitle>
-                      <div className="flex items-center gap-2 text-sm text-cyan-800/80">
-                        {persona.age && (
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            {persona.age}
-                          </span>
-                        )}
-                        {persona.location && (
-                          <span className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />
-                            {persona.location}
-                          </span>
-                        )}
-                      </div>
+                    
+                    {/* Access Type Indicator */}
+                    <div className="flex items-center gap-1">
+                      {persona.accessType === 'owner' && (
+                        <Badge className="bg-blue-900/30 text-blue-200 border-blue-500/30 text-xs">
+                          <User className="w-3 h-3 mr-1" />
+                          Mine
+                        </Badge>
+                      )}
+                      {persona.accessType === 'public' && (
+                        <Badge className="bg-green-900/30 text-green-200 border-green-500/30 text-xs">
+                          <Globe className="w-3 h-3 mr-1" />
+                          Public
+                        </Badge>
+                      )}
+                      {persona.accessType === 'shared' && (
+                        <Badge className="bg-purple-900/30 text-purple-200 border-purple-500/30 text-xs">
+                          <Share className="w-3 h-3 mr-1" />
+                          Shared
+                        </Badge>
+                      )}
                     </div>
                   </div>
                   
                   {persona.occupation && (
                     <div className="text-sm text-cyan-400/90 mb-3 font-medium">
                       {persona.occupation}
+                    </div>
+                  )}
+
+                  {/* Creator info for non-owned personas */}
+                  {!persona.isOwner && persona.creator && (
+                    <div className="text-xs text-cyan-300/70 mb-2">
+                      Created by {persona.creator.name}
                     </div>
                   )}
                 </CardHeader>
@@ -359,6 +492,11 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      {/* Persona Types Guide */}
+      {showGuide && (
+        <PersonaTypesGuide onClose={() => setShowGuide(false)} />
+      )}
 
       {/* Persona Wizard Modal */}
       {showWizard && (

@@ -8,23 +8,20 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  image     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // NextAuth fields
-  emailVerified DateTime?
-  accounts      Account[]
-  sessions      Session[]
-
-  personas       Persona[]
-  interactions   Interaction[]
-  researchData   ResearchData[]
+  id              String           @id @default(cuid())
+  email           String           @unique
+  name            String?
+  image           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  emailVerified   DateTime?
+  accounts        Account[]
+  interactions    Interaction[]
+  personas        Persona[]
   personaVersions PersonaVersion[]
-  timelineEvents TimelineEvent[]
+  researchData    ResearchData[]
+  sessions        Session[]
+  timelineEvents  TimelineEvent[]
 }
 
 model Account {
@@ -33,15 +30,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -63,180 +59,136 @@ model VerificationToken {
 }
 
 model Persona {
-  id          String   @id @default(cuid())
-  name        String
-  age         Int?
-  occupation  String?
-  location    String?
-  introduction String?
-  
+  id                String           @id @default(cuid())
+  name              String
+  age               Int?
+  occupation        String?
+  location          String?
+  introduction      String?
   personalityTraits Json?
-  interests        Json?
-  gadgets          Json?
-  metadata         Json?  // Extended persona data from wizard
-  
-  // Versioning and branching
-  currentVersion String?  // Points to the current active version
-  isTemplate     Boolean @default(false)  // Whether this is a template persona
-  parentId       String? // For persona cloning/branching
-  tags           Json?   // For categorization and search
-  
-  // Export and attachment support
-  profileImage   String? // URL to profile image
-  attachments    Json?   // File attachments metadata
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  createdBy String
-  
-  // Relations
-  creator         User             @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-  interactions    Interaction[]
-  researchData    ResearchData[]
-  versions        PersonaVersion[]
-  timelineEvents  TimelineEvent[]
-  parent          Persona?         @relation("PersonaBranching", fields: [parentId], references: [id])
-  children        Persona[]        @relation("PersonaBranching")
+  interests         Json?
+  gadgets           Json?
+  metadata          Json?
+  currentVersion    String?
+  isTemplate        Boolean          @default(false)
+  parentId          String?
+  tags              Json?
+  profileImage      String?
+  attachments       Json?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  createdBy         String
+  allowComments     Boolean          @default(false)
+  isPublic          Boolean          @default(false)
+  shareCount        Int              @default(0)
+  shareToken        String?          @unique
+  sharedAt          DateTime?
+  interactions      Interaction[]
+  creator           User             @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  parent            Persona?         @relation("PersonaBranching", fields: [parentId], references: [id])
+  children          Persona[]        @relation("PersonaBranching")
+  versions          PersonaVersion[]
+  researchData      ResearchData[]
+  timelineEvents    TimelineEvent[]
 }
 
 model Interaction {
-  id        String   @id @default(cuid())
-  personaId String
-  userId    String
-  content   String
-  response  String
-  
-  // Enhanced interaction tracking
-  sessionId String?  // Group related interactions
-  context   Json?    // Additional context about the interaction
-  sentiment Float?   // Sentiment analysis score (-1 to 1)
-  topics    Json?    // Extracted topics/themes
-  insights  Json?    // Insights generated from this interaction
-  
-  // Research and knowledge integration
-  relatedResearchIds Json? // IDs of related research data
-  generateTimelineEvent Boolean @default(false) // Should this create a timeline event
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                    String          @id @default(cuid())
+  personaId             String
+  userId                String
+  content               String
+  response              String
+  sessionId             String?
+  context               Json?
+  sentiment             Float?
+  topics                Json?
+  insights              Json?
+  relatedResearchIds    Json?
+  generateTimelineEvent Boolean         @default(false)
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  persona               Persona         @relation(fields: [personaId], references: [id], onDelete: Cascade)
+  user                  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  timelineEvents        TimelineEvent[]
 
-  persona         Persona         @relation(fields: [personaId], references: [id], onDelete: Cascade)
-  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  timelineEvents  TimelineEvent[] // Timeline events generated from this interaction
-  
   @@index([personaId, createdAt])
   @@index([sessionId])
 }
 
-// Persona versioning for branching and evolution tracking
 model PersonaVersion {
-  id        String   @id @default(cuid())
-  personaId String
-  version   String   // e.g., "1.0", "1.1", "2.0"
-  name      String
-  
-  // Snapshot of persona data at this version
-  snapshot  Json     // Complete persona state at this version
-  changes   Json?    // Description of changes from previous version
-  
-  // Branching information
-  branchFrom String? // Version ID this branched from
-  branchName String? // Name of the branch (e.g., "development", "experiment")
-  
-  // Status and metadata
-  isActive   Boolean @default(false) // Is this the current active version
-  isDraft    Boolean @default(true)  // Is this a draft or published version
-  notes      String? // Version notes
-  
-  createdAt DateTime @default(now())
-  createdBy String
-  
-  persona Persona @relation(fields: [personaId], references: [id], onDelete: Cascade)
-  creator User    @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-  
+  id         String   @id @default(cuid())
+  personaId  String
+  version    String
+  name       String
+  snapshot   Json
+  changes    Json?
+  branchFrom String?
+  branchName String?
+  isActive   Boolean  @default(false)
+  isDraft    Boolean  @default(true)
+  notes      String?
+  createdAt  DateTime @default(now())
+  createdBy  String
+  creator    User     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  persona    Persona  @relation(fields: [personaId], references: [id], onDelete: Cascade)
+
   @@unique([personaId, version])
 }
 
-// Research data and knowledge management
 model ResearchData {
-  id          String   @id @default(cuid())
-  personaId   String
-  title       String
-  description String?
-  content     String   @db.Text
-  
-  // File and media support
-  fileUrl     String?  // URL to uploaded file
-  fileName    String?  // Original filename
-  fileType    String?  // MIME type
-  fileSize    Int?     // Size in bytes
-  
-  // Categorization and organization
-  category    String   // e.g., "interview", "survey", "observation", "document"
-  tags        Json?    // Array of tags for categorization
-  source      String?  // Source of the research data
-  
-  // Timeline and relevance
-  relevantDate DateTime? // When this data was collected/relevant
-  confidence   Float?    // Confidence level (0-1) in this data
-  verified     Boolean   @default(false) // Has this been verified
-  
-  // Analysis and insights
-  insights     Json?     // Key insights extracted from this data
-  connections  Json?     // Connections to other data points
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  createdBy String
-  
-  persona Persona @relation(fields: [personaId], references: [id], onDelete: Cascade)
-  creator User    @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-  
-  // Timeline events can reference research data
+  id             String          @id @default(cuid())
+  personaId      String
+  title          String
+  description    String?
+  content        String
+  fileUrl        String?
+  fileName       String?
+  fileType       String?
+  fileSize       Int?
+  category       String
+  tags           Json?
+  source         String?
+  relevantDate   DateTime?
+  confidence     Float?
+  verified       Boolean         @default(false)
+  insights       Json?
+  connections    Json?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  createdBy      String
+  creator        User            @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  persona        Persona         @relation(fields: [personaId], references: [id], onDelete: Cascade)
   timelineEvents TimelineEvent[]
-  
+
   @@index([personaId, category])
   @@index([personaId, relevantDate])
 }
 
-// Timeline for persona development and key events
 model TimelineEvent {
-  id          String   @id @default(cuid())
-  personaId   String
-  title       String
-  description String?
-  eventType   String   // e.g., "milestone", "change", "insight", "interaction"
-  
-  // Date and time information
-  eventDate   DateTime
-  endDate     DateTime? // For events with duration
-  isEstimated Boolean   @default(false) // Is the date estimated
-  
-  // Linked data
-  researchDataId String? // Link to research data that triggered this event
-  interactionId  String? // Link to interaction that created this event
-  
-  // Event properties
-  importance  Int      @default(5)     // 1-10 scale
-  category    String?  // Custom categorization
-  tags        Json?    // Tags for filtering
-  metadata    Json?    // Additional event data
-  
-  // Visual representation
-  color       String?  // Color for timeline visualization
-  icon        String?  // Icon identifier
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  createdBy String
-  
-  persona      Persona       @relation(fields: [personaId], references: [id], onDelete: Cascade)
-  creator      User          @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-  researchData ResearchData? @relation(fields: [researchDataId], references: [id])
-  interaction  Interaction?  @relation(fields: [interactionId], references: [id])
-  
+  id             String        @id @default(cuid())
+  personaId      String
+  title          String
+  description    String?
+  eventType      String
+  eventDate      DateTime
+  endDate        DateTime?
+  isEstimated    Boolean       @default(false)
+  researchDataId String?
+  interactionId  String?
+  importance     Int           @default(5)
+  category       String?
+  tags           Json?
+  metadata       Json?
+  color          String?
+  icon           String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  createdBy      String
+  creator        User          @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  interaction    Interaction?  @relation(fields: [interactionId], references: [id])
+  persona        Persona       @relation(fields: [personaId], references: [id], onDelete: Cascade)
+  researchData   ResearchData? @relation(fields: [researchDataId], references: [id])
+
   @@index([personaId, eventDate])
   @@index([personaId, eventType])
 }
-
-// Enhanced interactions with better tracking

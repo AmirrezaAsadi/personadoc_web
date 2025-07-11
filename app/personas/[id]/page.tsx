@@ -14,6 +14,7 @@ import NarrativeTab from '@/components/persona-tabs/NarrativeTab'
 import { KnowledgeManagementTab } from '@/components/persona-tabs/KnowledgeManagementTab-Enhanced'
 import MediaTab from '@/components/persona-tabs/MediaTab'
 import { GlobalTimeline } from '@/components/GlobalTimeline'
+import { PersonaSharing } from '@/components/PersonaSharing'
 
 interface Version {
   id: string
