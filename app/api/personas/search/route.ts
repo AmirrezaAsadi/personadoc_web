@@ -37,19 +37,33 @@ export async function GET(request: NextRequest) {
         createdBy: userId,
       }
     } else if (type === 'public') {
-      // For now, return empty array since sharing not yet fully implemented
       whereConditions = {
-        createdBy: 'never_match',
+        isPublic: true,
       }
     } else if (type === 'shared') {
-      // For now, return empty array since sharing not yet fully implemented
+      // Find personas shared with this user via share links
+      // For now, we'll include personas that have shareToken (meaning they can be shared)
+      // In a full implementation, you'd track who has access to which shared personas
       whereConditions = {
-        createdBy: 'never_match',
+        AND: [
+          { shareToken: { not: null } },
+          { isPublic: false },
+          { createdBy: { not: userId } }
+        ]
       }
     } else {
-      // 'all' - for now just user's personas
+      // 'all' - user's personas, public personas, and shared ones
       whereConditions = {
-        createdBy: userId,
+        OR: [
+          { createdBy: userId },
+          { isPublic: true },
+          {
+            AND: [
+              { shareToken: { not: null } },
+              { isPublic: false }
+            ]
+          }
+        ]
       }
     }
 
@@ -113,12 +127,19 @@ export async function GET(request: NextRequest) {
     })
 
     // Add ownership and access info to each persona
-    const enrichedPersonas = personas.map(persona => ({
+    const enrichedPersonas = personas.map((persona: any) => ({
       ...persona,
       isOwner: persona.createdBy === userId,
       accessType: persona.createdBy === userId 
         ? 'owner' 
-        : 'public' // For now, simplified logic
+        : persona.isPublic 
+          ? 'public' 
+          : 'shared',
+      // Add default sharing fields if missing
+      isPublic: persona.isPublic || false,
+      shareToken: persona.shareToken || null,
+      shareCount: persona.shareCount || 0,
+      allowComments: persona.allowComments || false
     }))
 
     return NextResponse.json(enrichedPersonas)

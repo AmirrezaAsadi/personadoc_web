@@ -30,18 +30,41 @@ export async function GET(
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    const persona = await prisma.persona.findFirst({
-      where: { 
-        id: id,
-        createdBy: userId 
-      },
+    // Check if user can access this persona
+    const persona = await prisma.persona.findUnique({
+      where: { id: id },
+      include: {
+        creator: {
+          select: {
+            name: true,
+            email: true,
+          }
+        }
+      }
     })
 
     if (!persona) {
       return NextResponse.json({ error: 'Persona not found' }, { status: 404 })
     }
 
-    return NextResponse.json(persona)
+    // Check access permissions
+    const personaWithSharing = persona as any
+    const isOwner = persona.createdBy === userId
+    const isPublic = personaWithSharing.isPublic === true
+    const hasShareToken = personaWithSharing.shareToken !== null
+
+    if (!isOwner && !isPublic && !hasShareToken) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+    }
+
+    // Add access information to the response
+    const responseData = {
+      ...persona,
+      isOwner,
+      accessType: isOwner ? 'owner' : isPublic ? 'public' : 'shared'
+    }
+
+    return NextResponse.json(responseData)
   } catch (error) {
     console.error('Database error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
