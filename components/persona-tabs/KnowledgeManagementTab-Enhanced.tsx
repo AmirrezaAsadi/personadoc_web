@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -13,7 +13,8 @@ import {
   Search, Filter, BookOpen, Database, BarChart3,
   Archive, Share, Trash2, Eye, Edit, ChevronRight,
   ChevronLeft, Image, File, X, Save, RefreshCw,
-  PanelRightClose, PanelRightOpen, Calendar
+  PanelRightClose, PanelRightOpen, Calendar, Camera,
+  Plus, ImageIcon, FileDown, ExternalLink
 } from 'lucide-react'
 
 interface KnowledgeManagementTabProps {
@@ -55,6 +56,9 @@ interface DocumentFile {
   url?: string
   content?: string
   thumbnail?: string
+  caption?: string
+  uploadedAt?: string
+  category?: 'document' | 'image' | 'social' | 'research'
 }
 
 export function KnowledgeManagementTab({ personaId, personaName }: KnowledgeManagementTabProps) {
@@ -73,6 +77,8 @@ export function KnowledgeManagementTab({ personaId, personaName }: KnowledgeMana
   // Document viewer state
   const [selectedDocument, setSelectedDocument] = useState<DocumentFile | null>(null)
   const [showDocumentViewer, setShowDocumentViewer] = useState(false)
+  const [showImageUpload, setShowImageUpload] = useState(false)
+  const [activeView, setActiveView] = useState<'all' | 'documents' | 'images' | 'social'>('all')
   
   // Timeline state
   const [showTimeline, setShowTimeline] = useState(true)
@@ -197,6 +203,65 @@ export function KnowledgeManagementTab({ personaId, personaName }: KnowledgeMana
     setShowDocumentViewer(true)
   }
 
+  const downloadFile = async (file: DocumentFile) => {
+    try {
+      if (file.url) {
+        // Direct download from URL
+        const link = document.createElement('a')
+        link.href = file.url
+        link.download = file.name
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+      } else {
+        // Fetch from API
+        const response = await fetch(`/api/personas/${personaId}/files/${file.id}/download`)
+        if (response.ok) {
+          const blob = await response.blob()
+          const url = window.URL.createObjectURL(blob)
+          const link = document.createElement('a')
+          link.href = url
+          link.download = file.name
+          document.body.appendChild(link)
+          link.click()
+          window.URL.revokeObjectURL(url)
+          document.body.removeChild(link)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to download file:', error)
+      alert('Failed to download file. Please try again.')
+    }
+  }
+
+  const uploadImage = async (file: File, caption: string, category: 'social' | 'research' = 'social') => {
+    try {
+      setLoading(true)
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('caption', caption)
+      formData.append('category', category)
+      formData.append('type', 'image')
+
+      const response = await fetch(`/api/personas/${personaId}/files/upload`, {
+        method: 'POST',
+        body: formData
+      })
+
+      if (response.ok) {
+        fetchResearchData() // Refresh to show new image
+        setShowImageUpload(false)
+      } else {
+        throw new Error('Upload failed')
+      }
+    } catch (error) {
+      console.error('Failed to upload image:', error)
+      alert('Failed to upload image. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const updatePersonaField = (field: string, value: any) => {
     if (!editingPersona) return
     
@@ -205,6 +270,109 @@ export function KnowledgeManagementTab({ personaId, personaName }: KnowledgeMana
       [field]: value
     }))
     setHasUnsavedChanges(true)
+  }
+
+  const ImageUploadModal = () => {
+    const [selectedFile, setSelectedFile] = useState<File | null>(null)
+    const [caption, setCaption] = useState('')
+    const [category, setCategory] = useState<'social' | 'research'>('social')
+    const [preview, setPreview] = useState<string | null>(null)
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (file && file.type.startsWith('image/')) {
+        setSelectedFile(file)
+        const reader = new FileReader()
+        reader.onload = (e) => setPreview(e.target?.result as string)
+        reader.readAsDataURL(file)
+      }
+    }
+
+    const handleUpload = () => {
+      if (selectedFile) {
+        uploadImage(selectedFile, caption, category)
+      }
+    }
+
+    if (!showImageUpload) return null
+
+    return (
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+          <div className="flex items-center justify-between p-4 border-b">
+            <h3 className="text-lg font-semibold">Upload Image</h3>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowImageUpload(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          <div className="p-4 space-y-4">
+            <div>
+              <Label htmlFor="image-file">Select Image</Label>
+              <Input
+                id="image-file"
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+              />
+            </div>
+
+            {preview && (
+              <div className="border rounded-lg p-2">
+                <img 
+                  src={preview} 
+                  alt="Preview" 
+                  className="w-full h-48 object-cover rounded"
+                />
+              </div>
+            )}
+
+            <div>
+              <Label htmlFor="caption">Caption</Label>
+              <Textarea
+                id="caption"
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+                placeholder="Add a caption for this image..."
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="category">Category</Label>
+              <select
+                id="category"
+                value={category}
+                onChange={(e) => setCategory(e.target.value as 'social' | 'research')}
+                className="w-full p-2 border border-gray-300 rounded-md"
+              >
+                <option value="social">Social Media</option>
+                <option value="research">Research</option>
+              </select>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowImageUpload(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleUpload}
+                disabled={!selectedFile || loading}
+              >
+                {loading ? 'Uploading...' : 'Upload'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   const DocumentViewer = () => {
@@ -431,7 +599,7 @@ export function KnowledgeManagementTab({ personaId, personaName }: KnowledgeMana
           </div>
         </div>
 
-        {/* Search and Filter */}
+        {/* Search, Filter, and Upload */}
         <div className="flex items-center gap-4 mb-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -442,20 +610,63 @@ export function KnowledgeManagementTab({ personaId, personaName }: KnowledgeMana
               className="pl-10"
             />
           </div>
-          <ResearchUpload 
-            personaId={personaId} 
-            onUploadComplete={fetchResearchData}
-          />
+          
+          {/* View Filter */}
+          <div className="flex items-center gap-1 border rounded-lg p-1">
+            {[
+              { id: 'all', label: 'All', icon: Database },
+              { id: 'documents', label: 'Docs', icon: FileText },
+              { id: 'images', label: 'Images', icon: ImageIcon },
+              { id: 'social', label: 'Social', icon: Camera }
+            ].map(({ id, label, icon: Icon }) => (
+              <Button
+                key={id}
+                variant={activeView === id ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveView(id as any)}
+                className="flex items-center gap-1"
+              >
+                <Icon className="h-3 w-3" />
+                {label}
+              </Button>
+            ))}
+          </div>
+          
+          {/* Upload Options */}
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => setShowImageUpload(true)}
+              className="flex items-center gap-2"
+              variant="outline"
+            >
+              <Camera className="h-4 w-4" />
+              Upload Image
+            </Button>
+            
+            <ResearchUpload 
+              personaId={personaId} 
+              onUploadComplete={fetchResearchData}
+            />
+          </div>
         </div>
 
         {/* Documents and Research Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {researchData
-            .filter(item => 
-              searchTerm === '' || 
-              item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              item.content.toLowerCase().includes(searchTerm.toLowerCase())
-            )
+            .filter(item => {
+              // Search filter
+              const matchesSearch = searchTerm === '' || 
+                item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                item.content.toLowerCase().includes(searchTerm.toLowerCase())
+              
+              // View filter
+              if (activeView === 'all') return matchesSearch
+              if (activeView === 'documents') return matchesSearch && item.files?.some(f => !f.type?.startsWith('image/'))
+              if (activeView === 'images') return matchesSearch && item.files?.some(f => f.type?.startsWith('image/'))
+              if (activeView === 'social') return matchesSearch && item.category === 'social'
+              
+              return matchesSearch
+            })
             .map((item) => (
               <Card key={item.id} className="hover:shadow-md transition-shadow">
                 <CardHeader className="pb-3">
@@ -488,36 +699,78 @@ export function KnowledgeManagementTab({ personaId, personaName }: KnowledgeMana
                   
                   {/* File Previews */}
                   {item.files && item.files.length > 0 && (
-                    <div className="grid grid-cols-2 gap-2 mb-3">
-                      {item.files.slice(0, 4).map((file, index) => (
-                        <div
-                          key={index}
-                          className="relative bg-gray-50 rounded border p-2 cursor-pointer hover:bg-gray-100"
-                          onClick={() => viewDocument(file)}
-                        >
-                          <div className="flex items-center gap-2">
+                    <div className="space-y-2 mb-3">
+                      <div className="grid grid-cols-2 gap-2">
+                        {item.files.slice(0, 4).map((file, index) => (
+                          <div
+                            key={index}
+                            className="relative group bg-gray-50 rounded border overflow-hidden"
+                          >
                             {file.type?.startsWith('image/') ? (
-                              <Image className="h-4 w-4 text-blue-500" />
+                              <div 
+                                className="cursor-pointer"
+                                onClick={() => viewDocument(file)}
+                              >
+                                {file.thumbnail || file.url ? (
+                                  <img 
+                                    src={file.thumbnail || file.url} 
+                                    alt={file.name}
+                                    className="w-full h-24 object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-24 flex items-center justify-center">
+                                    <ImageIcon className="h-8 w-8 text-gray-400" />
+                                  </div>
+                                )}
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                  <Eye className="h-4 w-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </div>
+                              </div>
                             ) : (
-                              <File className="h-4 w-4 text-gray-500" />
+                              <div 
+                                className="p-2 cursor-pointer h-24 flex flex-col justify-between"
+                                onClick={() => viewDocument(file)}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <File className="h-4 w-4 text-gray-500" />
+                                  <span className="text-xs truncate">{file.name}</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs text-gray-400">
+                                    {(file.size / 1024).toFixed(1)} KB
+                                  </span>
+                                  <Eye className="h-3 w-3 text-gray-400 group-hover:text-blue-500" />
+                                </div>
+                              </div>
                             )}
-                            <span className="text-xs truncate">{file.name}</span>
+                            
+                            {/* Download button overlay */}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity p-1 h-6 w-6"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                downloadFile(file)
+                              }}
+                            >
+                              <FileDown className="h-3 w-3" />
+                            </Button>
                           </div>
-                          {file.type?.startsWith('image/') && file.thumbnail && (
-                            <img 
-                              src={file.thumbnail} 
-                              alt={file.name}
-                              className="w-full h-16 object-cover rounded mt-2"
-                            />
-                          )}
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+                      
+                      {item.files.length > 4 && (
+                        <p className="text-xs text-gray-500 text-center">
+                          +{item.files.length - 4} more files
+                        </p>
+                      )}
                     </div>
                   )}
                   
                   {/* Tags */}
                   {item.tags && item.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-1 mb-2">
                       {item.tags.map((tag, index) => (
                         <Badge key={index} variant="outline" className="text-xs">
                           {tag}
@@ -525,6 +778,35 @@ export function KnowledgeManagementTab({ personaId, personaName }: KnowledgeMana
                       ))}
                     </div>
                   )}
+                  
+                  {/* Action Buttons */}
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => viewDocument(item.files?.[0])}
+                        disabled={!item.files?.length}
+                      >
+                        <Eye className="h-3 w-3 mr-1" />
+                        View
+                      </Button>
+                      {item.files?.length > 0 && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => downloadFile(item.files[0])}
+                        >
+                          <FileDown className="h-3 w-3 mr-1" />
+                          Download
+                        </Button>
+                      )}
+                    </div>
+                    
+                    <div className="text-xs text-gray-400">
+                      {item.files?.length || 0} files
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -541,6 +823,9 @@ export function KnowledgeManagementTab({ personaId, personaName }: KnowledgeMana
 
       {/* Right Edit Panel */}
       <EditPanel />
+
+      {/* Image Upload Modal */}
+      <ImageUploadModal />
 
       {/* Document Viewer Modal */}
       {showDocumentViewer && <DocumentViewer />}
