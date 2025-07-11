@@ -128,10 +128,10 @@ export default function InterviewTab({ persona }: InterviewTabProps) {
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       {/* Conversation Starters & Context */}
       <div className="lg:col-span-1 space-y-6">
-        <Card>
+        <Card className="bg-white border-slate-200 shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Lightbulb className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-slate-800">
+              <Lightbulb className="h-5 w-5 text-blue-600" />
               Conversation Starters
             </CardTitle>
           </CardHeader>
@@ -141,7 +141,7 @@ export default function InterviewTab({ persona }: InterviewTabProps) {
                 key={index}
                 variant="outline"
                 size="sm"
-                className="w-full text-left h-auto p-3 text-sm"
+                className="w-full text-left h-auto p-3 text-sm bg-slate-50 hover:bg-blue-50 text-slate-700 border-slate-200 hover:border-blue-300"
                 onClick={() => sendMessage(starter)}
                 disabled={loading}
               >
@@ -151,19 +151,19 @@ export default function InterviewTab({ persona }: InterviewTabProps) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white border-slate-200 shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Brain className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-slate-800">
+              <Brain className="h-5 w-5 text-blue-600" />
               Persona Context
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <h4 className="font-medium text-sm mb-2">Key Traits</h4>
+              <h4 className="font-medium text-sm mb-2 text-slate-700">Key Traits</h4>
               <div className="flex flex-wrap gap-1">
                 {persona.personalityTraits?.map((trait, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs">
+                  <Badge key={index} className="text-xs bg-blue-100 text-blue-800 border-blue-200">
                     {trait}
                   </Badge>
                 ))}
@@ -171,12 +171,12 @@ export default function InterviewTab({ persona }: InterviewTabProps) {
             </div>
             
             <div>
-              <h4 className="font-medium text-sm mb-2">Behavioral Profile</h4>
+              <h4 className="font-medium text-sm mb-2 text-slate-700">Behavioral Profile</h4>
               <div className="space-y-2 text-xs">
                 {persona.metadata?.personality && Object.entries(persona.metadata.personality).map(([key, value]) => {
                   if (typeof value === 'number' && value >= 1 && value <= 10) {
                     return (
-                      <div key={key} className="flex justify-between">
+                      <div key={key} className="flex justify-between text-slate-600">
                         <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>
                         <span className="font-medium">{value}/10</span>
                       </div>
@@ -192,7 +192,7 @@ export default function InterviewTab({ persona }: InterviewTabProps) {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowReasoning(!showReasoning)}
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 bg-slate-50 hover:bg-blue-50 text-slate-700 border-slate-200"
               >
                 <Brain className="h-3 w-3" />
                 {showReasoning ? 'Hide' : 'Show'} Reasoning
@@ -204,11 +204,11 @@ export default function InterviewTab({ persona }: InterviewTabProps) {
 
       {/* Main Chat Interface */}
       <div className="lg:col-span-3">
-        <Card className="h-[700px] flex flex-col">
+        <Card className="h-[700px] flex flex-col bg-white border-slate-200 shadow-lg">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <MessageCircle className="h-5 w-5" />
+              <CardTitle className="flex items-center gap-2 text-slate-800">
+                <MessageCircle className="h-5 w-5 text-blue-600" />
                 Interview with {persona.name}
               </CardTitle>
               <div className="flex items-center gap-2">
@@ -218,10 +218,10 @@ export default function InterviewTab({ persona }: InterviewTabProps) {
                     placeholder="Search conversation..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 w-64"
+                    className="pl-10 w-64 border-slate-200"
                   />
                 </div>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="border-slate-200">
                   <History className="h-4 w-4" />
                 </Button>
               </div>
@@ -234,8 +234,8 @@ export default function InterviewTab({ persona }: InterviewTabProps) {
               {filteredMessages.length === 0 ? (
                 <div className="text-center text-gray-500 mt-32">
                   <MessageCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p>Start your interview with {persona.name}</p>
-                  <p className="text-sm mt-2">Use the conversation starters or ask your own questions</p>
+                  <p className="text-slate-600">Start your interview with {persona.name}</p>
+                  <p className="text-sm mt-2 text-slate-500">Use the conversation starters or ask your own questions</p>
                 </div>
               ) : (
                 filteredMessages.map((message, index) => (

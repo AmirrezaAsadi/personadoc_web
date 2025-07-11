@@ -100,30 +100,30 @@ export default function SocialPostsTab({ personaId, persona }: SocialPostsTabPro
       </div>
 
       {/* Input Form */}
-      <Card className="bg-white/5 backdrop-blur-lg border-cyan-200/20">
+      <Card className="bg-white/95 backdrop-blur-lg border-cyan-200/20 shadow-lg">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-cyan-400" />
+          <CardTitle className="text-slate-800 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-cyan-600" />
             Content Parameters
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Product Description */}
           <div>
-            <Label htmlFor="product" className="text-white">Product/Service Description *</Label>
+            <Label htmlFor="product" className="text-slate-700">Product/Service Description *</Label>
             <Textarea
               id="product"
               placeholder="Describe the product, service, or topic you want to create content about..."
               value={product}
               onChange={(e) => setProduct(e.target.value)}
-              className="bg-white/10 border-cyan-200/30 text-white placeholder-cyan-200/60"
+              className="bg-white border-slate-300 text-slate-800 placeholder-slate-500"
               rows={3}
             />
           </div>
 
           {/* Platform Selection */}
           <div>
-            <Label className="text-white mb-3 block">Social Media Platform</Label>
+            <Label className="text-slate-700 mb-3 block">Social Media Platform</Label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {platforms.map((p) => {
                 const Icon = p.icon
@@ -133,8 +133,8 @@ export default function SocialPostsTab({ personaId, persona }: SocialPostsTabPro
                     onClick={() => setPlatform(p.id)}
                     className={`flex items-center gap-2 p-3 rounded-lg border-2 transition-all ${
                       platform === p.id
-                        ? `${p.color} border-white text-white`
-                        : 'bg-white/10 border-cyan-200/30 text-cyan-200 hover:bg-white/20'
+                        ? `${p.color} border-slate-300 text-white`
+                        : 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200'
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -148,33 +148,33 @@ export default function SocialPostsTab({ personaId, persona }: SocialPostsTabPro
           {/* Additional Parameters */}
           <div className="grid md:grid-cols-3 gap-4">
             <div>
-              <Label htmlFor="goals" className="text-white">Campaign Goals</Label>
+              <Label htmlFor="goals" className="text-slate-700">Campaign Goals</Label>
               <Input
                 id="goals"
                 placeholder="e.g., Increase sales, Build awareness"
                 value={goals}
                 onChange={(e) => setGoals(e.target.value)}
-                className="bg-white/10 border-cyan-200/30 text-white placeholder-cyan-200/60"
+                className="bg-white border-slate-300 text-slate-800 placeholder-slate-500"
               />
             </div>
             <div>
-              <Label htmlFor="tone" className="text-white">Tone of Voice</Label>
+              <Label htmlFor="tone" className="text-slate-700">Tone of Voice</Label>
               <Input
                 id="tone"
                 placeholder="e.g., Professional, Casual, Humorous"
                 value={tone}
                 onChange={(e) => setTone(e.target.value)}
-                className="bg-white/10 border-cyan-200/30 text-white placeholder-cyan-200/60"
+                className="bg-white border-slate-300 text-slate-800 placeholder-slate-500"
               />
             </div>
             <div>
-              <Label htmlFor="audience" className="text-white">Target Audience</Label>
+              <Label htmlFor="audience" className="text-slate-700">Target Audience</Label>
               <Input
                 id="audience"
                 placeholder="e.g., Young professionals, Tech enthusiasts"
                 value={targetAudience}
                 onChange={(e) => setTargetAudience(e.target.value)}
-                className="bg-white/10 border-cyan-200/30 text-white placeholder-cyan-200/60"
+                className="bg-white border-slate-300 text-slate-800 placeholder-slate-500"
               />
             </div>
           </div>
@@ -199,7 +199,7 @@ export default function SocialPostsTab({ personaId, persona }: SocialPostsTabPro
           </Button>
 
           {error && (
-            <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm">
+            <div className="p-3 bg-red-100 border border-red-300 rounded-lg text-red-800 text-sm">
               {error}
             </div>
           )}
@@ -212,10 +212,10 @@ export default function SocialPostsTab({ personaId, persona }: SocialPostsTabPro
           <h3 className="text-xl font-semibold text-white">Generated Posts ({posts.length})</h3>
           
           {posts.map((post, index) => (
-            <Card key={index} className="bg-white/5 backdrop-blur-lg border-cyan-200/20">
+            <Card key={index} className="bg-white/95 backdrop-blur-lg border-cyan-200/20 shadow-lg">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-white text-lg">Post Variation {index + 1}</CardTitle>
+                  <CardTitle className="text-slate-800 text-lg">Post Variation {index + 1}</CardTitle>
                   <div className="flex items-center gap-2">
                     <Badge className={`${getEngagementColor(post.engagement_prediction)} text-white`}>
                       {post.engagement_prediction} engagement
@@ -224,7 +224,7 @@ export default function SocialPostsTab({ personaId, persona }: SocialPostsTabPro
                       size="sm"
                       variant="outline"
                       onClick={() => copyToClipboard(post.content)}
-                      className="border-cyan-200/30 text-cyan-200 hover:bg-cyan-500/20"
+                      className="border-slate-300 text-slate-700 hover:bg-slate-100"
                     >
                       <Copy className="w-4 h-4" />
                     </Button>
@@ -233,20 +233,20 @@ export default function SocialPostsTab({ personaId, persona }: SocialPostsTabPro
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Post Content */}
-                <div className="p-4 bg-white/10 rounded-lg">
-                  <p className="text-white whitespace-pre-wrap">{post.content}</p>
+                <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                  <p className="text-slate-800 whitespace-pre-wrap">{post.content}</p>
                 </div>
 
                 {/* Reasoning */}
-                <div className="p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-lg">
-                  <h4 className="text-cyan-300 font-medium mb-1">Why this works for {persona?.name}:</h4>
-                  <p className="text-cyan-100 text-sm">{post.reasoning}</p>
+                <div className="p-3 bg-cyan-50 border border-cyan-200 rounded-lg">
+                  <h4 className="text-cyan-800 font-medium mb-1">Why this works for {persona?.name}:</h4>
+                  <p className="text-cyan-700 text-sm">{post.reasoning}</p>
                 </div>
 
                 {/* Platform Optimization */}
-                <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                  <h4 className="text-blue-300 font-medium mb-1">Platform Optimization:</h4>
-                  <p className="text-blue-100 text-sm">{post.platform_optimization}</p>
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h4 className="text-blue-800 font-medium mb-1">Platform Optimization:</h4>
+                  <p className="text-blue-700 text-sm">{post.platform_optimization}</p>
                 </div>
               </CardContent>
             </Card>
@@ -256,11 +256,11 @@ export default function SocialPostsTab({ personaId, persona }: SocialPostsTabPro
 
       {/* Empty State */}
       {posts.length === 0 && !loading && (
-        <Card className="bg-white/5 backdrop-blur-lg border-cyan-200/20">
+        <Card className="bg-white/95 backdrop-blur-lg border-cyan-200/20 shadow-lg">
           <CardContent className="text-center py-12">
-            <Sparkles className="w-12 h-12 text-cyan-400 mx-auto mb-4" />
-            <h3 className="text-white text-lg font-medium mb-2">Ready to Generate Social Posts</h3>
-            <p className="text-cyan-200">Enter a product description and generate authentic social media content from {persona?.name}'s perspective</p>
+            <Sparkles className="w-12 h-12 text-cyan-600 mx-auto mb-4" />
+            <h3 className="text-slate-800 text-lg font-medium mb-2">Ready to Generate Social Posts</h3>
+            <p className="text-slate-600">Enter a product description and generate authentic social media content from {persona?.name}'s perspective</p>
           </CardContent>
         </Card>
       )}

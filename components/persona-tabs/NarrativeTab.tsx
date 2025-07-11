@@ -164,24 +164,24 @@ export default function NarrativeTab({ persona }: NarrativeTabProps) {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Scenario Definition */}
       <div className="lg:col-span-1 space-y-6">
-        <Card>
+        <Card className="bg-white/95 backdrop-blur-lg border-cyan-200/20 shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Map className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-slate-800">
+              <Map className="h-5 w-5 text-cyan-600" />
               Scenario Definition
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Emoji Selector */}
             <div>
-              <Label>Scenario Type</Label>
+              <Label className="text-slate-700">Scenario Type</Label>
               <div className="grid grid-cols-4 gap-2 mt-2">
                 {['🛒', '🏥', '🍕', '🏦', '✈️', '🏠', '🚗', '💼', '🎓', '🎮', '📱', '🎪'].map(emoji => (
                   <button
                     key={emoji}
                     onClick={() => setScenario(prev => ({ ...prev, emoji }))}
-                    className={`p-3 text-2xl border rounded-lg hover:bg-gray-50 ${
-                      scenario.emoji === emoji ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                    className={`p-3 text-2xl border rounded-lg hover:bg-slate-50 ${
+                      scenario.emoji === emoji ? 'border-blue-500 bg-blue-50' : 'border-slate-200'
                     }`}
                   >
                     {emoji}
@@ -193,8 +193,8 @@ export default function NarrativeTab({ persona }: NarrativeTabProps) {
             {/* 5W Framework */}
             <div className="space-y-3">
               <div>
-                <Label htmlFor="where" className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
+                <Label htmlFor="where" className="flex items-center gap-2 text-slate-700">
+                  <MapPin className="h-4 w-4 text-cyan-600" />
                   Where
                 </Label>
                 <Input
@@ -202,12 +202,13 @@ export default function NarrativeTab({ persona }: NarrativeTabProps) {
                   placeholder="Location or context"
                   value={scenario.where}
                   onChange={(e) => setScenario(prev => ({ ...prev, where: e.target.value }))}
+                  className="bg-white border-slate-300 text-slate-800 placeholder-slate-500"
                 />
               </div>
 
               <div>
-                <Label htmlFor="how" className="flex items-center gap-2">
-                  <Target className="h-4 w-4" />
+                <Label htmlFor="how" className="flex items-center gap-2 text-slate-700">
+                  <Target className="h-4 w-4 text-cyan-600" />
                   How
                 </Label>
                 <Input
@@ -215,12 +216,13 @@ export default function NarrativeTab({ persona }: NarrativeTabProps) {
                   placeholder="Method or channel"
                   value={scenario.how}
                   onChange={(e) => setScenario(prev => ({ ...prev, how: e.target.value }))}
+                  className="bg-white border-slate-300 text-slate-800 placeholder-slate-500"
                 />
               </div>
 
               <div>
-                <Label htmlFor="withWho" className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
+                <Label htmlFor="withWho" className="flex items-center gap-2 text-slate-700">
+                  <Users className="h-4 w-4 text-cyan-600" />
                   With Who
                 </Label>
                 <Input
@@ -228,12 +230,13 @@ export default function NarrativeTab({ persona }: NarrativeTabProps) {
                   placeholder="Companions or alone"
                   value={scenario.withWho}
                   onChange={(e) => setScenario(prev => ({ ...prev, withWho: e.target.value }))}
+                  className="bg-white border-slate-300 text-slate-800 placeholder-slate-500"
                 />
               </div>
 
               <div>
-                <Label htmlFor="when" className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
+                <Label htmlFor="when" className="flex items-center gap-2 text-slate-700">
+                  <Clock className="h-4 w-4 text-cyan-600" />
                   When
                 </Label>
                 <Input
@@ -241,12 +244,13 @@ export default function NarrativeTab({ persona }: NarrativeTabProps) {
                   placeholder="Time and context"
                   value={scenario.when}
                   onChange={(e) => setScenario(prev => ({ ...prev, when: e.target.value }))}
+                  className="bg-white border-slate-300 text-slate-800 placeholder-slate-500"
                 />
               </div>
 
               <div>
-                <Label htmlFor="why" className="flex items-center gap-2">
-                  <Heart className="h-4 w-4" />
+                <Label htmlFor="why" className="flex items-center gap-2 text-slate-700">
+                  <Heart className="h-4 w-4 text-cyan-600" />
                   Why
                 </Label>
                 <Textarea
@@ -254,7 +258,7 @@ export default function NarrativeTab({ persona }: NarrativeTabProps) {
                   placeholder="Motivation and goals"
                   value={scenario.why}
                   onChange={(e) => setScenario(prev => ({ ...prev, why: e.target.value }))}
-                  className="min-h-[60px]"
+                  className="min-h-[60px] bg-white border-slate-300 text-slate-800 placeholder-slate-500"
                 />
               </div>
             </div>
@@ -262,7 +266,7 @@ export default function NarrativeTab({ persona }: NarrativeTabProps) {
             <Button
               onClick={generateJourney}
               disabled={loading || !scenario.where || !scenario.why}
-              className="w-full"
+              className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
             >
               {loading ? (
                 <>
@@ -280,24 +284,24 @@ export default function NarrativeTab({ persona }: NarrativeTabProps) {
         </Card>
 
         {/* Template Scenarios */}
-        <Card>
+        <Card className="bg-white/95 backdrop-blur-lg border-cyan-200/20 shadow-lg">
           <CardHeader>
-            <CardTitle className="text-sm">Quick Templates</CardTitle>
+            <CardTitle className="text-sm text-slate-800">Quick Templates</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {SCENARIO_TEMPLATES.map((template, index) => (
               <div
                 key={index}
-                className={`p-3 border rounded-lg cursor-pointer hover:bg-gray-50 ${
-                  selectedTemplate === index ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                className={`p-3 border rounded-lg cursor-pointer hover:bg-slate-50 ${
+                  selectedTemplate === index ? 'border-blue-500 bg-blue-50' : 'border-slate-200'
                 }`}
                 onClick={() => applyTemplate(template)}
               >
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{template.emoji}</span>
                   <div>
-                    <div className="font-medium text-sm">{template.title}</div>
-                    <div className="text-xs text-gray-600">{template.where} • {template.when}</div>
+                    <div className="font-medium text-sm text-slate-800">{template.title}</div>
+                    <div className="text-xs text-slate-600">{template.where} • {template.when}</div>
                   </div>
                 </div>
               </div>
@@ -306,16 +310,16 @@ export default function NarrativeTab({ persona }: NarrativeTabProps) {
         </Card>
 
         {/* Persona Context */}
-        <Card>
+        <Card className="bg-white/95 backdrop-blur-lg border-cyan-200/20 shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Brain className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-slate-800">
+              <Brain className="h-5 w-5 text-cyan-600" />
               {persona.name}'s Context
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <Label className="text-xs text-gray-600">Personality Influence</Label>
+              <Label className="text-xs text-slate-600">Personality Influence</Label>
               <div className="flex flex-wrap gap-1 mt-1">
                 {persona.personalityTraits?.slice(0, 3).map((trait, index) => (
                   <Badge key={index} variant="secondary" className="text-xs">
@@ -324,7 +328,7 @@ export default function NarrativeTab({ persona }: NarrativeTabProps) {
                 ))}
               </div>
             </div>
-            <div className="text-xs text-gray-600">
+            <div className="text-xs text-slate-600">
               Journey will reflect {persona.name}'s decision-making patterns and emotional responses
             </div>
           </CardContent>
@@ -333,29 +337,29 @@ export default function NarrativeTab({ persona }: NarrativeTabProps) {
 
       {/* Journey Visualization */}
       <div className="lg:col-span-2">
-        <Card>
+        <Card className="bg-white/95 backdrop-blur-lg border-cyan-200/20 shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Map className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-slate-800">
+              <Map className="h-5 w-5 text-cyan-600" />
               {persona.name}'s Journey Map
             </CardTitle>
           </CardHeader>
           <CardContent>
             {journeySteps.length === 0 ? (
-              <div className="text-center text-gray-500 py-16">
+              <div className="text-center text-slate-500 py-16">
                 <div className="text-6xl mb-4">{scenario.emoji || '🎯'}</div>
-                <p className="text-lg mb-2">No journey generated yet</p>
-                <p className="text-sm">Define your scenario using the 5W framework and click "Generate Journey"</p>
+                <p className="text-lg mb-2 text-slate-800">No journey generated yet</p>
+                <p className="text-sm text-slate-600">Define your scenario using the 5W framework and click "Generate Journey"</p>
               </div>
             ) : (
               <div className="space-y-8">
                 {/* Scenario Summary */}
-                <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6">
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 border border-slate-200">
                   <div className="flex items-center gap-4">
                     <div className="text-4xl">{scenario.emoji}</div>
                     <div>
-                      <h3 className="font-semibold text-lg">Journey Scenario</h3>
-                      <p className="text-sm text-gray-600">
+                      <h3 className="font-semibold text-lg text-slate-800">Journey Scenario</h3>
+                      <p className="text-sm text-slate-600">
                         {persona.name} {scenario.why} {scenario.where} {scenario.when} {scenario.withWho && `with ${scenario.withWho}`}
                       </p>
                     </div>
@@ -365,7 +369,7 @@ export default function NarrativeTab({ persona }: NarrativeTabProps) {
                 {/* Journey Steps */}
                 <div className="relative">
                   {/* Timeline Line */}
-                  <div className="absolute left-6 top-8 bottom-8 w-0.5 bg-gray-300"></div>
+                  <div className="absolute left-6 top-8 bottom-8 w-0.5 bg-slate-300"></div>
                   
                   <div className="space-y-8">
                     {journeySteps.map((step, index) => {
@@ -386,26 +390,26 @@ export default function NarrativeTab({ persona }: NarrativeTabProps) {
 
                           {/* Step Content */}
                           <div className="flex-1 pb-8">
-                            <Card>
+                            <Card className="bg-white border-slate-200 shadow-sm">
                               <CardContent className="p-6">
                                 <div className="flex items-start justify-between mb-4">
-                                  <h4 className="font-semibold text-lg">{step.title}</h4>
+                                  <h4 className="font-semibold text-lg text-slate-800">{step.title}</h4>
                                   <Badge className={emotionInfo.color}>
                                     {emotionInfo.emoji} {emotionInfo.label}
                                   </Badge>
                                 </div>
                                 
-                                <p className="text-gray-700 mb-4">{step.description}</p>
+                                <p className="text-slate-700 mb-4">{step.description}</p>
 
                                 {step.decisionPoints.length > 0 && (
                                   <div className="mb-4">
-                                    <h5 className="font-medium text-sm mb-2 flex items-center gap-2">
-                                      <Target className="h-4 w-4" />
+                                    <h5 className="font-medium text-sm mb-2 flex items-center gap-2 text-slate-800">
+                                      <Target className="h-4 w-4 text-cyan-600" />
                                       Decision Points
                                     </h5>
                                     <ul className="space-y-1">
                                       {step.decisionPoints.map((decision, idx) => (
-                                        <li key={idx} className="text-sm text-gray-600 flex items-start gap-2">
+                                        <li key={idx} className="text-sm text-slate-600 flex items-start gap-2">
                                           <span className="text-blue-500 mt-1">•</span>
                                           {decision}
                                         </li>
@@ -437,12 +441,12 @@ export default function NarrativeTab({ persona }: NarrativeTabProps) {
                 </div>
 
                 {/* Journey Summary */}
-                <Card className="bg-gray-50">
+                <Card className="bg-slate-50 border-slate-200">
                   <CardContent className="p-6">
-                    <h3 className="font-semibold mb-4">Journey Insights</h3>
+                    <h3 className="font-semibold mb-4 text-slate-800">Journey Insights</h3>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label className="text-sm text-gray-600">Emotional Journey</Label>
+                        <Label className="text-sm text-slate-600">Emotional Journey</Label>
                         <div className="flex gap-1 mt-1">
                           {journeySteps.map((step, index) => (
                             <span key={index} className="text-lg" title={`Step ${index + 1}`}>
@@ -452,7 +456,7 @@ export default function NarrativeTab({ persona }: NarrativeTabProps) {
                         </div>
                       </div>
                       <div>
-                        <Label className="text-sm text-gray-600">Total Steps</Label>
+                        <Label className="text-sm text-slate-600">Total Steps</Label>
                         <div className="text-2xl font-bold text-blue-600">{journeySteps.length}</div>
                       </div>
                     </div>

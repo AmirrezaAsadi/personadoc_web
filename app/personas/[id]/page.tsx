@@ -88,10 +88,21 @@ export default function PersonaDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading persona...</p>
+      <div className="min-h-screen relative">
+        {/* Underwater Background */}
+        <div className="sea-waves">
+          <div className="wave"></div>
+          <div className="wave"></div>
+          <div className="wave"></div>
+        </div>
+        
+        <div className="relative z-10 flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-400 mx-auto"></div>
+            <div className="mt-4 bg-white/90 backdrop-blur-sm rounded-lg px-6 py-3 shadow-lg">
+              <p className="text-slate-700 font-medium">Loading persona...</p>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -99,15 +110,23 @@ export default function PersonaDetailPage() {
 
   if (!persona) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">Persona Not Found</h1>
-          <Link href="/">
-            <Button>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Dashboard
-            </Button>
-          </Link>
+      <div className="min-h-screen relative">
+        <div className="sea-waves">
+          <div className="wave"></div>
+          <div className="wave"></div>
+          <div className="wave"></div>
+          <div className="wave"></div>
+        </div>
+        <div className="relative z-10 flex items-center justify-center min-h-screen">
+          <div className="text-center floating">
+            <h1 className="text-2xl font-bold text-cyan-100 mb-4 underwater-glow">Persona Not Found</h1>
+            <Link href="/">
+              <Button className="bg-cyan-600/80 hover:bg-cyan-500/80 text-white border-cyan-400/50 underwater-glow">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Dashboard
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     )
@@ -132,24 +151,36 @@ export default function PersonaDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto p-6">
+    <div className="min-h-screen relative">
+      {/* Animated Sea Wave Background */}
+      <div className="sea-waves">
+        <div className="wave"></div>
+        <div className="wave"></div>
+        <div className="wave"></div>
+        <div className="wave"></div>
+      </div>
+      
+      <div className="relative z-10 max-w-7xl mx-auto p-6">
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center gap-4 mb-4">
             <Link href="/">
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="bg-cyan-900/50 hover:bg-cyan-800/50 text-cyan-100 border-cyan-400/50 underwater-glow backdrop-blur-sm"
+              >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back
               </Button>
             </Link>
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center floating underwater-glow">
                 <User className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">{persona.name}</h1>
-                <p className="text-gray-600">
+                <h1 className="text-3xl font-bold text-cyan-100 underwater-glow">{persona.name}</h1>
+                <p className="text-cyan-200">
                   {persona.age && `${persona.age} years old`} 
                   {persona.occupation && ` • ${persona.occupation}`}
                   {persona.location && ` • ${persona.location}`}
@@ -159,28 +190,28 @@ export default function PersonaDetailPage() {
           </div>
 
           {/* Persona Summary Card */}
-          <Card className="mb-6">
+          <Card className="mb-6 floating bg-slate-800/60 border-cyan-400/30 backdrop-blur-sm underwater-glow">
             <CardContent className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Background</h3>
-                  <p className="text-sm text-gray-600">{persona.introduction}</p>
+                  <h3 className="font-semibold text-cyan-100 mb-2">Background</h3>
+                  <p className="text-sm text-cyan-200">{persona.introduction}</p>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Personality Traits</h3>
+                  <h3 className="font-semibold text-cyan-100 mb-2">Personality Traits</h3>
                   <div className="flex flex-wrap gap-1">
                     {persona.personalityTraits?.map((trait, index) => (
-                      <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                      <span key={index} className="px-2 py-1 bg-cyan-600/50 text-cyan-100 text-xs rounded border border-cyan-400/30">
                         {trait}
                       </span>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Interests</h3>
+                  <h3 className="font-semibold text-cyan-100 mb-2">Interests</h3>
                   <div className="flex flex-wrap gap-1">
                     {persona.interests?.map((interest, index) => (
-                      <span key={index} className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
+                      <span key={index} className="px-2 py-1 bg-emerald-600/50 text-emerald-100 text-xs rounded border border-emerald-400/30">
                         {interest}
                       </span>
                     ))}
@@ -190,8 +221,8 @@ export default function PersonaDetailPage() {
 
               {/* Behavioral Scores */}
               {persona.metadata?.personality && (
-                <div className="mt-6 pt-6 border-t">
-                  <h3 className="font-semibold text-gray-900 mb-4">Behavioral Profile</h3>
+                <div className="mt-6 pt-6 border-t border-cyan-400/30">
+                  <h3 className="font-semibold text-cyan-100 mb-4">Behavioral Profile</h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                     {[
                       { key: 'techSavvy', label: 'Tech Savvy' },
@@ -204,11 +235,11 @@ export default function PersonaDetailPage() {
                       const score = persona.metadata?.personality?.[key as keyof typeof persona.metadata.personality] as number || 5
                       return (
                         <div key={key} className="text-center">
-                          <div className="text-2xl font-bold text-blue-600">{score}/10</div>
-                          <div className="text-xs text-gray-600">{label}</div>
-                          <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                          <div className="text-2xl font-bold text-cyan-300">{score}/10</div>
+                          <div className="text-xs text-cyan-200">{label}</div>
+                          <div className="w-full bg-slate-700/50 rounded-full h-2 mt-1">
                             <div 
-                              className="bg-blue-600 h-2 rounded-full" 
+                              className="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full underwater-glow" 
                               style={{ width: `${score * 10}%` }}
                             ></div>
                           </div>
@@ -224,7 +255,7 @@ export default function PersonaDetailPage() {
 
         {/* Tabs Navigation */}
         <div className="mb-6">
-          <div className="border-b border-gray-200">
+          <div className="border-b border-cyan-400/30">
             <nav className="-mb-px flex space-x-8">
               {TABS.map((tab) => {
                 const Icon = tab.icon
@@ -232,18 +263,18 @@ export default function PersonaDetailPage() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm ${
+                    className={`group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-all duration-300 ${
                       activeTab === tab.id
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        ? 'border-cyan-400 text-cyan-300 underwater-glow'
+                        : 'border-transparent text-cyan-200 hover:text-cyan-100 hover:border-cyan-500/50'
                     }`}
                   >
                     <Icon className={`-ml-0.5 mr-2 h-5 w-5 ${
-                      activeTab === tab.id ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'
+                      activeTab === tab.id ? 'text-cyan-400' : 'text-cyan-300 group-hover:text-cyan-200'
                     }`} />
                     <div className="text-left">
                       <div>{tab.label}</div>
-                      <div className="text-xs text-gray-400">{tab.description}</div>
+                      <div className="text-xs text-cyan-400/70">{tab.description}</div>
                     </div>
                   </button>
                 )
@@ -254,7 +285,9 @@ export default function PersonaDetailPage() {
 
         {/* Tab Content */}
         <div className="min-h-[600px]">
-          {renderTabContent()}
+          <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-6 underwater-glow border border-cyan-200/30">
+            {renderTabContent()}
+          </div>
         </div>
       </div>
     </div>

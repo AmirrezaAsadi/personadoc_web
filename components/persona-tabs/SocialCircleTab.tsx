@@ -129,13 +129,13 @@ export default function SocialCircleTab({ persona }: SocialCircleTabProps) {
           </CardHeader>
           <CardContent>
             {/* Network Visualization */}
-            <div className="relative bg-gray-50 rounded-lg p-8 min-h-[400px] mb-6">
+            <div className="relative bg-slate-50 rounded-lg p-8 min-h-[400px] mb-6 border border-slate-200">
               {/* Central Persona */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                 <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center border-4 border-white shadow-lg">
                   <span className="text-white font-bold text-sm">{persona.name?.charAt(0)}</span>
                 </div>
-                <p className="text-center text-sm font-medium mt-2">{persona.name}</p>
+                <p className="text-center text-sm font-medium mt-2 text-slate-800">{persona.name}</p>
               </div>
 
               {/* Connection Nodes */}
@@ -235,20 +235,20 @@ export default function SocialCircleTab({ persona }: SocialCircleTabProps) {
                 <div>
                   <label className="text-sm font-medium">Connection Strength</label>
                   <div className="flex items-center gap-2 mt-1">
-                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                    <div className="flex-1 bg-slate-200 rounded-full h-2">
                       <div 
                         className="bg-blue-600 h-2 rounded-full" 
                         style={{ width: `${selectedConnection.connectionStrength * 10}%` }}
                       ></div>
                     </div>
-                    <span className="text-sm text-gray-600">{selectedConnection.connectionStrength}/10</span>
+                    <span className="text-sm text-slate-600">{selectedConnection.connectionStrength}/10</span>
                   </div>
                 </div>
 
                 <div>
                   <label className="text-sm font-medium">Influence Level</label>
                   <div className="flex items-center gap-2 mt-1">
-                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                    <div className="flex-1 bg-slate-200 rounded-full h-2">
                       <div 
                         className="bg-orange-600 h-2 rounded-full" 
                         style={{ width: `${selectedConnection.influenceLevel * 10}%` }}
@@ -331,7 +331,7 @@ export default function SocialCircleTab({ persona }: SocialCircleTabProps) {
           </CardHeader>
           <CardContent className="space-y-3">
             {SUGGESTED_CONNECTIONS.map((suggestion, index) => (
-              <div key={index} className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
+              <div key={index} className="p-3 border rounded-lg hover:bg-slate-50 cursor-pointer border-slate-200"
                 onClick={() => addConnection({
                   name: suggestion.name,
                   relationshipType: suggestion.type as any,
