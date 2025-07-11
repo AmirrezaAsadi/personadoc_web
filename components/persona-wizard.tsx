@@ -34,7 +34,7 @@ export default function PersonaWizard({ onComplete, onCancel }: PersonaWizardPro
     incomeLevel: '',
     education: '',
     backgroundStory: '',
-    avatar: null,
+    avatar: null as File | null,
     
     // Step 2: Personality
     personalityTraits: [],
@@ -102,6 +102,26 @@ export default function PersonaWizard({ onComplete, onCancel }: PersonaWizardPro
       })
     )
 
+    // Process avatar if present
+    let avatarData = null
+    if (personaData.avatar) {
+      const avatarBase64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader()
+        reader.onload = () => {
+          const result = reader.result as string
+          resolve(result) // Keep full data URL for display
+        }
+        reader.readAsDataURL(personaData.avatar!)
+      })
+      
+      avatarData = {
+        name: personaData.avatar.name,
+        type: personaData.avatar.type,
+        size: personaData.avatar.size,
+        dataUrl: avatarBase64
+      }
+    }
+
     // Transform data to match your existing persona structure
     const transformedData = {
       name: personaData.name,
@@ -113,6 +133,7 @@ export default function PersonaWizard({ onComplete, onCancel }: PersonaWizardPro
       interests: personaData.interests,
       // Add new fields for extended data
       metadata: {
+        avatar: avatarData,
         demographics: {
           gender: personaData.gender,
           incomeLevel: personaData.incomeLevel,

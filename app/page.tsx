@@ -23,6 +23,12 @@ interface Persona {
   avatarUrl?: string
   createdAt?: string
   metadata?: {
+    avatar?: {
+      name: string
+      type: string
+      size: number
+      dataUrl: string
+    }
     demographics?: any
     personality?: any
     technology?: any
@@ -269,9 +275,9 @@ export default function Home() {
                   <div className="flex items-center space-x-3 mb-3">
                     <div className="relative">
                       <div className="w-16 h-16 bg-gradient-to-r from-blue-400 to-cyan-600 rounded-full flex items-center justify-center shadow-lg underwater-glow">
-                        {persona.avatarUrl ? (
+                        {persona.avatarUrl || persona.metadata?.avatar?.dataUrl ? (
                           <img 
-                            src={persona.avatarUrl} 
+                            src={persona.avatarUrl || persona.metadata?.avatar?.dataUrl} 
                             alt={persona.name} 
                             className="w-14 h-14 rounded-full object-cover"
                           />

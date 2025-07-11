@@ -22,6 +22,12 @@ interface Persona {
   personalityTraits?: string[]
   interests?: string[]
   metadata?: {
+    avatar?: {
+      name: string
+      type: string
+      size: number
+      dataUrl: string
+    }
     demographics?: {
       gender?: string
       incomeLevel?: string
@@ -176,7 +182,15 @@ export default function PersonaDetailPage() {
             </Link>
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center floating underwater-glow">
-                <User className="w-8 h-8 text-white" />
+                {persona.metadata?.avatar?.dataUrl ? (
+                  <img 
+                    src={persona.metadata.avatar.dataUrl} 
+                    alt={persona.name} 
+                    className="w-14 h-14 rounded-full object-cover"
+                  />
+                ) : (
+                  <User className="w-8 h-8 text-white" />
+                )}
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-cyan-100 underwater-glow">{persona.name}</h1>
