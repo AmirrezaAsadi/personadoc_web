@@ -36,6 +36,10 @@ interface Persona {
   introduction?: string
   personalityTraits?: string[]
   interests?: string[]
+  isPublic?: boolean
+  shareToken?: string
+  shareCount?: number
+  allowComments?: boolean
   metadata?: {
     avatar?: {
       name: string
@@ -93,6 +97,15 @@ export default function PersonaDetailPage() {
   const [versions, setVersions] = useState<Version[]>([])
   const [currentVersion, setCurrentVersion] = useState<Version | null>(null)
   const [showTimeline, setShowTimeline] = useState(true)
+
+  const handleSharingChange = (updates: any) => {
+    if (persona) {
+      setPersona({
+        ...persona,
+        ...updates
+      })
+    }
+  }
 
   useEffect(() => {
     if (params.id && session) {
@@ -249,25 +262,40 @@ export default function PersonaDetailPage() {
                 Back
               </Button>
             </Link>
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center floating underwater-glow">
-                {persona.metadata?.avatar?.dataUrl ? (
-                  <img 
-                    src={persona.metadata.avatar.dataUrl} 
-                    alt={persona.name} 
-                    className="w-14 h-14 rounded-full object-cover"
-                  />
-                ) : (
-                  <User className="w-8 h-8 text-white" />
-                )}
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center floating underwater-glow">
+                  {persona.metadata?.avatar?.dataUrl ? (
+                    <img 
+                      src={persona.metadata.avatar.dataUrl} 
+                      alt={persona.name} 
+                      className="w-14 h-14 rounded-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-8 h-8 text-white" />
+                  )}
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-cyan-100 underwater-glow">{persona.name}</h1>
+                  <p className="text-cyan-200">
+                    {persona.age && `${persona.age} years old`} 
+                    {persona.occupation && ` • ${persona.occupation}`}
+                    {persona.location && ` • ${persona.location}`}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-cyan-100 underwater-glow">{persona.name}</h1>
-                <p className="text-cyan-200">
-                  {persona.age && `${persona.age} years old`} 
-                  {persona.occupation && ` • ${persona.occupation}`}
-                  {persona.location && ` • ${persona.location}`}
-                </p>
+              
+              {/* Sharing Component */}
+              <div className="flex items-center gap-2">
+                <PersonaSharing 
+                  personaId={persona.id}
+                  personaName={persona.name}
+                  isPublic={persona.isPublic || false}
+                  shareToken={persona.shareToken}
+                  shareCount={persona.shareCount || 0}
+                  allowComments={persona.allowComments || false}
+                  onSharingChange={handleSharingChange}
+                />
               </div>
             </div>
           </div>
