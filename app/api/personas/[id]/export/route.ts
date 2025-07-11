@@ -6,7 +6,7 @@ import { PersonaDocFormat } from '@/lib/personadoc-format'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -14,7 +14,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const personaId = params.id
+    const { id: personaId } = await params
     const url = new URL(request.url)
     const format = url.searchParams.get('format') || 'json'
     const includeImages = url.searchParams.get('includeImages') === 'true'
