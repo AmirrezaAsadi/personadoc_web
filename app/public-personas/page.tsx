@@ -224,7 +224,9 @@ export default function PublicPersonasPage() {
                       
                       <div className="flex items-center gap-2">
                         {persona.allowComments && (
-                          <MessageCircle className="w-4 h-4 text-blue-500" title="Comments enabled" />
+                          <div title="Comments enabled">
+                            <MessageCircle className="w-4 h-4 text-blue-500" />
+                          </div>
                         )}
                         <Link href={`/personas/${persona.id}`}>
                           <Button size="sm" variant="outline">
