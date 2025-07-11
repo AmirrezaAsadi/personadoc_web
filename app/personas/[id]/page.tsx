@@ -11,7 +11,7 @@ import InterviewTab from '@/components/persona-tabs/InterviewTab'
 import SocialPostsTab from '@/components/persona-tabs/SocialPostsTab'
 import SocialCircleTab from '@/components/persona-tabs/SocialCircleTab'
 import NarrativeTab from '@/components/persona-tabs/NarrativeTab'
-import { KnowledgeManagementTab } from '@/components/persona-tabs/KnowledgeManagementTab'
+import { KnowledgeManagementTab } from '@/components/persona-tabs/KnowledgeManagementTab-Enhanced'
 
 interface Persona {
   id: string
