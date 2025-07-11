@@ -95,7 +95,7 @@ export default function SocialPostsTab({ personaId, persona }: SocialPostsTabPro
     <div className="space-y-6">
       {/* Header */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-white mb-2">Social Posts Generator</h2>
+        <h2 className="text-2xl font-bold text-blue-800 mb-2">Social Posts Generator</h2>
         <p className="text-cyan-200">Generate authentic social media content from {persona?.name}'s perspective</p>
       </div>
 

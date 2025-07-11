@@ -42,8 +42,8 @@ export default function SignInPage() {
           <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <User className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">PersonaDoc</h1>
-          <p className="text-gray-600">Create and chat with AI personas</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">PersonaDock</h1>
+          <p className="text-gray-600">Personify you research</p>
         </div>
 
         <Card className="shadow-lg">
@@ -118,7 +118,7 @@ export default function SignInPage() {
         </Card>
 
         <p className="text-center text-sm text-gray-500">
-          By signing in, you agree to create and chat with AI personas
+          By signing in, you agree to follow rules and permissions!
         </p>
       </div>
     </div>
