@@ -367,36 +367,61 @@ export default function Home() {
             {filteredPersonas.map((persona, index) => (
               <Card
                 key={persona.id}
-                className="group bg-black/30 border-cyan-500/30 hover:border-cyan-400/60 transition-all duration-500 cursor-pointer hover:scale-105 hover:shadow-2xl backdrop-blur-sm floating underwater-glow ripple"
+                className="group relative cursor-pointer transition-all duration-700 hover:scale-[1.02] hover:z-10 floating overflow-hidden"
                 onClick={() => handlePersonaClick(persona.id)}
                 style={{
-                  animationDelay: `${index * 0.1}s`
+                  animationDelay: `${index * 0.1}s`,
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '20px',
+                  boxShadow: '0 8px 32px rgba(0, 255, 255, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.1)',
                 }}
               >
-                <CardHeader className="pb-3">
+                {/* Glassmorphic background overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] via-white/[0.05] to-transparent group-hover:from-white/[0.15] group-hover:via-white/[0.1] transition-all duration-700"></div>
+                
+                {/* Subtle border glow effect */}
+                <div className="absolute inset-0 rounded-[20px] bg-gradient-to-br from-cyan-400/20 via-transparent to-blue-400/20 opacity-0 group-hover:opacity-100 transition-all duration-700 blur-sm"></div>
+                
+                {/* Inner highlight */}
+                <div className="absolute inset-[1px] rounded-[19px] bg-gradient-to-br from-white/[0.1] via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                
+                <CardHeader className="relative pb-3 z-10">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
-                      <div className="relative">
-                        <div className="w-16 h-16 bg-gradient-to-r from-blue-400 to-cyan-600 rounded-full flex items-center justify-center shadow-lg underwater-glow">
+                      <div className="relative group/avatar">
+                        <div className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg relative overflow-hidden transition-all duration-500 group-hover:shadow-2xl group-hover:shadow-blue-500/30"
+                             style={{
+                               background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.6) 0%, rgba(6, 182, 212, 0.6) 100%)',
+                               backdropFilter: 'blur(10px)',
+                               border: '1px solid rgba(255, 255, 255, 0.2)',
+                               boxShadow: '0 8px 25px rgba(59, 130, 246, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.2)'
+                             }}>
                           {persona.profileImage || persona.metadata?.avatar?.dataUrl ? (
                             <img 
                               src={persona.profileImage || persona.metadata?.avatar?.dataUrl} 
                               alt={persona.name} 
-                              className="w-14 h-14 rounded-full object-cover"
+                              className="w-14 h-14 rounded-full object-cover border border-white/20 transition-transform duration-500 group-hover:scale-110"
                             />
                           ) : (
-                            <User className="w-8 h-8 text-white" />
+                            <User className="w-8 h-8 text-white/90 transition-transform duration-500 group-hover:scale-110" />
                           )}
                         </div>
-                        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full border-2 border-gray-900 flex items-center justify-center underwater-glow">
-                          <Eye className="w-3 h-3 text-white" />
+                        <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full border border-white/20 flex items-center justify-center transition-all duration-500 group-hover:scale-110"
+                             style={{
+                               background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.8) 0%, rgba(5, 150, 105, 0.8) 100%)',
+                               backdropFilter: 'blur(10px)',
+                               boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)'
+                             }}>
+                          <Eye className="w-3 h-3 text-white transition-transform duration-500 group-hover:scale-110" />
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <CardTitle className="text-cyan-400 text-lg font-bold truncate">
+                        <CardTitle className="text-white/90 text-lg font-bold truncate group-hover:text-white transition-colors">
                           {persona.name}
                         </CardTitle>
-                        <div className="flex items-center gap-2 text-sm text-cyan-800/80">
+                        <div className="flex items-center gap-2 text-sm text-white/60 group-hover:text-white/70 transition-colors">
                           {persona.age && (
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
@@ -416,19 +441,19 @@ export default function Home() {
                     {/* Access Type Indicator */}
                     <div className="flex items-center gap-1">
                       {persona.accessType === 'owner' && (
-                        <Badge className="bg-blue-900/30 text-blue-200 border-blue-500/30 text-xs">
+                        <Badge className="text-xs px-2 py-1 border-0 text-white/90 font-medium bg-blue-500/30 backdrop-blur-sm shadow-lg shadow-blue-500/20">
                           <User className="w-3 h-3 mr-1" />
                           Mine
                         </Badge>
                       )}
                       {persona.accessType === 'public' && (
-                        <Badge className="bg-green-900/30 text-green-200 border-green-500/30 text-xs">
+                        <Badge className="text-xs px-2 py-1 border-0 text-white/90 font-medium bg-emerald-500/30 backdrop-blur-sm shadow-lg shadow-emerald-500/20">
                           <Globe className="w-3 h-3 mr-1" />
                           Public
                         </Badge>
                       )}
                       {persona.accessType === 'shared' && (
-                        <Badge className="bg-purple-900/30 text-purple-200 border-purple-500/30 text-xs">
+                        <Badge className="text-xs px-2 py-1 border-0 text-white/90 font-medium bg-violet-500/30 backdrop-blur-sm shadow-lg shadow-violet-500/20">
                           <Share className="w-3 h-3 mr-1" />
                           Shared
                         </Badge>
@@ -437,22 +462,22 @@ export default function Home() {
                   </div>
                   
                   {persona.occupation && (
-                    <div className="text-sm text-cyan-400/90 mb-3 font-medium">
+                    <div className="text-sm text-white/70 group-hover:text-white/80 mb-3 font-medium transition-colors">
                       {persona.occupation}
                     </div>
                   )}
 
                   {/* Creator info for non-owned personas */}
                   {!persona.isOwner && persona.creator && (
-                    <div className="text-xs text-cyan-300/70 mb-2">
+                    <div className="text-xs text-white/50 group-hover:text-white/60 mb-2 transition-colors">
                       Created by {persona.creator.name}
                     </div>
                   )}
                 </CardHeader>
                 
-                <CardContent className="pt-0">
+                <CardContent className="relative pt-0 z-10">
                   {persona.introduction && (
-                    <p className="text-cyan-400/80 text-sm mb-4 line-clamp-2">
+                    <p className="text-white/70 group-hover:text-white/80 text-sm mb-4 line-clamp-2 transition-colors">
                       {persona.introduction}
                     </p>
                   )}
@@ -462,15 +487,15 @@ export default function Home() {
                       <Badge 
                         key={index} 
                         variant="secondary" 
-                        className="bg-cyan-900/30 text-cyan-200 border-cyan-500/30 text-xs px-2 py-1 underwater-glow"
+                        className="bg-white/10 text-white/80 border-white/20 text-xs px-2 py-1 backdrop-blur-sm hover:bg-white/15 transition-colors"
                       >
                         {trait}
                       </Badge>
                     ))}
                   </div>
                   
-                  <div className="flex items-center justify-between pt-3 border-t border-cyan-500/20">
-                    <div className="flex items-center gap-3 text-xs text-cyan-300/80">
+                  <div className="flex items-center justify-between pt-3 border-t border-white/10">
+                    <div className="flex items-center gap-3 text-xs text-white/60 group-hover:text-white/70 transition-colors">
                       <span className="flex items-center gap-1">
                         <MessageCircle className="w-3 h-3" />
                         Interview
@@ -484,7 +509,7 @@ export default function Home() {
                         Social
                       </span>
                     </div>
-                    <Star className="w-4 h-4 text-yellow-400 group-hover:scale-110 transition-transform" />
+                    <Star className="w-4 h-4 text-yellow-300/80 group-hover:text-yellow-300 group-hover:scale-110 transition-all" />
                   </div>
                 </CardContent>
               </Card>
