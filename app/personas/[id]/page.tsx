@@ -132,20 +132,25 @@ export default function PersonaDetailPage() {
     try {
       setLoading(true)
       const response = await fetch(`/api/personas/${params.id}/versions`, {
-        method: 'PATCH',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           versionId,
-          action: 'activate'
+          action: 'publish'
         })
       })
       
       if (response.ok) {
         await fetchVersions()
         await loadPersona() // Reload persona data
+      } else {
+        const error = await response.json()
+        console.error('Failed to switch version:', error)
+        alert('Failed to switch version: ' + (error.message || 'Unknown error'))
       }
     } catch (error) {
       console.error('Failed to switch version:', error)
+      alert('Failed to switch version. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -362,24 +367,37 @@ export default function PersonaDetailPage() {
 
         {/* Tab Content */}
         <div className="min-h-[600px]">
-          <div className={`bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-6 underwater-glow border border-cyan-200/30 ${showTimeline ? 'mb-32' : ''}`}>
+          <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-6 underwater-glow border border-cyan-200/30">
             {renderTabContent()}
           </div>
         </div>
       </div>
 
-      {/* Global Timeline */}
-      <GlobalTimeline
-        versions={versions}
-        currentVersion={currentVersion}
-        showTimeline={showTimeline}
-        onToggleTimeline={() => setShowTimeline(!showTimeline)}
-        onSwitchVersion={switchToVersion}
-        onCreateVersion={() => {
-          // TODO: Implement create version functionality
-          console.log('Create new version')
-        }}
-      />
+      {/* Global Timeline - now as a proper footer */}
+      {showTimeline ? (
+        <GlobalTimeline
+          versions={versions}
+          currentVersion={currentVersion}
+          showTimeline={showTimeline}
+          onToggleTimeline={() => setShowTimeline(!showTimeline)}
+          onSwitchVersion={switchToVersion}
+          onCreateVersion={() => {
+            // TODO: Implement create version functionality
+            console.log('Create new version')
+          }}
+        />
+      ) : (
+        <div className="fixed bottom-4 right-4 z-40">
+          <Button
+            onClick={() => setShowTimeline(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
+            size="sm"
+          >
+            <Clock className="w-4 h-4 mr-2" />
+            Timeline
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

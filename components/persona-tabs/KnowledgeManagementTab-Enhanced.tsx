@@ -536,7 +536,7 @@ export function KnowledgeManagementTab({ personaId, personaName, globalTimelineV
 
   return (
     <>
-      <div className={`transition-all duration-300 ${showEditPanel ? 'mr-96' : ''} ${showTimeline && !globalTimelineVisible ? 'mb-32' : ''}`}>
+      <div className={`transition-all duration-300 ${showEditPanel ? 'mr-96' : ''}`}>
         {/* Main Content Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold flex items-center gap-2">
