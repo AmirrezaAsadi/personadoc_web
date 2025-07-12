@@ -455,3 +455,70 @@ body {
 .text-soft-contrast {
   color: rgba(71, 85, 105, 0.85);
 }
+
+/* Enhanced glassmorphism for search bar */
+.glass-search-bar {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 4px 16px rgba(74, 155, 142, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* Enhanced glassmorphism for filter container */
+.glass-filter-container {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(74, 155, 142, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Enhanced glassmorphism for inactive filter buttons */
+.glass-filter-button {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.glass-filter-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Enhanced glassmorphism for active filter buttons */
+.glass-filter-button-active {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(74, 155, 142, 0.5);
+  border-radius: 8px;
+  color: white;
+  box-shadow: 
+    0 6px 20px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(74, 155, 142, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 0 0 1px rgba(74, 155, 142, 0.3) inset;
+}
+
+.glass-filter-button-active::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(74, 155, 142, 0.1), rgba(44, 122, 123, 0.05));
+  pointer-events: none;
+}

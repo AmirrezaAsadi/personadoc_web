@@ -452,7 +452,7 @@ export default function PersonaDetailPage() {
               {/* Inclusivity Attributes */}
               {persona.inclusivityAttributes && Object.keys(persona.inclusivityAttributes).length > 0 && (
                 <div className="mt-6 pt-6 border-t border-cyan-400/30">
-                  <h3 className="font-semibold text-cyan-400 mb-4">Inclusivity Dimensions</h3>
+                  <h3 className="font-semibold text-cyan-400 mb-4">Niche Attributes</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {Object.entries(persona.inclusivityAttributes).map(([category, attributes]) => (
                       <div key={category} className="space-y-2">

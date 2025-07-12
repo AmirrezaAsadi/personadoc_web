@@ -259,21 +259,21 @@ export default function Home() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search personas by name, occupation, traits, or interests..."
-              className="pl-12 py-4 text-lg glass-morphism text-white placeholder-white/60 focus:border-teal-400 focus:ring-teal-400/30 rounded-xl underwater-glow"
+              className="pl-12 py-4 text-lg bg-white/15 backdrop-blur-[10px] border border-white/30 text-white placeholder-white/60 focus:border-teal-400 focus:ring-teal-400/30 rounded-xl underwater-glow"
             />
           </div>
 
           {/* Filter Tabs */}
           <div className="flex justify-center mb-4">
-            <div className="glass-morphism rounded-xl p-1 underwater-glow">
+            <div className="bg-white/10 backdrop-blur-[8px] border border-white/25 rounded-xl p-1 underwater-glow">
               <div className="flex gap-1">
                 <Button
                   variant={filterType === 'all' ? 'default' : 'outline'}
                   onClick={() => setFilterType('all')}
                   className={`px-4 py-2 text-sm rounded-lg transition-all duration-300 ${
                     filterType === 'all'
-                      ? 'bg-gradient-to-r from-teal-500 to-emerald-600 text-white shadow-lg'
-                      : 'text-white/80 hover:text-white hover:bg-white/10 border-white/20'
+                      ? 'bg-white/20 backdrop-blur-[10px] text-white shadow-lg border border-teal-400/50 underwater-glow'
+                      : 'bg-white/10 backdrop-blur-[8px] border border-white/25 text-white/80 hover:text-white hover:bg-white/15'
                   }`}
                 >
                   <Filter className="w-4 h-4 mr-2" />
@@ -284,8 +284,8 @@ export default function Home() {
                   onClick={() => setFilterType('user')}
                   className={`px-4 py-2 text-sm rounded-lg transition-all duration-300 ${
                     filterType === 'user'
-                      ? 'bg-gradient-to-r from-teal-500 to-emerald-600 text-white shadow-lg'
-                      : 'text-white/80 hover:text-white hover:bg-white/10 border-white/20'
+                      ? 'bg-white/20 backdrop-blur-[10px] text-white shadow-lg border border-teal-400/50 underwater-glow'
+                      : 'bg-white/10 backdrop-blur-[8px] border border-white/25 text-white/80 hover:text-white hover:bg-white/15'
                   }`}
                 >
                   <User className="w-4 h-4 mr-2" />
@@ -296,8 +296,8 @@ export default function Home() {
                   onClick={() => setFilterType('public')}
                   className={`px-4 py-2 text-sm rounded-lg transition-all duration-300 ${
                     filterType === 'public'
-                      ? 'bg-gradient-to-r from-teal-500 to-emerald-600 text-white shadow-lg'
-                      : 'text-white/80 hover:text-white hover:bg-white/10 border-white/20'
+                      ? 'bg-white/20 backdrop-blur-[10px] text-white shadow-lg border border-teal-400/50 underwater-glow'
+                      : 'bg-white/10 backdrop-blur-[8px] border border-white/25 text-white/80 hover:text-white hover:bg-white/15'
                   }`}
                 >
                   <Globe className="w-4 h-4 mr-2" />
@@ -308,8 +308,8 @@ export default function Home() {
                   onClick={() => setFilterType('shared')}
                   className={`px-4 py-2 text-sm rounded-lg transition-all duration-300 ${
                     filterType === 'shared'
-                      ? 'bg-gradient-to-r from-teal-500 to-emerald-600 text-white shadow-lg'
-                      : 'text-white/80 hover:text-white hover:bg-white/10 border-white/20'
+                      ? 'bg-white/20 backdrop-blur-[10px] text-white shadow-lg border border-teal-400/50 underwater-glow'
+                      : 'bg-white/10 backdrop-blur-[8px] border border-white/25 text-white/80 hover:text-white hover:bg-white/15'
                   }`}
                 >
                   <Share className="w-4 h-4 mr-2" />
