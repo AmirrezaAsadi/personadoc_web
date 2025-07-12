@@ -67,8 +67,8 @@ export default function PersonaWizard({ onComplete, onCancel, initialData, isEdi
     researchMethodology: initialData?.researchMethodology || '',
 
     // Step 5: Brands & Custom Attributes
-    preferredBrands: initialData?.preferredBrands || [],
-    customAttributes: initialData?.customAttributes || {},
+    preferredBrands: initialData?.metadata?.brands?.preferredBrands || [],
+    customAttributes: initialData?.metadata?.brands?.customAttributes || {},
   })
 
   const updatePersonaData = (stepData: any) => {
