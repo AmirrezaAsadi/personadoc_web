@@ -7,10 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Search, Plus, User, LogOut, X, MessageCircle, Users, Eye, Calendar, MapPin, Brain, Heart, Star, Filter, Globe, Lock, Share, HelpCircle } from 'lucide-react'
+import { Search, Plus, User, LogOut, X, MessageCircle, Users, Eye, Calendar, MapPin, Brain, Heart, Star, Filter, Globe, Lock, Share, HelpCircle, Shield } from 'lucide-react'
 import LandingPage from '@/components/landing-page'
 import PersonaWizard from '@/components/persona-wizard'
 import { PersonaTypesGuide } from '@/components/PersonaTypesGuide'
+import { useIsAdmin } from '@/lib/hooks/useIsAdmin'
 
 interface Persona {
   id: string
@@ -46,6 +47,7 @@ interface Persona {
 export default function Home() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const { isAdmin } = useIsAdmin()
   const [personas, setPersonas] = useState<Persona[]>([])
   const [filteredPersonas, setFilteredPersonas] = useState<Persona[]>([])
   const [searchQuery, setSearchQuery] = useState('')
@@ -229,6 +231,18 @@ export default function Home() {
             </div>
             
             <div className="flex gap-3">
+              {/* Hidden Admin Access - only visible for admin users */}
+              {isAdmin && (
+                <Button 
+                  onClick={() => router.push('/admin')} 
+                  variant="outline" 
+                  className="border-orange-400/50 text-orange-300 hover:bg-orange-500/10 ripple underwater-glow flex items-center gap-2 transition-all duration-300"
+                >
+                  <Shield className="w-4 h-4" />
+                  Admin
+                </Button>
+              )}
+              
               <Button 
                 onClick={createPersona} 
                 className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white border-0 shadow-lg ripple underwater-glow flex items-center gap-2 transition-all duration-300"
