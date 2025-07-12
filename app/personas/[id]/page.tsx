@@ -264,8 +264,8 @@ export default function PersonaDetailPage() {
     try {
       console.log('Applying suggestion:', suggestion) // Debug log
       
-      // Call AI to enhance the persona based on the suggestion
-      const response = await fetch(`/api/personas/${params.id}/enhance`, {
+      // Call new endpoint to create a version with the perspective
+      const response = await fetch(`/api/personas/${params.id}/enhance-new`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ suggestion })
@@ -277,25 +277,28 @@ export default function PersonaDetailPage() {
         const data = await response.json()
         console.log('Enhancement response:', data) // Debug log
         
-        // Update the current persona data to reflect the changes
+        // Update the current persona data to reflect the new version
         setPersona(prev => ({
           ...prev,
           ...data.enhancedPersona
         }))
         
+        // Refresh versions to show the new version in timeline
+        await fetchVersions()
+        
         // Show success message
-        alert(`✨ Perspective Applied!\n\n${data.message}\n\nThe "${suggestion.label}" perspective has been added to your persona. You can see it in the Niche Attributes section.`)
+        alert(`✨ New Version Created!\n\n${data.message}\n\nA new version "${data.newVersion.version}" has been created with the "${suggestion.label}" perspective. You can see it in the timeline and the new attributes in the Niche Attributes section.`)
         
         // Reload persona to get fresh data
         await loadPersona()
       } else {
         const error = await response.json()
         console.error('Enhancement error:', error) // Debug log
-        alert('Failed to apply perspective: ' + (error.error || 'Unknown error'))
+        alert('Failed to create new version: ' + (error.error || 'Unknown error'))
       }
     } catch (error) {
       console.error('Failed to apply inclusivity suggestion:', error)
-      alert('Failed to apply perspective. Please check the console for details.')
+      alert('Failed to create new version. Please check the console for details.')
     }
   }
 

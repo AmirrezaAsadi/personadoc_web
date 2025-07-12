@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Search, Plus, User, LogOut, X, MessageCircle, Users, Eye, Calendar, MapPin, Brain, Heart, Star, Filter, Globe, Lock, Share, HelpCircle } from 'lucide-react'
+import { Search, Plus, User, LogOut, X, MessageCircle, Users, Eye, Calendar, MapPin, Brain, Heart, Star, Filter, Globe, Lock, Share, HelpCircle, FileText, ChevronDown } from 'lucide-react'
 import PersonaWizard from '@/components/persona-wizard'
+import TranscriptWizard from '@/components/transcript-wizard'
 import { PersonaTypesGuide } from '@/components/PersonaTypesGuide'
 
 interface Persona {
@@ -50,6 +51,8 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState<'all' | 'user' | 'public' | 'shared'>('all')
   const [showWizard, setShowWizard] = useState(false)
+  const [showTranscriptWizard, setShowTranscriptWizard] = useState(false)
+  const [showCreationDropdown, setShowCreationDropdown] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [showGuide, setShowGuide] = useState(false)
 
@@ -132,6 +135,45 @@ export default function Dashboard() {
     setShowWizard(false)
   }
 
+  const handleTranscriptWizardComplete = async (personaData: any) => {
+    try {
+      const response = await fetch('/api/personas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(personaData),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to create persona from transcripts')
+      }
+
+      const newPersona = await response.json()
+      setPersonas(prev => [newPersona, ...prev])
+      setShowTranscriptWizard(false)
+      // Navigate to the new persona
+      router.push(`/personas/${newPersona.id}`)
+    } catch (error) {
+      console.error('Failed to create persona from transcripts:', error)
+      alert('Failed to create persona from transcripts. Please try again.')
+    }
+  }
+
+  const handleTranscriptWizardCancel = () => {
+    setShowTranscriptWizard(false)
+  }
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showCreationDropdown) {
+        setShowCreationDropdown(false)
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showCreationDropdown])
+
   const handlePersonaClick = (personaId: string) => {
     router.push(`/personas/${personaId}`)
   }
@@ -197,13 +239,52 @@ export default function Dashboard() {
             </div>
             
             <div className="flex gap-3">
-              <Button 
-                onClick={createPersona} 
-                className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white border-0 shadow-lg ripple underwater-glow flex items-center gap-2 transition-all duration-300"
-              >
-                <Plus className="w-4 h-4" />
-                Create New Persona
-              </Button>
+              {/* Creation Dropdown */}
+              <div className="relative">
+                <Button 
+                  onClick={() => setShowCreationDropdown(!showCreationDropdown)}
+                  className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white border-0 shadow-lg ripple underwater-glow flex items-center gap-2 transition-all duration-300"
+                >
+                  <Plus className="w-4 h-4" />
+                  Create Persona
+                  <ChevronDown className="w-4 h-4" />
+                </Button>
+                
+                {showCreationDropdown && (
+                  <div className="absolute top-full mt-2 left-0 bg-white rounded-lg shadow-xl border border-gray-200 z-50 min-w-[250px]">
+                    <div className="p-2">
+                      <button
+                        onClick={() => {
+                          setShowCreationDropdown(false)
+                          createPersona()
+                        }}
+                        className="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-3"
+                      >
+                        <Plus className="w-5 h-5 text-blue-600" />
+                        <div>
+                          <div className="font-medium text-gray-900">Manual Creation</div>
+                          <div className="text-sm text-gray-500">Create step-by-step with wizard</div>
+                        </div>
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          setShowCreationDropdown(false)
+                          setShowTranscriptWizard(true)
+                        }}
+                        className="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-3"
+                      >
+                        <FileText className="w-5 h-5 text-purple-600" />
+                        <div>
+                          <div className="font-medium text-gray-900">From Transcripts</div>
+                          <div className="text-sm text-gray-500">AI analyzes transcripts to create persona</div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
               <Button 
                 onClick={() => signOut()} 
                 variant="outline" 
@@ -513,6 +594,28 @@ export default function Dashboard() {
       {/* Persona Types Guide Modal */}
       {showGuide && (
         <PersonaTypesGuide onClose={() => setShowGuide(false)} />
+      )}
+
+      {/* Transcript Wizard Modal */}
+      {showTranscriptWizard && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="relative bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="absolute top-4 right-4 z-10">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleTranscriptWizardCancel}
+                className="rounded-full"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <TranscriptWizard 
+              onComplete={handleTranscriptWizardComplete}
+              onCancel={handleTranscriptWizardCancel}
+            />
+          </div>
+        </div>
       )}
     </div>
   )
