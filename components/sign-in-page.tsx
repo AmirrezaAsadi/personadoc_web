@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { User, Github } from 'lucide-react'
+import { User } from 'lucide-react'
 
 export default function SignInPage() {
   const [email, setEmail] = useState('')
@@ -55,7 +55,7 @@ export default function SignInPage() {
             <div className="w-16 h-16 bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg ripple underwater-glow">
               <User className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-4xl font-bold gradient-text mb-2">PersonaDock</h1>
+            <h1 className="text-4xl font-bold text-white mb-2">PersonaDock</h1>
             <p className="text-white/80">Personify your research</p>
           </div>
 
@@ -116,15 +116,6 @@ export default function SignInPage() {
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                 </svg>
                 Continue with Google
-              </Button>
-              
-              <Button
-                onClick={() => signIn('github', { callbackUrl: '/' })}
-                variant="outline"
-                className="w-full flex items-center justify-center gap-3 h-12 text-base border-white/20 text-white bg-gray-900/90 hover:bg-gray-800 ripple underwater-glow backdrop-blur-sm"
-              >
-                <Github className="w-5 h-5" />
-                Continue with GitHub
               </Button>
             </div>
           </div>

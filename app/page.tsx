@@ -212,7 +212,7 @@ export default function Home() {
                 )}
               </div>
               <div>
-                <h1 className="text-3xl font-bold gradient-text">
+                <h1 className="text-3xl font-bold text-white">
                   PersonaDock
                 </h1>
                 <p className="text-white/80 flex items-center gap-2">
@@ -263,18 +263,40 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Search and Filter Section */}
+      {/* Search Section */}
       <div className="max-w-7xl mx-auto px-6 py-8 relative z-10">
         <div className="mb-8">
-          {/* Search Bar */}
-          <div className="relative max-w-2xl mx-auto search-float mb-6">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/60 w-5 h-5" />
-            <Input
+          {/* Glassmorphism Search Bar */}
+          <div className="search-container max-w-4xl mx-auto mb-6 relative">
+            <input 
+              type="text" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              className="search-input w-full px-6 py-5 text-lg rounded-2xl bg-white/15 backdrop-blur-[12px] border border-white/30 text-white placeholder-white/70 focus:border-white/50 focus:bg-white/20 focus:outline-none transition-all duration-300 shadow-lg"
               placeholder="Search personas by name, occupation, traits, or interests..."
-              className="pl-12 py-4 text-lg bg-white/15 backdrop-blur-[10px] border border-white/30 text-white placeholder-white/60 focus:border-teal-400 focus:ring-teal-400/30 rounded-xl underwater-glow"
+              style={{
+                background: 'rgba(255, 255, 255, 0.15)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = 'rgba(255, 255, 255, 0.5)'
+                e.target.style.background = 'rgba(255, 255, 255, 0.2)'
+                e.target.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.15), 0 0 0 3px rgba(255, 255, 255, 0.1)'
+                e.target.style.transform = 'translateY(-2px)'
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)'
+                e.target.style.background = 'rgba(255, 255, 255, 0.15)'
+                e.target.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.1)'
+                e.target.style.transform = 'translateY(0)'
+              }}
             />
+            <div className="absolute right-6 top-1/2 transform -translate-y-1/2 text-white/60 text-xl pointer-events-none transition-colors duration-300">
+              🔍
+            </div>
           </div>
 
           {/* Filter Tabs */}
