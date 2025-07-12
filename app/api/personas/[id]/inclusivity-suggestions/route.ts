@@ -151,7 +151,7 @@ Respond with ONLY a JSON array of exactly 5 suggestions in this format:
       },
       {
         role: "user" as const,
-        content: `Please analyze this persona and provide 5 brief inclusivity suggestions (2-3 words each) that would make it more representative. Focus on meaningful dimensions that aren't already represented.`
+        content: `Please analyze this persona and provide 5 brief inclusivity suggestions (3-5 words each) that would make it more representative. Focus on meaningful dimensions that aren't already represented.`
       }
     ]
 
