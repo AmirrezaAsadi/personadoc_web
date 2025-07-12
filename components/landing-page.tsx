@@ -57,7 +57,7 @@ export default function LandingPage() {
   ]
 
   const dataQuotes = [
-    { text: "I love outdoors", delay: "0s" },
+    { text: "Particpants to Go", delay: "0s" },
     { text: "Time is limited", delay: "1s" },
     { text: "Need simplicity", delay: "2s" },
     { text: "Make User Research Reusable", delay: "3s" },
