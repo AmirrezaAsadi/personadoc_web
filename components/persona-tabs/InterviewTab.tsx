@@ -201,7 +201,7 @@ export default function InterviewTab({ persona }: InterviewTabProps) {
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       {/* Conversation Starters & Context */}
       <div className="lg:col-span-1 space-y-6">
-        <Card className="bg-white border-slate-200 shadow-lg">
+        <Card className="bg-white/95 backdrop-blur-lg border-cyan-200/20 shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-slate-800">
               <Lightbulb className="h-5 w-5 text-blue-600" />
@@ -224,7 +224,7 @@ export default function InterviewTab({ persona }: InterviewTabProps) {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-slate-200 shadow-lg">
+        <Card className="bg-white/95 backdrop-blur-lg border-cyan-200/20 shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-slate-800">
               <Brain className="h-5 w-5 text-blue-600" />
@@ -291,7 +291,7 @@ export default function InterviewTab({ persona }: InterviewTabProps) {
 
       {/* Main Chat Interface */}
       <div className="lg:col-span-3">
-        <Card className="h-[700px] flex flex-col bg-white border-slate-200 shadow-lg">
+        <Card className="h-[700px] flex flex-col bg-white/95 backdrop-blur-lg border-cyan-200/20 shadow-lg">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-slate-800">
@@ -340,8 +340,8 @@ export default function InterviewTab({ persona }: InterviewTabProps) {
                     <div className={`max-w-2xl ${message.type === 'user' ? 'text-right' : 'text-left'}`}>
                       <div className={`px-4 py-3 rounded-lg ${
                         message.type === 'user'
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-white border shadow-sm'
+                          ? 'bg-blue-500 text-white shadow-lg'
+                          : 'bg-white/95 backdrop-blur-lg border border-cyan-200/30 shadow-lg'
                       }`}>
                         <p className="text-sm">{message.content}</p>
                         <p className={`text-xs mt-2 ${
@@ -353,7 +353,7 @@ export default function InterviewTab({ persona }: InterviewTabProps) {
                       
                       {/* Show reasoning for persona responses */}
                       {message.type === 'persona' && message.reasoning && showReasoning && (
-                        <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="mt-2 p-3 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border border-slate-200/50 rounded-lg shadow-sm backdrop-blur-sm">
                           <div className="flex items-start gap-2">
                             <Brain className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                             <div>
@@ -370,7 +370,7 @@ export default function InterviewTab({ persona }: InterviewTabProps) {
               
               {loading && (
                 <div className="flex justify-start">
-                  <div className="bg-white border rounded-lg px-4 py-3 shadow-sm max-w-xs">
+                  <div className="bg-white/95 backdrop-blur-lg border border-cyan-200/30 rounded-lg px-4 py-3 shadow-lg max-w-xs">
                     <div className="flex items-center space-x-2">
                       <div className="flex space-x-1">
                         <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>

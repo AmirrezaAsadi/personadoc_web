@@ -273,14 +273,14 @@ export function KnowledgeManagementTab({ personaId, personaName }: KnowledgeMana
       {activeTab === 'research' && (
         <div className="space-y-6">
           {/* Search and Filters */}
-          <Card>
+          <Card className="bg-white/95 backdrop-blur-lg border-cyan-200/20 shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5" />
+                  <BookOpen className="h-5 w-5 text-cyan-600" />
                   Research Library ({researchData.length} items)
                 </span>
-                <Button onClick={handleRAGProcessing} disabled={loading}>
+                <Button onClick={handleRAGProcessing} disabled={loading} className="border-cyan-200">
                   <Database className="h-4 w-4 mr-2" />
                   Process with AI
                 </Button>
@@ -316,7 +316,7 @@ export function KnowledgeManagementTab({ personaId, personaName }: KnowledgeMana
                   </p>
                 ) : (
                   filteredResearch.map(item => (
-                    <Card key={item.id}>
+                    <Card key={item.id} className="bg-white/95 backdrop-blur-lg border-cyan-200/20 shadow-lg">
                       <CardContent className="pt-6">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -390,14 +390,14 @@ export function KnowledgeManagementTab({ personaId, personaName }: KnowledgeMana
 
       {/* Versions Tab */}
       {activeTab === 'versions' && (
-        <Card>
+        <Card className="bg-white/95 backdrop-blur-lg border-cyan-200/20 shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <GitBranch className="h-5 w-5" />
+                <GitBranch className="h-5 w-5 text-cyan-600" />
                 Version History
               </span>
-              <Button onClick={createNewVersion} disabled={loading}>
+              <Button onClick={createNewVersion} disabled={loading} className="border-cyan-200">
                 <GitBranch className="h-4 w-4 mr-2" />
                 Create Version
               </Button>
