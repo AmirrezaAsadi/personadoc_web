@@ -118,12 +118,12 @@ export function InclusivitySuggestions({ persona, onApplySuggestion }: Inclusivi
           <Sparkles className="h-6 w-6 text-white" />
         </Button>
       ) : (
-        <Card className="w-80 bg-white/95 backdrop-blur-md border-purple-200 shadow-2xl animate-in fade-in-0 zoom-in-95 duration-300">
+        <Card className="w-96 bg-white/95 backdrop-blur-md border-purple-200 shadow-2xl animate-in fade-in-0 zoom-in-95 duration-300">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium flex items-center gap-2 text-purple-700">
                 <Sparkles className="h-4 w-4" />
-                Alternative Perspectives
+                Granular Perspective Insights
               </CardTitle>
               <Button
                 variant="outline"
@@ -134,6 +134,9 @@ export function InclusivitySuggestions({ persona, onApplySuggestion }: Inclusivi
                 <X className="h-3 w-3" />
               </Button>
             </div>
+            <p className="text-xs text-gray-600 mt-1">
+              Specific behavioral patterns and contextual factors
+            </p>
           </CardHeader>
           
           <CardContent className="space-y-3">
@@ -155,16 +158,20 @@ export function InclusivitySuggestions({ persona, onApplySuggestion }: Inclusivi
                 </Button>
               </div>
             ) : currentSuggestion ? (
-              <div className="space-y-3">
-                {/* Brief card-based display */}
+              <div className="space-y-4">
+                {/* Enhanced granular suggestion display */}
                 <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border border-purple-200">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 bg-white rounded-lg shadow-sm">
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="p-2 bg-white rounded-lg shadow-sm flex-shrink-0">
                       <IconComponent className="h-5 w-5 text-purple-600" />
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-sm text-gray-800">{currentSuggestion.label}</h3>
-                      <p className="text-xs text-gray-600 capitalize">{currentSuggestion.icon_type} insight</p>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm text-gray-800 leading-tight mb-1">
+                        {currentSuggestion.label}
+                      </h3>
+                      <span className="text-xs text-purple-600 font-medium capitalize bg-purple-100 px-2 py-1 rounded">
+                        {currentSuggestion.icon_type} context
+                      </span>
                     </div>
                   </div>
                   
@@ -182,7 +189,7 @@ export function InclusivitySuggestions({ persona, onApplySuggestion }: Inclusivi
                     disabled={isLoading}
                   >
                     <Sparkles className="h-3 w-3 mr-1" />
-                    {currentSuggestions.length > 1 ? 'Next Idea' : 'New Ideas'}
+                    {currentSuggestions.length > 1 ? 'Next Insight' : 'New Insights'}
                   </Button>
                   <Button
                     onClick={() => onApplySuggestion(currentSuggestion)}
@@ -190,14 +197,14 @@ export function InclusivitySuggestions({ persona, onApplySuggestion }: Inclusivi
                     className="flex-1 text-xs bg-purple-600 hover:bg-purple-700"
                     disabled={isLoading}
                   >
-                    Auto-Apply
+                    Apply Context
                   </Button>
                 </div>
 
                 {currentSuggestions.length > 1 && (
                   <div className="text-center">
                     <span className="text-xs text-gray-400">
-                      {currentIndex + 1} of {currentSuggestions.length}
+                      {currentIndex + 1} of {currentSuggestions.length} insights
                     </span>
                   </div>
                 )}
@@ -206,7 +213,7 @@ export function InclusivitySuggestions({ persona, onApplySuggestion }: Inclusivi
 
             <div className="pt-2 border-t border-gray-200">
               <p className="text-xs text-gray-500 text-center">
-                Making personas more representative ✨
+                Contextual insights for authentic personas ✨
               </p>
             </div>
           </CardContent>

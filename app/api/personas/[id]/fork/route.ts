@@ -51,18 +51,18 @@ export async function POST(
     const hasShareToken = (originalPersona as any).shareToken !== null
 
     if (!isOwner && !isPublic && !hasShareToken) {
-      return NextResponse.json({ error: 'Cannot fork private persona' }, { status: 403 })
+      return NextResponse.json({ error: 'Cannot clone private persona' }, { status: 403 })
     }
 
     // Don't allow users to fork their own personas
     if (isOwner) {
-      return NextResponse.json({ error: 'Cannot fork your own persona' }, { status: 400 })
+      return NextResponse.json({ error: 'Cannot clone your own persona' }, { status: 400 })
     }
 
     // Create a forked copy
     const forkedPersona = await prisma.persona.create({
       data: {
-        name: `${originalPersona.name} (Fork)`,
+        name: `${originalPersona.name} (Clone)`,
         age: originalPersona.age,
         occupation: originalPersona.occupation,
         location: originalPersona.location,
@@ -100,6 +100,6 @@ export async function POST(
     return NextResponse.json(responseData)
   } catch (error) {
     console.error('Fork error:', error)
-    return NextResponse.json({ error: 'Failed to fork persona' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to clone persona' }, { status: 500 })
   }
 }

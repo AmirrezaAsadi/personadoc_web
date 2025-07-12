@@ -70,8 +70,8 @@ export async function POST(
       appliedSuggestions = []
     }
 
-    // Build the AI prompt for inclusivity suggestions
-    const systemPrompt = `You are an expert in inclusive design and persona research. Your role is to analyze personas and suggest brief, impactful inclusivity enhancements that make personas more diverse and representative.
+    // Build the AI prompt for enhanced granular inclusivity suggestions
+    const systemPrompt = `You are an expert in inclusive design, persona research, and accessibility. Your role is to analyze personas and suggest specific, granular inclusivity enhancements that make personas more diverse and representative.
 
 CURRENT PERSONA ANALYSIS:
 Name: ${persona.name}
@@ -91,59 +91,103 @@ ${Object.keys(inclusivityAttributes).length > 0 ? JSON.stringify(inclusivityAttr
 PREVIOUSLY APPLIED SUGGESTIONS:
 ${appliedSuggestions.length > 0 ? appliedSuggestions.map(s => `- ${s.label} (${s.icon_type})`).join('\n') : 'None applied yet'}
 
-TASK: Generate 5 diverse, brief inclusivity suggestions. Each should be 2-3 words maximum that represent meaningful inclusive dimensions that would make this persona more representative of real-world diversity.
+TASK: Generate 5 specific, granular inclusivity suggestions that go beyond surface-level demographics. Focus on behavioral patterns, contextual factors, and detailed accessibility considerations.
 
-INTERESTING SUGGESTIONS TO CONSIDER:
-- "Color blind" - visual accessibility needs
-- "Non-binary" - gender identity diversity  
-- "Bilingual speaker" - linguistic diversity
-- "First generation" - education/immigration background
-- "Chronic illness" - health accessibility
-- "Remote caregiver" - family responsibility patterns
-- "Deaf community" - communication differences
-- "Night shift worker" - work schedule diversity
-- "Religious minority" - faith/cultural diversity
-- "Wheelchair user" - mobility accessibility
-- "Low bandwidth" - technology constraints
-- "Single parent" - family structure variety
-- "Immigrant" - cultural adaptation
-- "Neurodivergent" - cognitive diversity
-- "Rural background" - geographic/cultural differences
-- "Gen Z digital native" - generational tech patterns
-- "Minimalist lifestyle" - consumption preferences
-- "Public transit user" - transportation accessibility
-- "Sign language user" - communication preferences
-- "Plant-based diet" - lifestyle/ethical choices
+GRANULAR INCLUSIVITY DIMENSIONS TO CONSIDER:
+
+ACCESSIBILITY & ABILITY:
+- "Uses screen reader daily" - specific assistive technology dependency
+- "Chronic fatigue affects scheduling" - energy management patterns
+- "Limited fine motor control" - specific physical interaction needs
+- "Noise sensitivity in crowds" - sensory processing specifics
+- "Memory aids for appointments" - cognitive support strategies
+- "Voice control preference" - alternative input methods
+- "High contrast display needs" - visual accessibility requirements
+
+SOCIOECONOMIC CONTEXT:
+- "Shares phone with family" - device access limitations
+- "Public WiFi dependent" - connectivity constraints
+- "Biweekly grocery budgeting" - financial planning patterns
+- "Second-hand clothing shopper" - economic shopping behaviors
+- "No car maintenance budget" - transportation reliability issues
+- "Prepaid phone plan limits" - communication constraints
+- "Energy bill conscious habits" - resource conservation behaviors
+
+CULTURAL & LINGUISTIC:
+- "Code-switches between languages" - multilingual communication patterns
+- "Observes Sabbath restrictions" - religious practice implications
+- "Extended family decisions" - collective decision-making culture
+- "Halal dietary requirements" - specific food restrictions
+- "Cash-preferred transactions" - cultural payment preferences
+- "Elder consultation tradition" - family hierarchy respect
+- "Lunar calendar observer" - alternative time systems
+
+FAMILY & CAREGIVING:
+- "School pickup scheduling constraint" - parental time limitations
+- "Elder care responsibilities" - multi-generational support duties
+- "Special needs sibling support" - family caregiving patterns
+- "Single income household stress" - financial pressure dynamics
+- "Shift work childcare gaps" - non-traditional schedule challenges
+- "Pet medication reminders" - animal care responsibilities
+- "Foster parent flexibility needs" - temporary family changes
+
+WORK & LIFESTYLE:
+- "Night shift circadian challenges" - sleep schedule disruptions
+- "Gig economy income uncertainty" - financial instability patterns
+- "Remote work isolation effects" - social connection needs
+- "Standing desk necessity" - workplace accommodation requirements
+- "Commute time stress factors" - transportation pressure impacts
+- "Uniform cleaning expenses" - job-related costs
+- "Weekend work social isolation" - non-standard schedule effects
+
+TECHNOLOGY & DIGITAL:
+- "Limited data plan behavior" - usage restriction adaptations
+- "Older device compatibility" - legacy technology constraints
+- "Privacy-focused preferences" - data protection concerns
+- "Offline-first app needs" - connectivity independence requirements
+- "Voice message preference" - alternative communication methods
+- "Dark mode necessity" - visual comfort requirements
+- "Notification fatigue management" - attention protection strategies
+
+GEOGRAPHIC & ENVIRONMENTAL:
+- "Seasonal depression patterns" - weather-related mental health
+- "Rural internet unreliability" - infrastructure limitation impacts
+- "Public transport timing dependency" - mobility schedule constraints
+- "Air quality health monitoring" - environmental health awareness
+- "Limited local service access" - geographic resource scarcity
+- "Natural disaster preparedness" - regional risk awareness
+- "Urban noise coping strategies" - environmental adaptation needs
 
 For each suggestion, provide:
-1. LABEL: 2-3 word inclusive dimension (brief and impactful)
-2. ICON_TYPE: Choose from these categories for icon matching:
-   - accessibility (for disabilities, assistive tech)
-   - identity (for gender, sexuality, identity)
-   - culture (for ethnicity, religion, immigration)
-   - economic (for income, employment, class)
-   - family (for family structure, relationships)
-   - health (for chronic conditions, mental health)
-   - education (for literacy, learning differences)
-   - geographic (for rural/urban, regional differences)
-3. DESCRIPTION: One concise sentence explaining how this would enhance persona inclusivity
+1. LABEL: Specific, detailed dimension (4-6 words describing exact situation)
+2. ICON_TYPE: Choose most relevant category:
+   - accessibility (disabilities, assistive tech, sensory needs)
+   - identity (gender, sexuality, cultural identity)
+   - culture (ethnicity, religion, traditions, language)
+   - economic (income, employment, financial constraints)
+   - family (caregiving, relationships, household dynamics)
+   - health (chronic conditions, mental health, medical needs)
+   - education (learning differences, literacy, knowledge gaps)
+   - geographic (location impacts, environmental factors)
+3. DESCRIPTION: Two detailed sentences explaining the specific behavioral impacts and design considerations
 
 Choose suggestions that:
-- Are NOT already represented in the current persona or applied suggestions
-- Add meaningful diversity across different dimensions
-- Would impact how this person interacts with products/services
-- Represent underrepresented communities
-- Avoid duplicating existing inclusivity attributes
+- Are highly specific and actionable (not general categories)
+- Include concrete behavioral patterns and constraints
+- Would significantly impact product/service design decisions
+- Represent real-world diversity in detailed ways
+- Focus on contextual factors and daily life realities
+- Avoid stereotyping while addressing authentic experiences
+- Are NOT already represented in current persona attributes
 
 Respond with ONLY a JSON array of exactly 5 suggestions in this format:
 [
   {
-    "label": "Brief label",
-    "icon_type": "category_name",
-    "description": "One sentence explaining the inclusivity enhancement"
+    "label": "Specific detailed situation",
+    "icon_type": "category_name", 
+    "description": "First sentence explains the specific pattern. Second sentence details design implications."
   }
 ]`
-
     const messages = [
       {
         role: "system" as const,
@@ -151,7 +195,7 @@ Respond with ONLY a JSON array of exactly 5 suggestions in this format:
       },
       {
         role: "user" as const,
-        content: `Please analyze this persona and provide 5 brief inclusivity suggestions (3-5 words each) that would make it more representative. Focus on meaningful dimensions that aren't already represented.`
+        content: `Please analyze this persona and provide 5 specific, granular inclusivity suggestions that represent detailed behavioral patterns, contextual constraints, and accessibility considerations. Focus on actionable specifics rather than broad categories.`
       }
     ]
 
@@ -182,32 +226,32 @@ Respond with ONLY a JSON array of exactly 5 suggestions in this format:
       }
     } catch (error) {
       console.error('Failed to parse AI suggestions:', error)
-      // Fallback suggestions if AI parsing fails
+      // Fallback suggestions if AI parsing fails - granular examples
       suggestions = [
         {
-          label: "Non-binary",
-          icon_type: "identity",
-          description: "Consider gender identity diversity beyond binary options"
+          label: "Uses voice control daily",
+          icon_type: "accessibility",
+          description: "Relies on voice commands due to limited fine motor control. Interface design must prioritize voice navigation and minimize precise touch interactions."
         },
         {
-          label: "Bilingual speaker",
-          icon_type: "culture",
-          description: "Explore multilingual communication patterns and cultural code-switching"
-        },
-        {
-          label: "Chronic illness",
-          icon_type: "health",
-          description: "Consider invisible disabilities and energy management needs"
-        },
-        {
-          label: "Remote caregiver",
-          icon_type: "family",
-          description: "Examine caring responsibilities and flexible work arrangements"
-        },
-        {
-          label: "Low bandwidth",
+          label: "Shares phone with family",
           icon_type: "economic",
-          description: "Account for technology constraints and data usage considerations"
+          description: "Device access is limited to specific hours when other family members don't need it. Apps must support quick login/logout and offline functionality."
+        },
+        {
+          label: "Observes Sabbath digital restrictions",
+          icon_type: "culture",
+          description: "Cannot use digital devices from Friday evening to Saturday evening weekly. Systems need delayed response handling and non-urgent communication options."
+        },
+        {
+          label: "Night shift circadian challenges",
+          icon_type: "health",
+          description: "Works midnight to 8am shifts causing sleep schedule disruption. Interfaces should minimize bright lights and support alternative active hours."
+        },
+        {
+          label: "Public transit timing dependency",
+          icon_type: "geographic",
+          description: "Daily schedule is constrained by fixed bus routes with limited frequency. Time-sensitive features must account for transportation delays and gaps."
         }
       ]
     }
