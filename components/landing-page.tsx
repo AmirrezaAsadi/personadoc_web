@@ -31,8 +31,8 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg ripple underwater-glow">
-                  <User className="w-6 h-6 text-white" />
+                <div className="w-10 h-10 bg-white/20 backdrop-blur-[8px] border border-white/30 rounded-full flex items-center justify-center shadow-lg ripple underwater-glow transition-all duration-300 hover:bg-white/25 hover:border-white/40">
+                  <User className="w-6 h-6 text-white drop-shadow-lg" />
                 </div>
                 <h1 className="text-2xl font-bold text-white">PersonaDock</h1>
               </div>
@@ -215,8 +215,8 @@ export default function LandingPage() {
         <footer className="glass-morphism border-t border-white/20 py-8 px-6">
           <div className="max-w-6xl mx-auto text-center">
             <div className="flex items-center justify-center space-x-3 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full flex items-center justify-center">
-                <User className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 bg-white/20 backdrop-blur-[8px] border border-white/30 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/25">
+                <User className="w-4 h-4 text-white drop-shadow-lg" />
               </div>
               <span className="text-lg font-semibold text-white">PersonaDock</span>
             </div>

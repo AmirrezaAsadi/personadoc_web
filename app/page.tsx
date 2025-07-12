@@ -200,15 +200,15 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg ripple">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-[8px] border border-white/30 rounded-full flex items-center justify-center shadow-lg ripple underwater-glow transition-all duration-300 hover:bg-white/25 hover:border-white/40">
                 {session?.user?.image ? (
                   <img 
                     src={session.user.image} 
                     alt={session.user.name || 'User'} 
-                    className="w-10 h-10 rounded-full"
+                    className="w-10 h-10 rounded-full ring-2 ring-white/30"
                   />
                 ) : (
-                  <User className="w-6 h-6 text-white" />
+                  <User className="w-6 h-6 text-white drop-shadow-lg" />
                 )}
               </div>
               <div>

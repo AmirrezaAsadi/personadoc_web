@@ -102,8 +102,6 @@ export default function SignInPage() {
 
             {/* OAuth Providers */}
             <div className="space-y-3">
-              <h3 className="text-sm font-medium text-white/90">🌐 OAuth Sign In</h3>
-              
               <Button
                 onClick={() => signIn('google', { callbackUrl: '/' })}
                 variant="outline"
