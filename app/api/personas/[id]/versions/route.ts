@@ -86,14 +86,16 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
-    if (!session?.user) {
+    
+    if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Get user ID
     let userId = (session.user as any).id
-    if (!userId && session.user.email) {
+    if (!userId) {
       const user = await prisma.user.findUnique({
         where: { email: session.user.email },
       })
@@ -101,84 +103,86 @@ export async function POST(
     }
 
     if (!userId) {
-      return NextResponse.json({ error: 'User ID not found' }, { status: 401 })
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    const { id: personaId } = await params
     const body = await request.json()
+    const { personaData, versionNotes } = body
 
-    const {
-      version,
-      name,
-      changes,
-      branchFrom,
-      branchName,
-      notes,
-      personaUpdates
-    } = body
-
-    const persona = await prisma.persona.findUnique({
-      where: { id: personaId }
+    // Check if user owns the persona
+    const existingPersona = await prisma.persona.findFirst({
+      where: { 
+        id: id,
+        createdBy: userId 
+      },
     })
 
-    if (!persona) {
-      return NextResponse.json({ error: 'Persona not found' }, { status: 404 })
+    if (!existingPersona) {
+      return NextResponse.json({ error: 'Persona not found or access denied' }, { status: 404 })
     }
 
-    const metadata = persona.metadata as any || {}
+    // Get existing versions from metadata
+    const metadata = existingPersona.metadata as any || {}
     const versions = metadata.versions || []
 
-    // Create snapshot of current persona state with any updates
-    const updatedPersonaData = {
-      name: personaUpdates?.name || persona.name,
-      age: personaUpdates?.age || persona.age,
-      occupation: personaUpdates?.occupation || persona.occupation,
-      location: personaUpdates?.location || persona.location,
-      introduction: personaUpdates?.introduction || persona.introduction,
-      personalityTraits: personaUpdates?.personalityTraits || persona.personalityTraits,
-      interests: personaUpdates?.interests || persona.interests,
-      gadgets: personaUpdates?.gadgets || persona.gadgets
-    }
+    // Generate new version number
+    const lastVersion = versions.length > 0 
+      ? Math.max(...versions.map((v: any) => parseFloat(v.version))) 
+      : 0
+    const nextVersionNumber = (lastVersion + 0.1).toFixed(1)
 
+    // Create new version
     const newVersion = {
-      id: `v${version}`,
-      version,
-      name: name || `${updatedPersonaData.name} - Version ${version}`,
-      snapshot: updatedPersonaData,
-      changes,
-      branchFrom,
-      branchName,
-      isActive: false,
-      isDraft: true,
-      notes,
-      createdAt: new Date().toISOString(),
-      createdBy: userId
+      id: `v${nextVersionNumber}`,
+      version: nextVersionNumber,
+      name: `${personaData.name} - Version ${nextVersionNumber}`,
+      snapshot: {
+        name: personaData.name,
+        age: personaData.age,
+        occupation: personaData.occupation,
+        location: personaData.location,
+        introduction: personaData.introduction,
+        personalityTraits: personaData.personalityTraits || [],
+        interests: personaData.interests || []
+      },
+      isActive: false, // New versions start as inactive
+      isDraft: true,  // Mark as draft initially
+      notes: versionNotes || `Version ${nextVersionNumber} - Updated via edit modal`,
+      createdAt: new Date().toISOString()
     }
 
-    versions.push(newVersion)
+    // Add new version to the versions array
+    const updatedVersions = [...versions, newVersion]
 
-    // Update persona metadata
-    await prisma.persona.update({
-      where: { id: personaId },
+    // Update the persona with new data and version
+    const updatedPersona = await prisma.persona.update({
+      where: { id: id },
       data: {
+        name: personaData.name,
+        age: personaData.age,
+        occupation: personaData.occupation,
+        location: personaData.location,
+        introduction: personaData.introduction,
+        personalityTraits: personaData.personalityTraits || [],
+        interests: personaData.interests || [],
+        currentVersion: nextVersionNumber,
+        updatedAt: new Date(),
         metadata: {
           ...metadata,
-          versions
+          versions: updatedVersions
         }
       }
     })
 
-    return NextResponse.json({
+    return NextResponse.json({ 
       success: true,
-      version: newVersion
+      persona: updatedPersona,
+      version: newVersion,
+      message: `Version ${nextVersionNumber} created successfully`
     })
-
   } catch (error) {
-    console.error('Version creation error:', error)
-    return NextResponse.json(
-      { error: 'Failed to create version' },
-      { status: 500 }
-    )
+    console.error('Error creating persona version:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 

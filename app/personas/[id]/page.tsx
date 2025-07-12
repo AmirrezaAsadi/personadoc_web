@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { MessageCircle, Share2, Users, Map, User, ArrowLeft, Database, Camera, Clock, ChevronLeft } from 'lucide-react'
+import { MessageCircle, Share2, Users, Map, User, ArrowLeft, Database, Camera, Clock, ChevronLeft, Edit } from 'lucide-react'
 import Link from 'next/link'
 import InterviewTab from '@/components/persona-tabs/InterviewTab'
 import SocialPostsTab from '@/components/persona-tabs/SocialPostsTab'
@@ -15,6 +15,8 @@ import { KnowledgeManagementTab } from '@/components/persona-tabs/KnowledgeManag
 import MediaTab from '@/components/persona-tabs/MediaTab'
 import { GlobalTimeline } from '@/components/GlobalTimeline'
 import { PersonaSharing } from '@/components/PersonaSharing'
+import { PersonaEditModal } from '@/components/PersonaEditModal'
+import { InclusivitySuggestions } from '@/components/InclusivitySuggestions'
 
 interface Version {
   id: string
@@ -93,16 +95,22 @@ export default function PersonaDetailPage() {
   const [activeTab, setActiveTab] = useState('interview')
   const [loading, setLoading] = useState(true)
   
+  // Modal states
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  
   // Global timeline state
   const [versions, setVersions] = useState<Version[]>([])
   const [currentVersion, setCurrentVersion] = useState<Version | null>(null)
   const [showTimeline, setShowTimeline] = useState(true)
 
-  const handleSharingChange = (updates: any) => {
+  const handleSharingChange = (updatedSharing: any) => {
     if (persona) {
       setPersona({
         ...persona,
-        ...updates
+        isPublic: updatedSharing.isPublic,
+        shareToken: updatedSharing.shareToken,
+        shareCount: updatedSharing.shareCount,
+        allowComments: updatedSharing.allowComments
       })
     }
   }
@@ -146,7 +154,7 @@ export default function PersonaDetailPage() {
     try {
       setLoading(true)
       const response = await fetch(`/api/personas/${params.id}/versions`, {
-        method: 'POST',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           versionId,
@@ -168,6 +176,40 @@ export default function PersonaDetailPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSavePersonaEdit = async (editedPersona: any, versionNotes?: string) => {
+    try {
+      const response = await fetch(`/api/personas/${params.id}/versions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'create',
+          personaData: editedPersona,
+          versionNotes
+        })
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setPersona(data.persona)
+        await fetchVersions() // Refresh versions
+        alert(data.message || 'Persona updated successfully!')
+      } else {
+        const error = await response.json()
+        alert('Failed to save changes: ' + (error.error || 'Unknown error'))
+      }
+    } catch (error) {
+      console.error('Failed to save persona edit:', error)
+      alert('Failed to save changes. Please try again.')
+    }
+  }
+
+  const handleApplyInclusivitySuggestion = (suggestion: any) => {
+    // Open edit modal and pre-populate with suggestion context
+    setIsEditModalOpen(true)
+    // Could also show a toast or notification about the suggestion
+    console.log('Applying inclusivity suggestion:', suggestion)
   }
 
   if (loading) {
@@ -287,6 +329,14 @@ export default function PersonaDetailPage() {
               
               {/* Sharing Component */}
               <div className="flex items-center gap-2">
+                <Button
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="bg-blue-600/80 hover:bg-blue-700/80 text-white backdrop-blur-sm underwater-glow"
+                  size="sm"
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit
+                </Button>
                 <PersonaSharing 
                   personaId={persona.id}
                   personaName={persona.name}
@@ -427,6 +477,20 @@ export default function PersonaDetailPage() {
           </Button>
         </div>
       )}
+
+      {/* Edit Modal */}
+      <PersonaEditModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        persona={persona}
+        onSave={handleSavePersonaEdit}
+      />
+
+      {/* Inclusivity Suggestions */}
+      <InclusivitySuggestions
+        persona={persona}
+        onApplySuggestion={handleApplyInclusivitySuggestion}
+      />
     </div>
   )
 }
