@@ -34,7 +34,7 @@ export default function LandingPage() {
                 <div className="w-10 h-10 bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg ripple underwater-glow">
                   <User className="w-6 h-6 text-white" />
                 </div>
-                <h1 className="text-2xl font-bold gradient-text">PersonaDock</h1>
+                <h1 className="text-2xl font-bold text-white">PersonaDock</h1>
               </div>
               
               <div className="flex gap-3">
@@ -218,7 +218,7 @@ export default function LandingPage() {
               <div className="w-8 h-8 bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full flex items-center justify-center">
                 <User className="w-4 h-4 text-white" />
               </div>
-              <span className="text-lg font-semibold gradient-text">PersonaDock</span>
+              <span className="text-lg font-semibold text-white">PersonaDock</span>
             </div>
             <p className="text-white/60 text-sm">
               © 2025 PersonaDock. Personify your research with confidence.
