@@ -523,6 +523,34 @@ body {
   pointer-events: none;
 }
 
+/* Persona Summary Minimize Animation */
+.persona-summary-content {
+  transition: all 0.3s ease-in-out;
+  overflow: hidden;
+}
+
+.persona-summary-minimized {
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  opacity: 0;
+}
+
+.persona-summary-expanded {
+  max-height: 2000px; /* Large enough to accommodate content */
+  opacity: 1;
+}
+
+/* Minimize button hover effect */
+.minimize-button {
+  transition: all 0.2s ease-in-out;
+}
+
+.minimize-button:hover {
+  transform: scale(1.05);
+  background: rgba(148, 163, 184, 0.1);
+}
+
 /* Sci-Fi Timeline Animations */
 @keyframes flow {
   0% {

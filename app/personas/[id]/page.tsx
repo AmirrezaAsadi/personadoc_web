@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { MessageCircle, Share2, Users, Map, User, ArrowLeft, Database, Camera, Clock, ChevronLeft, Edit } from 'lucide-react'
+import { MessageCircle, Share2, Users, Map, User, ArrowLeft, Database, Camera, Clock, ChevronLeft, ChevronUp, ChevronDown, Edit } from 'lucide-react'
 import Link from 'next/link'
 import InterviewTab from '@/components/persona-tabs/InterviewTab'
 import SocialPostsTab from '@/components/persona-tabs/SocialPostsTab'
@@ -102,6 +102,7 @@ export default function PersonaDetailPage() {
   const [persona, setPersona] = useState<Persona | null>(null)
   const [activeTab, setActiveTab] = useState('interview')
   const [loading, setLoading] = useState(true)
+  const [isPersonaSummaryMinimized, setIsPersonaSummaryMinimized] = useState(false)
   
   // Modal states
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -390,89 +391,109 @@ export default function PersonaDetailPage() {
 
           {/* Persona Summary Card */}
           <Card className="mb-6 floating bg-white/95 backdrop-blur-lg border-cyan-200/20 shadow-lg">
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <h3 className="font-semibold text-slate-800 mb-2">Background</h3>
-                  <p className="text-sm text-slate-700 leading-relaxed">{persona.introduction}</p>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-slate-800 mb-2">Personality Traits</h3>
-                  <div className="flex flex-wrap gap-1">
-                    {persona.personalityTraits?.map((trait, index) => (
-                      <span key={index} className="px-2 py-1 bg-cyan-100 text-cyan-800 text-xs rounded border border-cyan-200">
-                        {trait}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-slate-800 mb-2">Interests</h3>
-                  <div className="flex flex-wrap gap-1">
-                    {persona.interests?.map((interest, index) => (
-                      <span key={index} className="px-2 py-1 bg-emerald-100 text-emerald-800 text-xs rounded border border-emerald-200">
-                        {interest}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg font-semibold text-slate-800">Persona Overview</CardTitle>
+                <Button
+                  onClick={() => setIsPersonaSummaryMinimized(!isPersonaSummaryMinimized)}
+                  size="sm"
+                  variant="outline"
+                  className="h-8 w-8 p-0 hover:bg-slate-100/50 border-slate-200/50 transition-colors duration-200 minimize-button"
+                >
+                  {isPersonaSummaryMinimized ? (
+                    <ChevronDown className="w-4 h-4 text-slate-600" />
+                  ) : (
+                    <ChevronUp className="w-4 h-4 text-slate-600" />
+                  )}
+                </Button>
               </div>
+            </CardHeader>
+            
+            <CardContent className={`persona-summary-content ${
+              isPersonaSummaryMinimized ? 'persona-summary-minimized' : 'persona-summary-expanded'
+            } pt-0 pb-6`}>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <h3 className="font-semibold text-slate-800 mb-2">Background</h3>
+                    <p className="text-sm text-slate-700 leading-relaxed">{persona.introduction}</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-800 mb-2">Personality Traits</h3>
+                    <div className="flex flex-wrap gap-1">
+                      {persona.personalityTraits?.map((trait, index) => (
+                        <span key={index} className="px-2 py-1 bg-cyan-100 text-cyan-800 text-xs rounded border border-cyan-200">
+                          {trait}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-800 mb-2">Interests</h3>
+                    <div className="flex flex-wrap gap-1">
+                      {persona.interests?.map((interest, index) => (
+                        <span key={index} className="px-2 py-1 bg-emerald-100 text-emerald-800 text-xs rounded border border-emerald-200">
+                          {interest}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
 
-              {/* Behavioral Scores */}
-              {persona.metadata?.personality && (
-                <div className="mt-6 pt-6 border-t border-slate-200">
-                  <h3 className="font-semibold text-slate-800 mb-4">Behavioral Profile</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                    {[
-                      { key: 'techSavvy', label: 'Tech Savvy' },
-                      { key: 'socialness', label: 'Social' },
-                      { key: 'creativity', label: 'Creative' },
-                      { key: 'organization', label: 'Organized' },
-                      { key: 'riskTaking', label: 'Risk Taking' },
-                      { key: 'adaptability', label: 'Adaptable' }
-                    ].map(({ key, label }) => {
-                      const score = persona.metadata?.personality?.[key as keyof typeof persona.metadata.personality] as number || 5
-                      return (
-                        <div key={key} className="text-center">
-                          <div className="text-2xl font-bold text-slate-800">{score}/10</div>
-                          <div className="text-xs text-slate-600">{label}</div>
-                          <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
-                            <div 
-                              className="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full shadow-sm" 
-                              style={{ width: `${score * 10}%` }}
-                            ></div>
+                {/* Behavioral Scores */}
+                {persona.metadata?.personality && (
+                  <div className="mt-6 pt-6 border-t border-slate-200">
+                    <h3 className="font-semibold text-slate-800 mb-4">Behavioral Profile</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                      {[
+                        { key: 'techSavvy', label: 'Tech Savvy' },
+                        { key: 'socialness', label: 'Social' },
+                        { key: 'creativity', label: 'Creative' },
+                        { key: 'organization', label: 'Organized' },
+                        { key: 'riskTaking', label: 'Risk Taking' },
+                        { key: 'adaptability', label: 'Adaptable' }
+                      ].map(({ key, label }) => {
+                        const score = persona.metadata?.personality?.[key as keyof typeof persona.metadata.personality] as number || 5
+                        return (
+                          <div key={key} className="text-center">
+                            <div className="text-2xl font-bold text-slate-800">{score}/10</div>
+                            <div className="text-xs text-slate-600">{label}</div>
+                            <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
+                              <div 
+                                className="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full shadow-sm" 
+                                style={{ width: `${score * 10}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Inclusivity Attributes */}
+                {persona.inclusivityAttributes && Object.keys(persona.inclusivityAttributes).length > 0 && (
+                  <div className="mt-6 pt-6 border-t border-slate-200">
+                    <h3 className="font-semibold text-slate-800 mb-4">Niche Attributes</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {Object.entries(persona.inclusivityAttributes).map(([category, attributes]) => (
+                        <div key={category} className="space-y-2">
+                          <h4 className="text-sm font-medium text-slate-700 capitalize">{category}</h4>
+                          <div className="flex flex-wrap gap-1">
+                            {(attributes as string[]).map((attribute, index) => (
+                              <span 
+                                key={index} 
+                                className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded border border-purple-200"
+                              >
+                                {attribute}
+                              </span>
+                            ))}
                           </div>
                         </div>
-                      )
-                    })}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-
-              {/* Inclusivity Attributes */}
-              {persona.inclusivityAttributes && Object.keys(persona.inclusivityAttributes).length > 0 && (
-                <div className="mt-6 pt-6 border-t border-slate-200">
-                  <h3 className="font-semibold text-slate-800 mb-4">Niche Attributes</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {Object.entries(persona.inclusivityAttributes).map(([category, attributes]) => (
-                      <div key={category} className="space-y-2">
-                        <h4 className="text-sm font-medium text-slate-700 capitalize">{category}</h4>
-                        <div className="flex flex-wrap gap-1">
-                          {(attributes as string[]).map((attribute, index) => (
-                            <span 
-                              key={index} 
-                              className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded border border-purple-200"
-                            >
-                              {attribute}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
+                )}
+              </CardContent>
           </Card>
         </div>
 
