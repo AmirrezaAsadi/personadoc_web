@@ -227,7 +227,7 @@ export default function Dashboard() {
               </div>
             </div>
             
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               {/* Main Create Button */}
               <Button 
                 onClick={createPersona}
