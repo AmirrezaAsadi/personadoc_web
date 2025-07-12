@@ -110,7 +110,7 @@ Important: Ensure all personal identifiers remain anonymized and the persona is 
 
     // Call AI to analyze transcripts
     const response = await grok.chat.completions.create({
-      model: 'grok-beta',
+      model: 'grok-3',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: 'Please analyze these transcripts and create a comprehensive anonymous persona profile.' }
