@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Search, Plus, User, LogOut, X, MessageCircle, Users, Eye, Calendar, MapPin, Brain, Heart, Star, Filter, Globe, Lock, Share, HelpCircle, FileText, ChevronDown } from 'lucide-react'
+import { Search, Plus, User, LogOut, X, MessageCircle, Users, Eye, Calendar, MapPin, Brain, Heart, Star, Filter, Globe, Lock, Share, HelpCircle, FileText } from 'lucide-react'
 import PersonaWizard from '@/components/persona-wizard'
 import TranscriptWizard from '@/components/transcript-wizard'
 import { PersonaTypesGuide } from '@/components/PersonaTypesGuide'
@@ -52,7 +52,6 @@ export default function Dashboard() {
   const [filterType, setFilterType] = useState<'all' | 'user' | 'public' | 'shared'>('all')
   const [showWizard, setShowWizard] = useState(false)
   const [showTranscriptWizard, setShowTranscriptWizard] = useState(false)
-  const [showCreationDropdown, setShowCreationDropdown] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [showGuide, setShowGuide] = useState(false)
 
@@ -162,17 +161,7 @@ export default function Dashboard() {
     setShowTranscriptWizard(false)
   }
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (showCreationDropdown) {
-        setShowCreationDropdown(false)
-      }
-    }
-    
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [showCreationDropdown])
+
 
   const handlePersonaClick = (personaId: string) => {
     router.push(`/personas/${personaId}`)
@@ -239,51 +228,23 @@ export default function Dashboard() {
             </div>
             
             <div className="flex gap-3">
-              {/* Creation Dropdown */}
-              <div className="relative">
-                <Button 
-                  onClick={() => setShowCreationDropdown(!showCreationDropdown)}
-                  className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white border-0 shadow-lg ripple underwater-glow flex items-center gap-2 transition-all duration-300"
-                >
-                  <Plus className="w-4 h-4" />
-                  Create Persona
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-                
-                {showCreationDropdown && (
-                  <div className="absolute top-full mt-2 left-0 bg-white rounded-lg shadow-xl border border-gray-200 z-50 min-w-[250px]">
-                    <div className="p-2">
-                      <button
-                        onClick={() => {
-                          setShowCreationDropdown(false)
-                          createPersona()
-                        }}
-                        className="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-3"
-                      >
-                        <Plus className="w-5 h-5 text-blue-600" />
-                        <div>
-                          <div className="font-medium text-gray-900">Manual Creation</div>
-                          <div className="text-sm text-gray-500">Create step-by-step with wizard</div>
-                        </div>
-                      </button>
-                      
-                      <button
-                        onClick={() => {
-                          setShowCreationDropdown(false)
-                          setShowTranscriptWizard(true)
-                        }}
-                        className="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-3"
-                      >
-                        <FileText className="w-5 h-5 text-purple-600" />
-                        <div>
-                          <div className="font-medium text-gray-900">From Transcripts</div>
-                          <div className="text-sm text-gray-500">AI analyzes transcripts to create persona</div>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* Main Create Button */}
+              <Button 
+                onClick={createPersona}
+                className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white border-0 shadow-lg ripple underwater-glow flex items-center gap-2 transition-all duration-300"
+              >
+                <Plus className="w-4 h-4" />
+                Create Persona
+              </Button>
+              
+              {/* Transcript Creation Button */}
+              <Button 
+                onClick={() => setShowTranscriptWizard(true)}
+                className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white border-0 shadow-lg ripple underwater-glow flex items-center gap-2 transition-all duration-300"
+              >
+                <FileText className="w-4 h-4" />
+                From Transcripts
+              </Button>
               
               <Button 
                 onClick={() => signOut()} 
