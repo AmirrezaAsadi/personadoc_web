@@ -31,6 +31,8 @@ export function PersonaEditModal({ isOpen, onClose, persona, onSave }: PersonaEd
 
   useEffect(() => {
     if (persona && isOpen) {
+      const isAIEnhanced = persona.versionNotes && persona.versionNotes.includes('inclusivity')
+      
       setEditedPersona({
         name: persona.name || '',
         age: persona.age?.toString() || '',
@@ -42,7 +44,13 @@ export function PersonaEditModal({ isOpen, onClose, persona, onSave }: PersonaEd
       })
       setPersonalityInput((persona.personalityTraits || []).join(', '))
       setInterestsInput((persona.interests || []).join(', '))
-      setVersionNotes('')
+      
+      // Pre-populate version notes if this is an AI enhancement
+      if (isAIEnhanced && persona.versionNotes) {
+        setVersionNotes(persona.versionNotes)
+      } else {
+        setVersionNotes('')
+      }
     }
   }, [persona, isOpen])
 
@@ -59,13 +67,24 @@ export function PersonaEditModal({ isOpen, onClose, persona, onSave }: PersonaEd
 
   if (!isOpen) return null
 
+  const isAIEnhanced = versionNotes && versionNotes.includes('inclusivity')
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white/95 backdrop-blur-md border-white/20 shadow-2xl">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-xl font-bold flex items-center gap-2">
-            <Edit3 className="h-5 w-5 text-blue-600" />
-            Edit Persona
+            {isAIEnhanced ? (
+              <>
+                <Sparkles className="h-5 w-5 text-purple-600" />
+                Edit AI-Enhanced Persona
+              </>
+            ) : (
+              <>
+                <Edit3 className="h-5 w-5 text-blue-600" />
+                Edit Persona
+              </>
+            )}
           </CardTitle>
           <Button
             variant="outline"
@@ -78,6 +97,18 @@ export function PersonaEditModal({ isOpen, onClose, persona, onSave }: PersonaEd
         </CardHeader>
         
         <CardContent className="space-y-4">
+          {isAIEnhanced && (
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-3 mb-4">
+              <div className="flex items-center gap-2 text-purple-700 text-sm font-medium mb-1">
+                <Sparkles className="h-4 w-4" />
+                AI-Enhanced Content
+              </div>
+              <p className="text-xs text-purple-600">
+                This persona has been automatically enhanced with inclusive design insights. Review the changes and adjust as needed before saving.
+              </p>
+            </div>
+          )}
+          
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="name">Name</Label>

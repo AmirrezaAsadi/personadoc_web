@@ -205,18 +205,41 @@ export default function PersonaDetailPage() {
     }
   }
 
-  const handleApplyInclusivitySuggestion = (suggestion: any) => {
-    // Open edit modal and provide context about the suggestion
-    setIsEditModalOpen(true)
-    
-    // Show a toast or notification about the suggestion context
-    if (suggestion.research_prompt) {
-      setTimeout(() => {
-        alert(`💡 Research Focus: ${suggestion.research_prompt}\n\nConsider how this insight might enhance ${persona?.name}'s representation when editing.`)
-      }, 500)
+  const handleApplyInclusivitySuggestion = async (suggestion: any) => {
+    try {
+      // Show loading state
+      const loadingAlert = setTimeout(() => {
+        alert('AI is enhancing your persona with inclusive insights... This may take a moment.')
+      }, 1000)
+
+      // Call AI to enhance the persona based on the suggestion
+      const response = await fetch(`/api/personas/${params.id}/enhance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ suggestion })
+      })
+
+      clearTimeout(loadingAlert)
+
+      if (response.ok) {
+        const data = await response.json()
+        
+        // Open edit modal with the AI-enhanced persona data
+        setPersona(data.enhancedPersona)
+        setIsEditModalOpen(true)
+        
+        // Show success message
+        setTimeout(() => {
+          alert(`✨ AI Enhancement Applied!\n\n${data.message}\n\nThe edit modal has been populated with enhanced details. Review and save to create a new version.`)
+        }, 500)
+      } else {
+        const error = await response.json()
+        alert('Failed to enhance persona: ' + (error.error || 'Unknown error'))
+      }
+    } catch (error) {
+      console.error('Failed to apply inclusivity suggestion:', error)
+      alert('Failed to enhance persona. Please try again.')
     }
-    
-    console.log('Applying AI inclusivity suggestion:', suggestion)
   }
 
   if (loading) {

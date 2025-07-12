@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Sparkles, X, Users, Globe, Heart, Brain, DollarSign, Accessibility, Loader2 } from 'lucide-react'
+import { Sparkles, X, Users, Globe, Heart, Brain, DollarSign, Accessibility, Loader2, Home, GraduationCap, Activity } from 'lucide-react'
 
 interface InclusivitySuggestionsProps {
   persona: any
@@ -11,19 +11,20 @@ interface InclusivitySuggestionsProps {
 }
 
 interface AISuggestion {
-  category: string
-  suggestion: string
-  impact: string
-  research_prompt: string
+  label: string
+  icon_type: string
+  description: string
 }
 
-const categoryIcons: { [key: string]: any } = {
-  'Economic Diversity': DollarSign,
-  'Accessibility': Accessibility,
-  'Cultural Context': Globe,
-  'Gender Identity': Heart,
-  'Digital Literacy': Brain,
-  'Family Structure': Users,
+const iconMapping: { [key: string]: any } = {
+  accessibility: Accessibility,
+  identity: Heart,
+  culture: Globe,
+  economic: DollarSign,
+  family: Users,
+  health: Activity,
+  education: GraduationCap,
+  geographic: Home,
   default: Sparkles
 }
 
@@ -69,10 +70,9 @@ export function InclusivitySuggestions({ persona, onApplySuggestion }: Inclusivi
       setError('Unable to generate suggestions. Please try again.')
       // Fallback to a basic suggestion
       setCurrentSuggestions([{
-        category: 'Inclusive Design',
-        suggestion: 'Consider exploring diverse user perspectives to make this persona more inclusive.',
-        impact: 'Better representation leads to more accessible and inclusive product design.',
-        research_prompt: 'What diverse experiences and needs might we be overlooking for this persona?'
+        label: 'Neurodivergent',
+        icon_type: 'accessibility',
+        description: 'Consider different cognitive processing patterns and accessibility needs.'
       }])
     } finally {
       setIsLoading(false)
@@ -105,7 +105,7 @@ export function InclusivitySuggestions({ persona, onApplySuggestion }: Inclusivi
 
   const currentSuggestion = getCurrentSuggestion()
   const IconComponent = currentSuggestion 
-    ? (categoryIcons[currentSuggestion.category] || categoryIcons.default)
+    ? (iconMapping[currentSuggestion.icon_type] || iconMapping.default)
     : Sparkles
 
   return (
@@ -123,7 +123,7 @@ export function InclusivitySuggestions({ persona, onApplySuggestion }: Inclusivi
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium flex items-center gap-2 text-purple-700">
                 <Sparkles className="h-4 w-4" />
-                AI Inclusivity Insights
+                Inclusive Perspectives
               </CardTitle>
               <Button
                 variant="outline"
@@ -156,22 +156,21 @@ export function InclusivitySuggestions({ persona, onApplySuggestion }: Inclusivi
               </div>
             ) : currentSuggestion ? (
               <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                  <IconComponent className="h-4 w-4 text-purple-600" />
-                  {currentSuggestion.category}
-                </div>
-                
-                <div className="p-3 bg-purple-50 rounded-lg border-l-4 border-purple-400">
-                  <p className="text-sm text-gray-700 leading-relaxed mb-2">
-                    <strong>Suggestion:</strong> {currentSuggestion.suggestion}
+                {/* Brief card-based display */}
+                <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border border-purple-200">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-white rounded-lg shadow-sm">
+                      <IconComponent className="h-5 w-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-sm text-gray-800">{currentSuggestion.label}</h3>
+                      <p className="text-xs text-gray-600 capitalize">{currentSuggestion.icon_type} insight</p>
+                    </div>
+                  </div>
+                  
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    {currentSuggestion.description}
                   </p>
-                  <p className="text-xs text-gray-600">
-                    <strong>Impact:</strong> {currentSuggestion.impact}
-                  </p>
-                </div>
-
-                <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
-                  💡 <strong>Research question:</strong> {currentSuggestion.research_prompt}
                 </div>
 
                 <div className="flex gap-2">
@@ -180,6 +179,7 @@ export function InclusivitySuggestions({ persona, onApplySuggestion }: Inclusivi
                     variant="outline"
                     size="sm"
                     className="flex-1 text-xs"
+                    disabled={isLoading}
                   >
                     <Sparkles className="h-3 w-3 mr-1" />
                     {currentSuggestions.length > 1 ? 'Next Idea' : 'New Ideas'}
@@ -188,8 +188,9 @@ export function InclusivitySuggestions({ persona, onApplySuggestion }: Inclusivi
                     onClick={() => onApplySuggestion(currentSuggestion)}
                     size="sm"
                     className="flex-1 text-xs bg-purple-600 hover:bg-purple-700"
+                    disabled={isLoading}
                   >
-                    Explore This
+                    Auto-Apply
                   </Button>
                 </div>
 
@@ -205,7 +206,7 @@ export function InclusivitySuggestions({ persona, onApplySuggestion }: Inclusivi
 
             <div className="pt-2 border-t border-gray-200">
               <p className="text-xs text-gray-500 text-center">
-                AI-powered insights for inclusive design ✨
+                Making personas more representative ✨
               </p>
             </div>
           </CardContent>

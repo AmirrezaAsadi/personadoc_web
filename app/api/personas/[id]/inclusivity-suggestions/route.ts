@@ -52,7 +52,7 @@ export async function POST(
     }
 
     // Build the AI prompt for inclusivity suggestions
-    const systemPrompt = `You are an expert in inclusive design and persona research. Your role is to analyze personas and suggest improvements that make them more inclusive and representative of diverse user experiences.
+    const systemPrompt = `You are an expert in inclusive design and persona research. Your role is to analyze personas and suggest brief, impactful inclusivity enhancements that make personas more diverse and representative.
 
 CURRENT PERSONA ANALYSIS:
 Name: ${persona.name}
@@ -66,35 +66,57 @@ Interests: ${Array.isArray(persona.interests) ? persona.interests.join(', ') : '
 EXISTING DEMOGRAPHICS:
 ${metadata.demographics ? JSON.stringify(metadata.demographics, null, 2) : 'Limited demographic information'}
 
-TASK: Generate 3 specific, actionable inclusivity suggestions that would help make this persona more representative and inclusive. Focus on aspects that are missing or could be enhanced.
+TASK: Generate 5 diverse, brief inclusivity suggestions. Each should be 2-3 words maximum that represent meaningful inclusive dimensions that would make this persona more representative of real-world diversity.
 
-Consider these dimensions:
-- Economic diversity (income levels, employment situations, financial circumstances)
-- Accessibility needs (physical, cognitive, sensory differences)
-- Cultural backgrounds (ethnicity, immigration status, language preferences)
-- Gender identity and expression (beyond binary assumptions)
-- Digital literacy levels (varying tech comfort and access)
-- Family structures (non-traditional arrangements, caregiving responsibilities)
-- Geographic contexts (rural vs urban, regional differences)
-- Life circumstances (chronic conditions, temporary situations, major life events)
+INTERESTING SUGGESTIONS TO CONSIDER:
+- "Color blind" - visual accessibility needs
+- "Non-binary" - gender identity diversity  
+- "Bilingual speaker" - linguistic diversity
+- "First generation" - education/immigration background
+- "Chronic illness" - health accessibility
+- "Remote caregiver" - family responsibility patterns
+- "Deaf community" - communication differences
+- "Night shift worker" - work schedule diversity
+- "Religious minority" - faith/cultural diversity
+- "Wheelchair user" - mobility accessibility
+- "Low bandwidth" - technology constraints
+- "Single parent" - family structure variety
+- "Immigrant" - cultural adaptation
+- "Neurodivergent" - cognitive diversity
+- "Rural background" - geographic/cultural differences
+- "Gen Z digital native" - generational tech patterns
+- "Minimalist lifestyle" - consumption preferences
+- "Public transit user" - transportation accessibility
+- "Sign language user" - communication preferences
+- "Plant-based diet" - lifestyle/ethical choices
 
 For each suggestion, provide:
-1. CATEGORY: The inclusivity dimension being addressed
-2. SUGGESTION: A specific, research-backed suggestion 
-3. IMPACT: How this would improve the persona's usefulness
-4. RESEARCH_PROMPT: A question to guide further research
+1. LABEL: 2-3 word inclusive dimension (brief and impactful)
+2. ICON_TYPE: Choose from these categories for icon matching:
+   - accessibility (for disabilities, assistive tech)
+   - identity (for gender, sexuality, identity)
+   - culture (for ethnicity, religion, immigration)
+   - economic (for income, employment, class)
+   - family (for family structure, relationships)
+   - health (for chronic conditions, mental health)
+   - education (for literacy, learning differences)
+   - geographic (for rural/urban, regional differences)
+3. DESCRIPTION: One concise sentence explaining how this would enhance persona inclusivity
 
-Respond with a JSON array of exactly 3 suggestions in this format:
+Choose suggestions that:
+- Are NOT already represented in the current persona
+- Add meaningful diversity across different dimensions
+- Would impact how this person interacts with products/services
+- Represent underrepresented communities
+
+Respond with ONLY a JSON array of exactly 5 suggestions in this format:
 [
   {
-    "category": "string",
-    "suggestion": "string", 
-    "impact": "string",
-    "research_prompt": "string"
+    "label": "Brief label",
+    "icon_type": "category_name",
+    "description": "One sentence explaining the inclusivity enhancement"
   }
-]
-
-Focus on genuine gaps in representation that would meaningfully improve product design decisions.`
+]`
 
     const messages = [
       {
@@ -103,13 +125,13 @@ Focus on genuine gaps in representation that would meaningfully improve product 
       },
       {
         role: "user" as const,
-        content: `Please analyze this persona and provide 3 specific inclusivity suggestions that would make it more representative and useful for inclusive design.`
+        content: `Please analyze this persona and provide 5 brief inclusivity suggestions (2-3 words each) that would make it more representative. Focus on meaningful dimensions that aren't already represented.`
       }
     ]
 
     // Call AI to generate suggestions
     const response = await grok.chat.completions.create({
-      model: "grok-3",
+      model: "grok-3",// this is correct model
       messages: messages,
       temperature: 0.7,
       max_tokens: 1000,
@@ -127,10 +149,9 @@ Focus on genuine gaps in representation that would meaningfully improve product 
       } else {
         // Fallback if JSON parsing fails
         suggestions = [{
-          category: "AI Response Error",
-          suggestion: "Unable to parse AI suggestions. Please try again.",
-          impact: "N/A",
-          research_prompt: "Review AI response format"
+          label: "AI Response Error",
+          icon_type: "accessibility",
+          description: "Unable to parse AI suggestions. Please try again."
         }]
       }
     } catch (error) {
@@ -138,29 +159,36 @@ Focus on genuine gaps in representation that would meaningfully improve product 
       // Fallback suggestions if AI parsing fails
       suggestions = [
         {
-          category: "Economic Diversity",
-          suggestion: "Consider different income levels and how they might affect technology access and usage patterns.",
-          impact: "Better understanding of affordability constraints and value-driven decisions",
-          research_prompt: "How might budget constraints influence this persona's technology choices and usage patterns?"
+          label: "Non-binary",
+          icon_type: "identity",
+          description: "Consider gender identity diversity beyond binary options"
         },
         {
-          category: "Accessibility",
-          suggestion: "Explore potential accessibility needs that might influence interaction preferences.",
-          impact: "Ensures design considers various ability levels and assistive technologies",
-          research_prompt: "What accessibility considerations might affect how this persona interacts with technology?"
+          label: "Bilingual speaker",
+          icon_type: "culture",
+          description: "Explore multilingual communication patterns and cultural code-switching"
         },
         {
-          category: "Cultural Context",
-          suggestion: "Examine cultural background and how it shapes communication styles and preferences.",
-          impact: "Creates more culturally aware and inclusive design decisions",
-          research_prompt: "How might cultural background influence this persona's expectations and communication preferences?"
+          label: "Chronic illness",
+          icon_type: "health",
+          description: "Consider invisible disabilities and energy management needs"
+        },
+        {
+          label: "Remote caregiver",
+          icon_type: "family",
+          description: "Examine caring responsibilities and flexible work arrangements"
+        },
+        {
+          label: "Low bandwidth",
+          icon_type: "economic",
+          description: "Account for technology constraints and data usage considerations"
         }
       ]
     }
 
     return NextResponse.json({ 
       success: true,
-      suggestions: suggestions.slice(0, 3), // Ensure only 3 suggestions
+      suggestions: suggestions.slice(0, 5), // Ensure only 5 suggestions
       persona_name: persona.name
     })
 
