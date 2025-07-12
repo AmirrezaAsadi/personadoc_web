@@ -389,28 +389,28 @@ export default function PersonaDetailPage() {
           </div>
 
           {/* Persona Summary Card */}
-          <Card className="mb-6 floating bg-slate-800/60 border-cyan-400/30 backdrop-blur-sm underwater-glow">
+          <Card className="mb-6 floating bg-white/95 backdrop-blur-lg border-cyan-200/20 shadow-lg">
             <CardContent className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <h3 className="font-semibold text-cyan-400 mb-2">Background</h3>
-                  <p className="text-sm text-cyan-200">{persona.introduction}</p>
+                  <h3 className="font-semibold text-slate-800 mb-2">Background</h3>
+                  <p className="text-sm text-slate-700 leading-relaxed">{persona.introduction}</p>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-cyan-400 mb-2">Personality Traits</h3>
+                  <h3 className="font-semibold text-slate-800 mb-2">Personality Traits</h3>
                   <div className="flex flex-wrap gap-1">
                     {persona.personalityTraits?.map((trait, index) => (
-                      <span key={index} className="px-2 py-1 bg-cyan-600/50 text-cyan-100 text-xs rounded border border-cyan-400/30">
+                      <span key={index} className="px-2 py-1 bg-cyan-100 text-cyan-800 text-xs rounded border border-cyan-200">
                         {trait}
                       </span>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-cyan-400 mb-2">Interests</h3>
+                  <h3 className="font-semibold text-slate-800 mb-2">Interests</h3>
                   <div className="flex flex-wrap gap-1">
                     {persona.interests?.map((interest, index) => (
-                      <span key={index} className="px-2 py-1 bg-emerald-600/50 text-emerald-100 text-xs rounded border border-emerald-400/30">
+                      <span key={index} className="px-2 py-1 bg-emerald-100 text-emerald-800 text-xs rounded border border-emerald-200">
                         {interest}
                       </span>
                     ))}
@@ -420,8 +420,8 @@ export default function PersonaDetailPage() {
 
               {/* Behavioral Scores */}
               {persona.metadata?.personality && (
-                <div className="mt-6 pt-6 border-t border-cyan-400/30">
-                  <h3 className="font-semibold text-cyan-400 mb-4">Behavioral Profile</h3>
+                <div className="mt-6 pt-6 border-t border-slate-200">
+                  <h3 className="font-semibold text-slate-800 mb-4">Behavioral Profile</h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                     {[
                       { key: 'techSavvy', label: 'Tech Savvy' },
@@ -434,11 +434,11 @@ export default function PersonaDetailPage() {
                       const score = persona.metadata?.personality?.[key as keyof typeof persona.metadata.personality] as number || 5
                       return (
                         <div key={key} className="text-center">
-                          <div className="text-2xl font-bold text-cyan-300">{score}/10</div>
-                          <div className="text-xs text-cyan-200">{label}</div>
-                          <div className="w-full bg-slate-700/50 rounded-full h-2 mt-1">
+                          <div className="text-2xl font-bold text-slate-800">{score}/10</div>
+                          <div className="text-xs text-slate-600">{label}</div>
+                          <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
                             <div 
-                              className="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full underwater-glow" 
+                              className="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full shadow-sm" 
                               style={{ width: `${score * 10}%` }}
                             ></div>
                           </div>
@@ -451,17 +451,17 @@ export default function PersonaDetailPage() {
 
               {/* Inclusivity Attributes */}
               {persona.inclusivityAttributes && Object.keys(persona.inclusivityAttributes).length > 0 && (
-                <div className="mt-6 pt-6 border-t border-cyan-400/30">
-                  <h3 className="font-semibold text-cyan-400 mb-4">Niche Attributes</h3>
+                <div className="mt-6 pt-6 border-t border-slate-200">
+                  <h3 className="font-semibold text-slate-800 mb-4">Niche Attributes</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {Object.entries(persona.inclusivityAttributes).map(([category, attributes]) => (
                       <div key={category} className="space-y-2">
-                        <h4 className="text-sm font-medium text-cyan-300 capitalize">{category}</h4>
+                        <h4 className="text-sm font-medium text-slate-700 capitalize">{category}</h4>
                         <div className="flex flex-wrap gap-1">
                           {(attributes as string[]).map((attribute, index) => (
                             <span 
                               key={index} 
-                              className="px-2 py-1 bg-purple-600/50 text-purple-100 text-xs rounded border border-purple-400/30"
+                              className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded border border-purple-200"
                             >
                               {attribute}
                             </span>
