@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { MessageCircle, Share2, Users, Map, User, ArrowLeft, Database, Camera, Clock, ChevronLeft, ChevronUp, ChevronDown, Edit } from 'lucide-react'
+import { MessageCircle, Share2, Users, Map, User, ArrowLeft, Database, Camera, Clock, ChevronLeft, ChevronUp, ChevronDown, Edit, Copy, Eye } from 'lucide-react'
 import Link from 'next/link'
 import InterviewTab from '@/components/persona-tabs/InterviewTab'
 import SocialPostsTab from '@/components/persona-tabs/SocialPostsTab'
@@ -50,6 +50,12 @@ interface Persona {
   shareToken?: string
   shareCount?: number
   allowComments?: boolean
+  isOwner?: boolean
+  accessType?: 'owner' | 'public' | 'shared'
+  creator?: {
+    name: string
+    email: string
+  }
   metadata?: {
     avatar?: {
       name: string
@@ -103,6 +109,7 @@ export default function PersonaDetailPage() {
   const [activeTab, setActiveTab] = useState('interview')
   const [loading, setLoading] = useState(true)
   const [isPersonaSummaryMinimized, setIsPersonaSummaryMinimized] = useState(false)
+  const [isCloning, setIsCloning] = useState(false)
   
   // Modal states
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -124,12 +131,46 @@ export default function PersonaDetailPage() {
     }
   }
 
+  const handleClonePersona = async () => {
+    if (!persona || isCloning) return
+    
+    try {
+      setIsCloning(true)
+      const response = await fetch(`/api/personas/${params.id}/fork`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const clonedPersona = await response.json()
+        // Redirect to the new cloned persona
+        window.location.href = `/personas/${clonedPersona.id}`
+      } else {
+        const error = await response.json()
+        alert('Failed to clone persona: ' + (error.message || 'Unknown error'))
+      }
+    } catch (error) {
+      console.error('Failed to clone persona:', error)
+      alert('Failed to clone persona. Please try again.')
+    } finally {
+      setIsCloning(false)
+    }
+  }
+
   useEffect(() => {
     if (params.id && session) {
       loadPersona()
-      fetchVersions()
     }
   }, [params.id, session])
+
+  useEffect(() => {
+    // Only fetch versions for owners
+    if (params.id && session && persona?.isOwner) {
+      fetchVersions()
+    }
+  }, [params.id, session, persona?.isOwner])
 
   const loadPersona = async () => {
     try {
@@ -311,9 +352,9 @@ export default function PersonaDetailPage() {
       case 'narrative':
         return <NarrativeTab persona={persona} />
       case 'media':
-        return <MediaTab personaId={personaId} personaName={persona?.name || 'Unknown'} />
+        return <MediaTab personaId={personaId} personaName={persona?.name || 'Unknown'} isOwner={persona?.isOwner || false} />
       case 'knowledge':
-        return <KnowledgeManagementTab personaId={personaId} personaName={persona?.name || 'Unknown'} globalTimelineVisible={showTimeline} />
+        return <KnowledgeManagementTab personaId={personaId} personaName={persona?.name || 'Unknown'} globalTimelineVisible={showTimeline} isOwner={persona?.isOwner || false} />
       default:
         return <InterviewTab persona={persona} />
     }
@@ -366,28 +407,61 @@ export default function PersonaDetailPage() {
                 </div>
               </div>
               
-              {/* Sharing Component */}
+              {/* Action Buttons */}
               <div className="flex items-center gap-2">
-                <Button
-                  onClick={() => setIsEditModalOpen(true)}
-                  className="bg-blue-600/80 hover:bg-blue-700/80 text-white backdrop-blur-sm underwater-glow"
-                  size="sm"
-                >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit
-                </Button>
-                <PersonaSharing 
-                  personaId={persona.id}
-                  personaName={persona.name}
-                  isPublic={persona.isPublic || false}
-                  shareToken={persona.shareToken}
-                  shareCount={persona.shareCount || 0}
-                  allowComments={persona.allowComments || false}
-                  onSharingChange={handleSharingChange}
-                />
+                {persona.isOwner ? (
+                  // Show edit button only for owners
+                  <Button
+                    onClick={() => setIsEditModalOpen(true)}
+                    className="bg-blue-600/80 hover:bg-blue-700/80 text-white backdrop-blur-sm underwater-glow"
+                    size="sm"
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit
+                  </Button>
+                ) : (
+                  // Show clone button for non-owners
+                  <Button
+                    onClick={handleClonePersona}
+                    disabled={isCloning}
+                    className="bg-purple-600/80 hover:bg-purple-700/80 text-white backdrop-blur-sm underwater-glow"
+                    size="sm"
+                  >
+                    <Copy className="w-4 h-4 mr-2" />
+                    {isCloning ? 'Cloning...' : 'Clone'}
+                  </Button>
+                )}
+                
+                {/* Show sharing only for owners */}
+                {persona.isOwner && (
+                  <PersonaSharing 
+                    personaId={persona.id}
+                    personaName={persona.name}
+                    isPublic={persona.isPublic || false}
+                    shareToken={persona.shareToken}
+                    shareCount={persona.shareCount || 0}
+                    allowComments={persona.allowComments || false}
+                    onSharingChange={handleSharingChange}
+                  />
+                )}
               </div>
             </div>
           </div>
+
+          {/* Non-owner notification banner */}
+          {!persona.isOwner && (
+            <div className="mb-4 p-4 bg-amber-50/90 backdrop-blur-sm border border-amber-200 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center">
+                  <Eye className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <p className="text-amber-800 font-medium">Viewing {persona.creator?.name || 'another user'}'s persona</p>
+                  <p className="text-amber-700 text-sm">You can explore this persona and clone it to create your own copy, but you cannot edit the original.</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Persona Summary Card */}
           <Card className="mb-6 floating bg-white/95 backdrop-blur-lg border-cyan-200/20 shadow-lg">
@@ -535,8 +609,8 @@ export default function PersonaDetailPage() {
         </div>
       </div>
 
-      {/* Global Timeline - now as a proper footer */}
-      {showTimeline ? (
+      {/* Global Timeline - only show for owners */}
+      {persona?.isOwner && showTimeline ? (
         <GlobalTimeline
           versions={versions}
           currentVersion={currentVersion}
@@ -548,7 +622,7 @@ export default function PersonaDetailPage() {
             console.log('Create new version')
           }}
         />
-      ) : (
+      ) : persona?.isOwner && !showTimeline ? (
         <div className="fixed bottom-4 right-4 z-40">
           <Button
             onClick={() => setShowTimeline(true)}
@@ -559,15 +633,17 @@ export default function PersonaDetailPage() {
             Timeline
           </Button>
         </div>
-      )}
+      ) : null}
 
-      {/* Edit Modal */}
-      <PersonaEditModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        persona={persona}
-        onSave={handleSavePersonaEdit}
-      />
+      {/* Edit Modal - Only show for owners */}
+      {persona?.isOwner && (
+        <PersonaEditModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          persona={persona}
+          onSave={handleSavePersonaEdit}
+        />
+      )}
 
       {/* Inclusivity Suggestions */}
       <InclusivitySuggestions

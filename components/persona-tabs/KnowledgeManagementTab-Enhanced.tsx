@@ -21,6 +21,7 @@ interface KnowledgeManagementTabProps {
   personaId: string
   personaName: string
   globalTimelineVisible?: boolean
+  isOwner?: boolean
 }
 
 interface ResearchItem {
@@ -62,7 +63,7 @@ interface DocumentFile {
   category?: 'document' | 'image' | 'social' | 'research'
 }
 
-export function KnowledgeManagementTab({ personaId, personaName, globalTimelineVisible = false }: KnowledgeManagementTabProps) {
+export function KnowledgeManagementTab({ personaId, personaName, globalTimelineVisible = false, isOwner = false }: KnowledgeManagementTabProps) {
   // Main state
   const [researchData, setResearchData] = useState<ResearchItem[]>([])
   const [versions, setVersions] = useState<Version[]>([])
@@ -572,10 +573,12 @@ export function KnowledgeManagementTab({ personaId, personaName, globalTimelineV
             <nav className="-mb-px flex space-x-8">
               {[
                 { id: 'research', label: 'Research Data', icon: BookOpen },
-                { id: 'upload', label: 'Upload', icon: Upload },
+                ...(isOwner ? [
+                  { id: 'upload', label: 'Upload', icon: Upload },
+                  { id: 'import', label: 'Import', icon: Archive }
+                ] : []),
                 { id: 'versions', label: 'Version History', icon: GitBranch },
-                { id: 'export', label: 'Export', icon: Download },
-                { id: 'import', label: 'Import', icon: Archive }
+                { id: 'export', label: 'Export', icon: Download }
               ].map((tab) => {
                 const Icon = tab.icon
                 return (

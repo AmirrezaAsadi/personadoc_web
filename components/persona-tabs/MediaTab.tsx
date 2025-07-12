@@ -15,6 +15,7 @@ import {
 interface MediaTabProps {
   personaId: string
   personaName: string
+  isOwner?: boolean
 }
 
 interface MediaItem {
@@ -54,7 +55,7 @@ const MEDIA_TYPES = [
   'document'
 ] as const
 
-export default function MediaTab({ personaId, personaName }: MediaTabProps) {
+export default function MediaTab({ personaId, personaName, isOwner = false }: MediaTabProps) {
   // State
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -220,10 +221,12 @@ export default function MediaTab({ personaId, personaName }: MediaTabProps) {
           <h2 className="text-2xl font-bold text-gray-900">Media Gallery</h2>
           <p className="text-gray-600">Manage images, videos, and media assets for {personaName}</p>
         </div>
-        <Button onClick={() => setShowUploadDialog(true)} className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Upload Media
-        </Button>
+        {isOwner && (
+          <Button onClick={() => setShowUploadDialog(true)} className="bg-blue-600 hover:bg-blue-700">
+            <Plus className="w-4 h-4 mr-2" />
+            Upload Media
+          </Button>
+        )}
       </div>
 
       {/* Filters and Search */}
@@ -376,13 +379,15 @@ export default function MediaTab({ personaId, personaName }: MediaTabProps) {
             <p className="text-gray-600 mb-4">
               {searchQuery || selectedCategory !== 'all' || selectedType !== 'all'
                 ? 'Try adjusting your filters or search terms.'
-                : 'Upload some images, videos, or documents to get started.'
+                : isOwner ? 'Upload some images, videos, or documents to get started.' : 'No media available for this persona.'
               }
             </p>
-            <Button onClick={() => setShowUploadDialog(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Upload Media
-            </Button>
+            {isOwner && (
+              <Button onClick={() => setShowUploadDialog(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Upload Media
+              </Button>
+            )}
           </CardContent>
         </Card>
       )}
