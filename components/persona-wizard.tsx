@@ -13,6 +13,8 @@ import Step4Research from './persona-wizard/step4-research'
 interface PersonaWizardProps {
   onComplete: (personaData: any) => void
   onCancel: () => void
+  initialData?: any
+  isEditing?: boolean
 }
 
 const STEPS = [
@@ -22,45 +24,45 @@ const STEPS = [
   { id: 4, title: 'Research Data Integration', icon: FileText, description: 'Upload research and validation' }
 ]
 
-export default function PersonaWizard({ onComplete, onCancel }: PersonaWizardProps) {
+export default function PersonaWizard({ onComplete, onCancel, initialData, isEditing = false }: PersonaWizardProps) {
   const [currentStep, setCurrentStep] = useState(1)
   const [personaData, setPersonaData] = useState({
     // Step 1: Demographics
-    name: '',
-    age: '',
-    gender: '',
-    location: '',
-    occupation: '',
-    incomeLevel: '',
-    education: '',
-    backgroundStory: '',
+    name: initialData?.name || '',
+    age: initialData?.age?.toString() || '',
+    gender: initialData?.gender || '',
+    location: initialData?.location || '',
+    occupation: initialData?.occupation || '',
+    incomeLevel: initialData?.incomeLevel || '',
+    education: initialData?.education || '',
+    backgroundStory: initialData?.backgroundStory || initialData?.introduction || '',
     avatar: null as File | null,
     
     // Step 2: Personality
-    personalityTraits: [],
-    interests: [],
-    techSavvy: 5,
-    socialness: 5,
-    creativity: 5,
-    organization: 5,
-    riskTaking: 5,
-    adaptability: 5,
-    values: '',
-    motivations: '',
-    politicalCompass: undefined,
+    personalityTraits: initialData?.personalityTraits || [],
+    interests: initialData?.interests || [],
+    techSavvy: initialData?.techSavvy || 5,
+    socialness: initialData?.socialness || 5,
+    creativity: initialData?.creativity || 5,
+    organization: initialData?.organization || 5,
+    riskTaking: initialData?.riskTaking || 5,
+    adaptability: initialData?.adaptability || 5,
+    values: initialData?.values || '',
+    motivations: initialData?.motivations || '',
+    politicalCompass: initialData?.politicalCompass || undefined,
     
     // Step 3: Technology
-    devicesOwned: [],
-    appPreferences: [],
-    techProficiency: 5,
-    digitalHabits: '',
-    communicationPreferences: [],
+    devicesOwned: initialData?.devicesOwned || [],
+    appPreferences: initialData?.appPreferences || [],
+    techProficiency: initialData?.techProficiency || 5,
+    digitalHabits: initialData?.digitalHabits || '',
+    communicationPreferences: initialData?.communicationPreferences || [],
     
     // Step 4: Research
     researchFiles: [],
-    dataSourceTypes: [],
-    manualKnowledge: '',
-    researchMethodology: '',
+    dataSourceTypes: initialData?.dataSourceTypes || [],
+    manualKnowledge: initialData?.manualKnowledge || '',
+    researchMethodology: initialData?.researchMethodology || '',
   })
 
   const updatePersonaData = (stepData: any) => {
@@ -204,7 +206,9 @@ export default function PersonaWizard({ onComplete, onCancel }: PersonaWizardPro
     <div className="max-w-4xl mx-auto p-6">
       {/* Progress Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Create New Persona</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          {isEditing ? 'Edit Persona' : 'Create New Persona'}
+        </h1>
         <p className="text-gray-600 mb-6">Build a comprehensive AI persona through our guided process</p>
         
         {/* Progress Indicator */}
@@ -287,7 +291,7 @@ export default function PersonaWizard({ onComplete, onCancel }: PersonaWizardPro
               onClick={handleComplete}
               className="bg-green-600 hover:bg-green-700"
             >
-              Create Persona
+              {isEditing ? 'Save Changes' : 'Create Persona'}
             </Button>
           )}
         </div>

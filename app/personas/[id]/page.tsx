@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { MessageCircle, Share2, Users, Map, User, ArrowLeft, Database, Camera, Clock, ChevronLeft, ChevronUp, ChevronDown, Edit, Copy, Eye } from 'lucide-react'
+import { MessageCircle, Share2, Users, Map, User, ArrowLeft, Database, Camera, Clock, ChevronLeft, ChevronUp, ChevronDown, Edit, Copy, Eye, X, Save, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import InterviewTab from '@/components/persona-tabs/InterviewTab'
 import SocialPostsTab from '@/components/persona-tabs/SocialPostsTab'
@@ -15,9 +15,94 @@ import { KnowledgeManagementTab } from '@/components/persona-tabs/KnowledgeManag
 import MediaTab from '@/components/persona-tabs/MediaTab'
 import { GlobalTimeline } from '@/components/GlobalTimeline'
 import { PersonaSharing } from '@/components/PersonaSharing'
-import { PersonaEditModal } from '@/components/PersonaEditModal'
+import PersonaWizard from '@/components/persona-wizard'
 import { InclusivitySuggestions } from '@/components/InclusivitySuggestions'
 import { PoliticalCompass } from '@/components/PoliticalCompass'
+
+// Edit Wizard Modal Component
+interface EditWizardModalProps {
+  persona: any
+  onComplete: (editedPersonaData: any, saveOption: 'new' | 'current') => void
+  onCancel: () => void
+}
+
+function EditWizardModal({ persona, onComplete, onCancel }: EditWizardModalProps) {
+  const [step, setStep] = useState<'wizard' | 'save-option'>('wizard')
+  const [editedPersonaData, setEditedPersonaData] = useState<any>(null)
+
+  const handleWizardComplete = (personaData: any) => {
+    setEditedPersonaData(personaData)
+    setStep('save-option')
+  }
+
+  const handleSaveOptionSelect = (saveOption: 'new' | 'current') => {
+    onComplete(editedPersonaData, saveOption)
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      {step === 'wizard' ? (
+        <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="flex items-center justify-between p-6 border-b">
+            <h2 className="text-2xl font-bold text-gray-900">Edit Persona</h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onCancel}
+              className="rounded-full"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+          <PersonaWizard 
+            initialData={persona}
+            onComplete={handleWizardComplete}
+            onCancel={onCancel}
+            isEditing={true}
+          />
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl max-w-md w-full p-6">
+          <h3 className="text-xl font-bold text-gray-900 mb-4">Save Changes</h3>
+          <p className="text-gray-600 mb-6">
+            How would you like to save your changes?
+          </p>
+          
+          <div className="space-y-3">
+            <Button
+              onClick={() => handleSaveOptionSelect('current')}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Update Current Version
+            </Button>
+            
+            <Button
+              onClick={() => handleSaveOptionSelect('new')}
+              className="w-full bg-green-600 hover:bg-green-700 text-white"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Save as New Version
+            </Button>
+            
+            <Button
+              onClick={onCancel}
+              variant="outline"
+              className="w-full"
+            >
+              Cancel
+            </Button>
+          </div>
+          
+          <div className="mt-4 text-sm text-gray-500">
+            <p><strong>Update Current:</strong> Overwrites the existing persona</p>
+            <p><strong>New Version:</strong> Creates a new version, keeping the original</p>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 interface Version {
   id: string
@@ -118,6 +203,7 @@ export default function PersonaDetailPage() {
   
   // Modal states
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isEditWizardOpen, setIsEditWizardOpen] = useState(false)
   
   // Global timeline state
   const [versions, setVersions] = useState<Version[]>([])
@@ -258,6 +344,57 @@ export default function PersonaDetailPage() {
       console.error('Failed to save persona edit:', error)
       alert('Failed to save changes. Please try again.')
     }
+  }
+
+  const handleWizardEditComplete = async (editedPersonaData: any, saveOption: 'new' | 'current') => {
+    try {
+      if (saveOption === 'new') {
+        // Create new version
+        const response = await fetch(`/api/personas/${params.id}/versions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'create',
+            personaData: editedPersonaData,
+            versionNotes: 'Edited through wizard'
+          })
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          setPersona(data.persona)
+          await fetchVersions()
+          setIsEditWizardOpen(false)
+          alert(data.message || 'New version created successfully!')
+        } else {
+          const error = await response.json()
+          alert('Failed to create new version: ' + (error.error || 'Unknown error'))
+        }
+      } else {
+        // Update current version
+        const response = await fetch(`/api/personas/${params.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(editedPersonaData)
+        })
+
+        if (response.ok) {
+          await loadPersona()
+          setIsEditWizardOpen(false)
+          alert('Persona updated successfully!')
+        } else {
+          const error = await response.json()
+          alert('Failed to update persona: ' + (error.error || 'Unknown error'))
+        }
+      }
+    } catch (error) {
+      console.error('Failed to save persona edit:', error)
+      alert('Failed to save changes. Please try again.')
+    }
+  }
+
+  const handleWizardEditCancel = () => {
+    setIsEditWizardOpen(false)
   }
 
   const handleApplyInclusivitySuggestion = async (suggestion: any) => {
@@ -422,7 +559,7 @@ export default function PersonaDetailPage() {
                 {persona.isOwner ? (
                   // Show edit button only for owners
                   <Button
-                    onClick={() => setIsEditModalOpen(true)}
+                    onClick={() => setIsEditWizardOpen(true)}
                     className="bg-blue-600/80 hover:bg-blue-700/80 text-white backdrop-blur-sm underwater-glow"
                     size="sm"
                   >
@@ -643,13 +780,12 @@ export default function PersonaDetailPage() {
         </div>
       ) : null}
 
-      {/* Edit Modal - Only show for owners */}
-      {persona?.isOwner && (
-        <PersonaEditModal
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
+      {/* Edit Wizard - Only show for owners */}
+      {persona?.isOwner && isEditWizardOpen && (
+        <EditWizardModal 
           persona={persona}
-          onSave={handleSavePersonaEdit}
+          onComplete={handleWizardEditComplete}
+          onCancel={handleWizardEditCancel}
         />
       )}
 
