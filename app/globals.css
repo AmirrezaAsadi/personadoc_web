@@ -522,3 +522,154 @@ body {
   background: linear-gradient(135deg, rgba(74, 155, 142, 0.1), rgba(44, 122, 123, 0.05));
   pointer-events: none;
 }
+
+/* Sci-Fi Timeline Animations */
+@keyframes flow {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(calc(100vw - 32px));
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes quantumPulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes neuralSync {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes dataStream {
+  0% {
+    transform: translateX(-10px);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(10px);
+    opacity: 0;
+  }
+}
+
+@keyframes hologramFlicker {
+  0%, 100% {
+    opacity: 1;
+  }
+  98% {
+    opacity: 1;
+  }
+  99% {
+    opacity: 0.8;
+  }
+}
+
+/* Timeline specific animations */
+.timeline-grid-overlay {
+  animation: neuralSync 4s ease-in-out infinite;
+}
+
+.quantum-indicator {
+  animation: quantumPulse 2s ease-in-out infinite;
+}
+
+.data-flow-particle {
+  animation: dataStream 2s ease-in-out infinite;
+}
+
+.hologram-text {
+  animation: hologramFlicker 3s ease-in-out infinite;
+}
+
+/* Neural network node pulse */
+.neural-node {
+  position: relative;
+}
+
+.neural-node::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.2);
+  transform: translate(-50%, -50%) scale(1);
+  animation: quantumPulse 2s ease-in-out infinite;
+}
+
+/* Temporal glow effect */
+.temporal-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.temporal-glow::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, transparent, rgba(6, 182, 212, 0.3), transparent);
+  border-radius: inherit;
+  z-index: -1;
+  animation: flow 3s linear infinite;
+}
+
+/* Cyber brackets animation */
+.cyber-brackets {
+  position: relative;
+}
+
+.cyber-brackets::before,
+.cyber-brackets::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border: 1px solid rgba(6, 182, 212, 0.4);
+  transition: all 0.3s ease;
+}
+
+.cyber-brackets::before {
+  top: 2px;
+  left: 2px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.cyber-brackets::after {
+  bottom: 2px;
+  right: 2px;
+  border-left: none;
+  border-top: none;
+}
+
+.cyber-brackets:hover::before,
+.cyber-brackets:hover::after {
+  border-color: rgba(6, 182, 212, 0.8);
+  width: 12px;
+  height: 12px;
+}
+
+/* Existing liquid background styles... */
