@@ -46,12 +46,12 @@ export default function LandingPage() {
   const testimonials = [
     {
       quote: "It really gives like a detailed in-depth explanation of the personas. So I guess the deeper we know about these people who are using the app.",
-      attribution: "P5, UX Designer, 3 Years Experience",
+      attribution: "UX Designer, 3 Years Experience",
       avatar: "👩‍💻"
     },
     {
       quote: "Make you your own like personal make. I mean again customize it based off of the real insight you gather from the from your audience.",
-      attribution: "P8, UX Researcher, 6 Years Experience", 
+      attribution: "UX Researcher, 6 Years Experience", 
       avatar: "👨‍🔬"
     }
   ]
