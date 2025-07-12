@@ -35,6 +35,15 @@ body {
   overflow: hidden;
 }
 
+/* Gradient text for headings */
+.gradient-text {
+  background: linear-gradient(135deg, #ffffff 0%, #4fd1c7 50%, #81e6d9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 20px rgba(79, 209, 199, 0.3);
+}
+
 /* Animated Liquid Background */
 .sea-waves {
   position: fixed;

@@ -118,10 +118,10 @@ export default function LandingPage() {
               {/* Left: Content */}
               <div className="space-y-8 floating">
                 <div className="space-y-4">
-                    <h1 className="text-5xl lg:text-6xl font-bold leading-tight text-white"></h1>
+                  <h1 className="text-5xl lg:text-6xl font-bold leading-tight text-white">
                     Go Deeper Into Your User Research
-                    </h1>
-                  <p className="text-xl text-white/80 leading-relaxed">
+                  </h1>
+                  <p className="text-xl text-white leading-relaxed">
                     Gain More From User Research, Uncover insights you missed and get 
                     <span className="text-teal-300 font-semibold"> "more in depth than you ever could with a research team."</span>
                   </p>
