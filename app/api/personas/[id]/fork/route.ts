@@ -77,7 +77,7 @@ export async function POST(
         shareCount: 0,
         allowComments: false,
         createdBy: userId,
-        forkedFrom: originalPersona.id, // Track the original persona
+        parentId: originalPersona.id, // Track the original persona
       },
       include: {
         creator: {
