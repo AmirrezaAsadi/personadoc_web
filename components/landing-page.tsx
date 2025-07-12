@@ -62,7 +62,7 @@ export default function LandingPage() {
     { text: "Need simplicity", delay: "2s" },
     { text: "Make User Research Reusable", delay: "3s" },
     { text: "Value authenticity", delay: "4s" },
-    { text: "Mobile first", delay: "5s" }
+    { text: "Evidence Based", delay: "5s" }
   ]
 
   return (
