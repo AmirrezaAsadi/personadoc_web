@@ -11,12 +11,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ isAdmin: false })
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { role: true, isActive: true }
-    })
-
-    const isAdmin = user?.role === 'ADMIN' && user?.isActive === true
+    const isAdmin = session.user.email === 'amircincy@gmail.com'
 
     return NextResponse.json({ isAdmin })
   } catch (error) {

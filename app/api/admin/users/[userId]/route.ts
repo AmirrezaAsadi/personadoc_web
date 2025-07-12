@@ -6,19 +6,23 @@ import { prisma } from '@/lib/prisma'
 // Helper function to check if user is admin
 async function isAdmin(req: NextRequest) {
   const session = await getServerSession(authOptions)
-  return session?.user?.email === 'admin@test.com'
+  return session?.user?.email === 'amircincy@gmail.com'
+}
+
+interface RouteParams {
+  params: Promise<{ userId: string }>
 }
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: RouteParams
 ) {
   try {
     if (!await isAdmin(req)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    const { userId } = params
+    const { userId } = await params
     const body = await req.json()
     const { action, isActive } = body
 
@@ -45,14 +49,14 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: RouteParams
 ) {
   try {
     if (!await isAdmin(req)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    const { userId } = params
+    const { userId } = await params
 
     // Prevent admin from deleting themselves
     const session = await getServerSession(authOptions)

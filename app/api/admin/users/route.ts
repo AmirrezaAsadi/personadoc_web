@@ -6,14 +6,7 @@ import { prisma } from '@/lib/prisma'
 // Helper function to check if user is admin
 async function isAdmin(req: NextRequest) {
   const session = await getServerSession(authOptions)
-  if (!session?.user?.email) return false
-  
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-    select: { role: true, isActive: true }
-  })
-  
-  return user?.role === 'ADMIN' && user?.isActive === true
+  return session?.user?.email === 'amircincy@gmail.com'
 }
 
 export async function GET(req: NextRequest) {
@@ -28,8 +21,6 @@ export async function GET(req: NextRequest) {
         email: true,
         name: true,
         image: true,
-        role: true,
-        isActive: true,
         createdAt: true,
         updatedAt: true,
         _count: {
@@ -50,8 +41,8 @@ export async function GET(req: NextRequest) {
       name: user.name,
       image: user.image,
       createdAt: user.createdAt.toISOString(),
-      isActive: user.isActive,
-      role: user.role.toLowerCase(),
+      isActive: true, // Default to true for now
+      role: user.email === 'amircincy@gmail.com' ? 'admin' : 'user',
       personaCount: user._count.personas,
       lastActive: user.updatedAt.toISOString()
     }))

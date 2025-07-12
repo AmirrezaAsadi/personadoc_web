@@ -6,19 +6,23 @@ import { prisma } from '@/lib/prisma'
 // Helper function to check if user is admin
 async function isAdmin(req: NextRequest) {
   const session = await getServerSession(authOptions)
-  return session?.user?.email === 'admin@test.com'
+  return session?.user?.email === 'amircincy@gmail.com'
+}
+
+interface RouteParams {
+  params: Promise<{ personaId: string }>
 }
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { personaId: string } }
+  { params }: RouteParams
 ) {
   try {
     if (!await isAdmin(req)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    const { personaId } = params
+    const { personaId } = await params
 
     // Check if persona exists
     const persona = await prisma.persona.findUnique({
@@ -47,14 +51,14 @@ export async function DELETE(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { personaId: string } }
+  { params }: RouteParams
 ) {
   try {
     if (!await isAdmin(req)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    const { personaId } = params
+    const { personaId } = await params
     const body = await req.json()
     const { action, isPublic } = body
 
