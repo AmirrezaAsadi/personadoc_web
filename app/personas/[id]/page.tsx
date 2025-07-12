@@ -448,21 +448,6 @@ export default function PersonaDetailPage() {
             </div>
           </div>
 
-          {/* Non-owner notification banner */}
-          {!persona.isOwner && (
-            <div className="mb-4 p-4 bg-amber-50/90 backdrop-blur-sm border border-amber-200 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center">
-                  <Eye className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <p className="text-amber-800 font-medium">Viewing {persona.creator?.name || 'another user'}'s persona</p>
-                  <p className="text-amber-700 text-sm">You can explore this persona and clone it to create your own copy, but you cannot edit the original.</p>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Persona Summary Card */}
           <Card className="mb-6 floating bg-white/95 backdrop-blur-lg border-cyan-200/20 shadow-lg">
             <CardHeader className="pb-3">
