@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { X, Plus } from 'lucide-react'
+import { PoliticalCompass } from '@/components/PoliticalCompass'
 
 interface Step2Props {
   data: any
@@ -218,6 +219,14 @@ export default function Step2Personality({ data, onUpdate }: Step2Props) {
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
           />
         </div>
+
+        {/* Political Compass - Optional */}
+        <div>
+          <PoliticalCompass
+            initialValues={data.politicalCompass}
+            onUpdate={(values) => onUpdate({ politicalCompass: values })}
+          />
+        </div>
       </div>
 
       <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -227,6 +236,7 @@ export default function Step2Personality({ data, onUpdate }: Step2Props) {
           <li>• Choose interests across multiple categories for depth</li>
           <li>• Use the behavioral sliders to create unique personality patterns</li>
           <li>• Values and motivations help the AI understand decision-making</li>
+          <li>• Political compass is optional but adds valuable context for preferences</li>
         </ul>
       </div>
     </div>

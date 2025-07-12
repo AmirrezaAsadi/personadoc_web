@@ -47,6 +47,7 @@ export default function PersonaWizard({ onComplete, onCancel }: PersonaWizardPro
     adaptability: 5,
     values: '',
     motivations: '',
+    politicalCompass: undefined,
     
     // Step 3: Technology
     devicesOwned: [],
@@ -149,6 +150,7 @@ export default function PersonaWizard({ onComplete, onCancel }: PersonaWizardPro
           values: personaData.values,
           motivations: personaData.motivations,
         },
+        politicalCompass: personaData.politicalCompass,
         technology: {
           devicesOwned: personaData.devicesOwned,
           appPreferences: personaData.appPreferences,

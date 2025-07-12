@@ -71,7 +71,10 @@ export async function POST(
         interests: originalPersona.interests as any,
         inclusivityAttributes: originalPersona.inclusivityAttributes as any,
         appliedSuggestions: originalPersona.appliedSuggestions as any,
-        metadata: originalPersona.metadata as any,
+        metadata: {
+          ...(originalPersona.metadata as any || {}),
+          // Ensure all relevant fields are copied including political compass
+        },
         isPublic: false, // Forked personas are private by default
         shareToken: null,
         shareCount: 0,
