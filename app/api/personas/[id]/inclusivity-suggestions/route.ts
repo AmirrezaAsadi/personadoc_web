@@ -109,7 +109,7 @@ Focus on genuine gaps in representation that would meaningfully improve product 
 
     // Call AI to generate suggestions
     const response = await grok.chat.completions.create({
-      model: "grok-beta",
+      model: "grok-3",
       messages: messages,
       temperature: 0.7,
       max_tokens: 1000,
