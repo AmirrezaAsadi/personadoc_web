@@ -57,11 +57,11 @@ export default function LandingPage() {
   ]
 
   const dataQuotes = [
-    { text: "Particpants to Go", delay: "0s" },
+    { text: "Test Ideas", delay: "0s" },
     { text: "Time is limited", delay: "1s" },
-    { text: "Need simplicity", delay: "2s" },
+    { text: "Participants to Go", delay: "2s" },
     { text: "Make User Research Reusable", delay: "3s" },
-    { text: "Value authenticity", delay: "4s" },
+    { text: "Knowledge Retention", delay: "4s" },
     { text: "Evidence Based", delay: "5s" }
   ]
 
@@ -118,9 +118,9 @@ export default function LandingPage() {
               {/* Left: Content */}
               <div className="space-y-8 floating">
                 <div className="space-y-4">
-                  <h1 className="text-5xl lg:text-6xl font-bold gradient-text leading-tight">
+                    <h1 className="text-5xl lg:text-6xl font-bold leading-tight text-white"></h1>
                     Go Deeper Into Your User Research
-                  </h1>
+                    </h1>
                   <p className="text-xl text-white/80 leading-relaxed">
                     Transform your interviews and user data into interactive AI personas. Uncover insights you missed and get 
                     <span className="text-teal-300 font-semibold"> "more in depth than you ever could with a research team."</span>
