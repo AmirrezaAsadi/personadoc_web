@@ -105,7 +105,7 @@ export default function SignInPage() {
               <h3 className="text-sm font-medium text-white/90">🌐 OAuth Sign In</h3>
               
               <Button
-                onClick={() => signIn('google')}
+                onClick={() => signIn('google', { callbackUrl: '/' })}
                 variant="outline"
                 className="w-full flex items-center justify-center gap-3 h-12 text-base border-white/20 text-black bg-white/90 hover:bg-white ripple underwater-glow backdrop-blur-sm"
               >
@@ -116,6 +116,15 @@ export default function SignInPage() {
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                 </svg>
                 Continue with Google
+              </Button>
+              
+              <Button
+                onClick={() => signIn('github', { callbackUrl: '/' })}
+                variant="outline"
+                className="w-full flex items-center justify-center gap-3 h-12 text-base border-white/20 text-white bg-gray-900/90 hover:bg-gray-800 ripple underwater-glow backdrop-blur-sm"
+              >
+                <Github className="w-5 h-5" />
+                Continue with GitHub
               </Button>
             </div>
           </div>

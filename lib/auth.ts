@@ -8,6 +8,9 @@ import { prisma } from "@/lib/prisma"
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
+  pages: {
+    signIn: '/signin',
+  },
   providers: [
     // Google OAuth for production
     GoogleProvider({
@@ -58,13 +61,20 @@ export const authOptions: NextAuthOptions = {
     ] : [])
   ],
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // Allows relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url
+      return baseUrl
+    },
     session: async ({ session, user, token }) => {
       if (session?.user) {
-        // For OAuth providers, use the user.id from database
+        // For database strategy (production with OAuth), use the user.id from database
         if (user?.id) {
           (session.user as any).id = user.id
         }
-        // For credentials provider, use the token.sub (user id from JWT)
+        // For JWT strategy (development or credentials), use the token.sub (user id from JWT)
         else if (token?.sub) {
           (session.user as any).id = token.sub
         }
