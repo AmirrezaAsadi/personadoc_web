@@ -122,7 +122,7 @@ export default function LandingPage() {
                     Go Deeper Into Your User Research
                     </h1>
                   <p className="text-xl text-white/80 leading-relaxed">
-                    Transform your interviews and user data into interactive AI personas. Uncover insights you missed and get 
+                    Gain More From User Research, Uncover insights you missed and get 
                     <span className="text-teal-300 font-semibold"> "more in depth than you ever could with a research team."</span>
                   </p>
                 </div>
