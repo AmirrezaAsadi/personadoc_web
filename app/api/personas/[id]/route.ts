@@ -122,6 +122,8 @@ export async function PATCH(
         introduction: updateData.introduction,
         personalityTraits: updateData.personalityTraits,
         interests: updateData.interests,
+        inclusivityAttributes: updateData.inclusivityAttributes,
+        appliedSuggestions: updateData.appliedSuggestions,
         metadata: updateData.metadata
       }
     })

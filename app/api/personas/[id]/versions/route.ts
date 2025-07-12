@@ -143,7 +143,9 @@ export async function POST(
         location: personaData.location,
         introduction: personaData.introduction,
         personalityTraits: personaData.personalityTraits || [],
-        interests: personaData.interests || []
+        interests: personaData.interests || [],
+        inclusivityAttributes: personaData.inclusivityAttributes || {},
+        appliedSuggestions: personaData.appliedSuggestions || []
       },
       isActive: false, // New versions start as inactive
       isDraft: true,  // Mark as draft initially
@@ -165,6 +167,8 @@ export async function POST(
         introduction: personaData.introduction,
         personalityTraits: personaData.personalityTraits || [],
         interests: personaData.interests || [],
+        inclusivityAttributes: personaData.inclusivityAttributes || {},
+        appliedSuggestions: personaData.appliedSuggestions || [],
         currentVersion: nextVersionNumber,
         updatedAt: new Date(),
         metadata: {
@@ -241,6 +245,8 @@ export async function PATCH(
           personalityTraits: versionSnapshot.personalityTraits,
           interests: versionSnapshot.interests,
           gadgets: versionSnapshot.gadgets,
+          inclusivityAttributes: versionSnapshot.inclusivityAttributes || {},
+          appliedSuggestions: versionSnapshot.appliedSuggestions || [],
           metadata: {
             ...metadata,
             versions,

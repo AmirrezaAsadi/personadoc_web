@@ -59,37 +59,42 @@ model VerificationToken {
 }
 
 model Persona {
-  id                String           @id @default(cuid())
-  name              String
-  age               Int?
-  occupation        String?
-  location          String?
-  introduction      String?
-  personalityTraits Json?
-  interests         Json?
-  gadgets           Json?
-  metadata          Json?
-  currentVersion    String?
-  isTemplate        Boolean          @default(false)
-  parentId          String?
-  tags              Json?
-  profileImage      String?
-  attachments       Json?
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  createdBy         String
-  allowComments     Boolean          @default(false)
-  isPublic          Boolean          @default(false)
-  shareCount        Int              @default(0)
-  shareToken        String?          @unique
-  sharedAt          DateTime?
-  interactions      Interaction[]
-  creator           User             @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-  parent            Persona?         @relation("PersonaBranching", fields: [parentId], references: [id])
-  children          Persona[]        @relation("PersonaBranching")
-  versions          PersonaVersion[]
-  researchData      ResearchData[]
-  timelineEvents    TimelineEvent[]
+  id                    String           @id @default(cuid())
+  name                  String
+  age                   Int?
+  occupation            String?
+  location              String?
+  introduction          String?
+  personalityTraits     Json?
+  interests             Json?
+  gadgets               Json?
+  metadata              Json?
+  currentVersion        String?
+  isTemplate            Boolean          @default(false)
+  parentId              String?
+  tags                  Json?
+  profileImage          String?
+  attachments           Json?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  createdBy             String
+  allowComments         Boolean          @default(false)
+  isPublic              Boolean          @default(false)
+  shareCount            Int              @default(0)
+  shareToken            String?          @unique
+  sharedAt              DateTime?
+  appliedSuggestions    Json?
+  inclusivityAttributes Json?
+  interactions          Interaction[]
+  creator               User             @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  parent                Persona?         @relation("PersonaBranching", fields: [parentId], references: [id])
+  children              Persona[]        @relation("PersonaBranching")
+  versions              PersonaVersion[]
+  researchData          ResearchData[]
+  timelineEvents        TimelineEvent[]
+
+  @@index([appliedSuggestions], map: "idx_persona_applied_suggestions", type: Gin)
+  @@index([inclusivityAttributes], map: "idx_persona_inclusivity_attributes", type: Gin)
 }
 
 model Interaction {

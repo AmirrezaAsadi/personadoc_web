@@ -23,7 +23,9 @@ export function PersonaEditModal({ isOpen, onClose, persona, onSave }: PersonaEd
     location: '',
     introduction: '',
     personalityTraits: [] as string[],
-    interests: [] as string[]
+    interests: [] as string[],
+    inclusivityAttributes: {} as any,
+    appliedSuggestions: [] as any[]
   })
   const [versionNotes, setVersionNotes] = useState('')
   const [personalityInput, setPersonalityInput] = useState('')
@@ -40,7 +42,9 @@ export function PersonaEditModal({ isOpen, onClose, persona, onSave }: PersonaEd
         location: persona.location || '',
         introduction: persona.introduction || '',
         personalityTraits: persona.personalityTraits || [],
-        interests: persona.interests || []
+        interests: persona.interests || [],
+        inclusivityAttributes: persona.inclusivityAttributes || {},
+        appliedSuggestions: persona.appliedSuggestions || []
       })
       setPersonalityInput((persona.personalityTraits || []).join(', '))
       setInterestsInput((persona.interests || []).join(', '))
@@ -59,7 +63,9 @@ export function PersonaEditModal({ isOpen, onClose, persona, onSave }: PersonaEd
       ...editedPersona,
       age: editedPersona.age ? parseInt(editedPersona.age) : null,
       personalityTraits: personalityInput.split(',').map(t => t.trim()).filter(t => t),
-      interests: interestsInput.split(',').map(i => i.trim()).filter(i => i)
+      interests: interestsInput.split(',').map(i => i.trim()).filter(i => i),
+      inclusivityAttributes: editedPersona.inclusivityAttributes,
+      appliedSuggestions: editedPersona.appliedSuggestions
     }
     onSave(updatedPersona, versionNotes)
     onClose()

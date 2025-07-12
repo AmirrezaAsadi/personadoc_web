@@ -123,7 +123,7 @@ export function InclusivitySuggestions({ persona, onApplySuggestion }: Inclusivi
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium flex items-center gap-2 text-purple-700">
                 <Sparkles className="h-4 w-4" />
-                Inclusive Perspectives
+                Alternative Perspectives
               </CardTitle>
               <Button
                 variant="outline"

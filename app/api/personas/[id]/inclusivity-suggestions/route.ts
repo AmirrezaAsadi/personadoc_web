@@ -41,14 +41,33 @@ export async function POST(
       return NextResponse.json({ error: 'Persona not found' }, { status: 404 })
     }
 
-    // Parse metadata for enhanced context
+    // Parse metadata and inclusivity data for enhanced context
     let metadata: any = {}
+    let inclusivityAttributes: any = {}
+    let appliedSuggestions: any[] = []
+    
     try {
       metadata = typeof (persona as any).metadata === 'string' 
         ? JSON.parse((persona as any).metadata) 
         : (persona as any).metadata || {}
     } catch (error) {
       metadata = {}
+    }
+
+    try {
+      inclusivityAttributes = typeof (persona as any).inclusivityAttributes === 'string'
+        ? JSON.parse((persona as any).inclusivityAttributes)
+        : (persona as any).inclusivityAttributes || {}
+    } catch (error) {
+      inclusivityAttributes = {}
+    }
+
+    try {
+      appliedSuggestions = typeof (persona as any).appliedSuggestions === 'string'
+        ? JSON.parse((persona as any).appliedSuggestions)
+        : (persona as any).appliedSuggestions || []
+    } catch (error) {
+      appliedSuggestions = []
     }
 
     // Build the AI prompt for inclusivity suggestions
@@ -65,6 +84,12 @@ Interests: ${Array.isArray(persona.interests) ? persona.interests.join(', ') : '
 
 EXISTING DEMOGRAPHICS:
 ${metadata.demographics ? JSON.stringify(metadata.demographics, null, 2) : 'Limited demographic information'}
+
+CURRENT INCLUSIVITY ATTRIBUTES:
+${Object.keys(inclusivityAttributes).length > 0 ? JSON.stringify(inclusivityAttributes, null, 2) : 'None applied yet'}
+
+PREVIOUSLY APPLIED SUGGESTIONS:
+${appliedSuggestions.length > 0 ? appliedSuggestions.map(s => `- ${s.label} (${s.icon_type})`).join('\n') : 'None applied yet'}
 
 TASK: Generate 5 diverse, brief inclusivity suggestions. Each should be 2-3 words maximum that represent meaningful inclusive dimensions that would make this persona more representative of real-world diversity.
 
@@ -104,10 +129,11 @@ For each suggestion, provide:
 3. DESCRIPTION: One concise sentence explaining how this would enhance persona inclusivity
 
 Choose suggestions that:
-- Are NOT already represented in the current persona
+- Are NOT already represented in the current persona or applied suggestions
 - Add meaningful diversity across different dimensions
 - Would impact how this person interacts with products/services
 - Represent underrepresented communities
+- Avoid duplicating existing inclusivity attributes
 
 Respond with ONLY a JSON array of exactly 5 suggestions in this format:
 [

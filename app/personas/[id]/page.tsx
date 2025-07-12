@@ -38,6 +38,14 @@ interface Persona {
   introduction?: string
   personalityTraits?: string[]
   interests?: string[]
+  inclusivityAttributes?: Record<string, string[]>
+  appliedSuggestions?: Array<{
+    label: string
+    icon_type: string
+    description: string
+    appliedAt: string
+    version: string
+  }>
   isPublic?: boolean
   shareToken?: string
   shareCount?: number
@@ -437,6 +445,30 @@ export default function PersonaDetailPage() {
                         </div>
                       )
                     })}
+                  </div>
+                </div>
+              )}
+
+              {/* Inclusivity Attributes */}
+              {persona.inclusivityAttributes && Object.keys(persona.inclusivityAttributes).length > 0 && (
+                <div className="mt-6 pt-6 border-t border-cyan-400/30">
+                  <h3 className="font-semibold text-cyan-400 mb-4">Inclusivity Dimensions</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {Object.entries(persona.inclusivityAttributes).map(([category, attributes]) => (
+                      <div key={category} className="space-y-2">
+                        <h4 className="text-sm font-medium text-cyan-300 capitalize">{category}</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {(attributes as string[]).map((attribute, index) => (
+                            <span 
+                              key={index} 
+                              className="px-2 py-1 bg-purple-600/50 text-purple-100 text-xs rounded border border-purple-400/30"
+                            >
+                              {attribute}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
