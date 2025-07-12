@@ -206,10 +206,17 @@ export default function PersonaDetailPage() {
   }
 
   const handleApplyInclusivitySuggestion = (suggestion: any) => {
-    // Open edit modal and pre-populate with suggestion context
+    // Open edit modal and provide context about the suggestion
     setIsEditModalOpen(true)
-    // Could also show a toast or notification about the suggestion
-    console.log('Applying inclusivity suggestion:', suggestion)
+    
+    // Show a toast or notification about the suggestion context
+    if (suggestion.research_prompt) {
+      setTimeout(() => {
+        alert(`💡 Research Focus: ${suggestion.research_prompt}\n\nConsider how this insight might enhance ${persona?.name}'s representation when editing.`)
+      }, 500)
+    }
+    
+    console.log('Applying AI inclusivity suggestion:', suggestion)
   }
 
   if (loading) {
