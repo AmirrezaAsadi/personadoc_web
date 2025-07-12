@@ -41,13 +41,13 @@ export default function LandingPage() {
                 <Button 
                   onClick={handleSignIn}
                   variant="outline"
-                  className="border-white/20 text-white hover:bg-white/10 ripple underwater-glow backdrop-blur-sm"
+                  className="bg-white/20 backdrop-blur-[8px] border border-white/30 text-white hover:bg-white/25 hover:border-white/40 ripple underwater-glow transition-all duration-300"
                 >
                   Sign In
                 </Button>
                 <Button 
                   onClick={handleSignIn}
-                  className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white border-0 shadow-lg ripple underwater-glow"
+                  className="bg-white/25 backdrop-blur-[10px] border border-white/30 text-white hover:bg-white/30 hover:border-white/40 shadow-lg ripple underwater-glow transition-all duration-300"
                 >
                   Get Started
                   <ArrowRight className="w-4 h-4 ml-2" />
@@ -78,7 +78,7 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center floating">
               <Button 
                 onClick={handleSignIn}
-                className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white border-0 shadow-xl ripple underwater-glow px-8 py-4 text-lg"
+                className="bg-white/25 backdrop-blur-[12px] border border-white/30 text-white hover:bg-white/30 hover:border-white/40 shadow-xl ripple underwater-glow px-8 py-4 text-lg transition-all duration-300"
               >
                 <User className="w-5 h-5 mr-2" />
                 Create Your First Persona
@@ -86,7 +86,7 @@ export default function LandingPage() {
               </Button>
               <Button 
                 variant="outline"
-                className="border-white/20 text-white hover:bg-white/10 ripple underwater-glow backdrop-blur-sm px-8 py-4 text-lg"
+                className="bg-white/20 backdrop-blur-[10px] border border-white/30 text-white hover:bg-white/25 hover:border-white/40 ripple underwater-glow px-8 py-4 text-lg transition-all duration-300"
                 onClick={() => {
                   document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })
                 }}
@@ -185,7 +185,7 @@ export default function LandingPage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button 
                   onClick={handleSignIn}
-                  className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white border-0 shadow-xl ripple underwater-glow px-8 py-4 text-lg"
+                  className="bg-white/25 backdrop-blur-[12px] border border-white/30 text-white hover:bg-white/30 hover:border-white/40 shadow-xl ripple underwater-glow px-8 py-4 text-lg transition-all duration-300"
                 >
                   <Users className="w-5 h-5 mr-2" />
                   Start Building Personas
