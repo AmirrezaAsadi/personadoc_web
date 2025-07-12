@@ -60,7 +60,7 @@ export default function LandingPage() {
     { text: "I love outdoors", delay: "0s" },
     { text: "Time is limited", delay: "1s" },
     { text: "Need simplicity", delay: "2s" },
-    { text: "Make User Research Reusable", delay: "3s" },
+    { text: "Privacy matters", delay: "3s" },
     { text: "Value authenticity", delay: "4s" },
     { text: "Mobile first", delay: "5s" }
   ]
@@ -162,7 +162,12 @@ export default function LandingPage() {
                 </div>
 
                 {/* Trust Signal */}
-              
+                <div className="flex items-center gap-3 pt-4">
+                  <CheckCircle className="w-5 h-5 text-teal-300" />
+                  <span className="text-white/70">
+                    <span className="text-teal-300 font-semibold">✓ Validated by 12 UX Professionals</span> • University Research
+                  </span>
+                </div>
               </div>
 
               {/* Right: Visual Storytelling */}
