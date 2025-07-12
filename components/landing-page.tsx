@@ -316,7 +316,7 @@ export default function LandingPage() {
               <div className="mt-8 flex justify-center items-center gap-6 text-sm text-white/60">
                 <div className="flex items-center gap-2">
                   <Globe className="w-4 h-4" />
-                  <span>Existing Human Validated Personas</span>
+                  <span>Use Existing Human Validated Personas</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Lock className="w-4 h-4" />
