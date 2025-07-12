@@ -4,11 +4,12 @@ import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { ChevronLeft, ChevronRight, User, Brain, Smartphone, FileText } from 'lucide-react'
+import { ChevronLeft, ChevronRight, User, Brain, Smartphone, FileText, Heart } from 'lucide-react'
 import Step1Demographics from './persona-wizard/step1-demographics'
 import Step2Personality from './persona-wizard/step2-personality'
 import Step3Technology from './persona-wizard/step3-technology'
 import Step4Research from './persona-wizard/step4-research'
+import Step5BrandsAndAttributes from './persona-wizard/step5-brands-attributes'
 
 interface PersonaWizardProps {
   onComplete: (personaData: any) => void
@@ -21,7 +22,8 @@ const STEPS = [
   { id: 1, title: 'Demographics & Background', icon: User, description: 'Basic information and background story' },
   { id: 2, title: 'Personality & Traits', icon: Brain, description: 'Behavioral characteristics and motivations' },
   { id: 3, title: 'Technology & Digital Behavior', icon: Smartphone, description: 'Tech preferences and digital habits' },
-  { id: 4, title: 'Research Data Integration', icon: FileText, description: 'Upload research and validation' }
+  { id: 4, title: 'Research Data Integration', icon: FileText, description: 'Upload research and validation' },
+  { id: 5, title: 'Brands & Custom Attributes', icon: Heart, description: 'Preferred brands and custom characteristics' }
 ]
 
 export default function PersonaWizard({ onComplete, onCancel, initialData, isEditing = false }: PersonaWizardProps) {
@@ -63,6 +65,10 @@ export default function PersonaWizard({ onComplete, onCancel, initialData, isEdi
     dataSourceTypes: initialData?.dataSourceTypes || [],
     manualKnowledge: initialData?.manualKnowledge || '',
     researchMethodology: initialData?.researchMethodology || '',
+
+    // Step 5: Brands & Custom Attributes
+    preferredBrands: initialData?.preferredBrands || [],
+    customAttributes: initialData?.customAttributes || {},
   })
 
   const updatePersonaData = (stepData: any) => {
@@ -70,7 +76,7 @@ export default function PersonaWizard({ onComplete, onCancel, initialData, isEdi
   }
 
   const nextStep = () => {
-    if (currentStep < 4) {
+    if (currentStep < 5) {
       setCurrentStep(currentStep + 1)
     }
   }
@@ -165,6 +171,10 @@ export default function PersonaWizard({ onComplete, onCancel, initialData, isEdi
           manualKnowledge: personaData.manualKnowledge,
           researchMethodology: personaData.researchMethodology,
           uploadedFiles: processedFiles
+        },
+        brands: {
+          preferredBrands: personaData.preferredBrands,
+          customAttributes: personaData.customAttributes
         }
       }
     }
@@ -182,6 +192,8 @@ export default function PersonaWizard({ onComplete, onCancel, initialData, isEdi
         return <Step3Technology data={personaData} onUpdate={updatePersonaData} />
       case 4:
         return <Step4Research data={personaData} onUpdate={updatePersonaData} />
+      case 5:
+        return <Step5BrandsAndAttributes data={personaData} onUpdate={updatePersonaData} />
       default:
         return null
     }
@@ -197,6 +209,8 @@ export default function PersonaWizard({ onComplete, onCancel, initialData, isEdi
         return personaData.devicesOwned.length > 0 && personaData.communicationPreferences.length > 0
       case 4:
         return true // Research step is optional
+      case 5:
+        return true // Brands & attributes step is optional
       default:
         return false
     }
@@ -278,7 +292,7 @@ export default function PersonaWizard({ onComplete, onCancel, initialData, isEdi
         </div>
         
         <div className="flex gap-2">
-          {currentStep < 4 ? (
+          {currentStep < 5 ? (
             <Button
               onClick={nextStep}
               disabled={!isStepValid()}
