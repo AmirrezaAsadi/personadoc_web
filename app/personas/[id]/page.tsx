@@ -262,38 +262,40 @@ export default function PersonaDetailPage() {
 
   const handleApplyInclusivitySuggestion = async (suggestion: any) => {
     try {
-      // Show loading state
-      const loadingAlert = setTimeout(() => {
-        alert('AI is enhancing your persona with inclusive insights... This may take a moment.')
-      }, 1000)
-
+      console.log('Applying suggestion:', suggestion) // Debug log
+      
       // Call AI to enhance the persona based on the suggestion
       const response = await fetch(`/api/personas/${params.id}/enhance`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ suggestion })
       })
-
-      clearTimeout(loadingAlert)
-
+      
+      console.log('Response status:', response.status) // Debug log
+      
       if (response.ok) {
         const data = await response.json()
+        console.log('Enhancement response:', data) // Debug log
         
-        // Open edit modal with the AI-enhanced persona data
-        setPersona(data.enhancedPersona)
-        setIsEditModalOpen(true)
+        // Update the current persona data to reflect the changes
+        setPersona(prev => ({
+          ...prev,
+          ...data.enhancedPersona
+        }))
         
         // Show success message
-        setTimeout(() => {
-          alert(`✨ AI Enhancement Applied!\n\n${data.message}\n\nThe edit modal has been populated with enhanced details. Review and save to create a new version.`)
-        }, 500)
+        alert(`✨ Perspective Applied!\n\n${data.message}\n\nThe "${suggestion.label}" perspective has been added to your persona. You can see it in the Niche Attributes section.`)
+        
+        // Reload persona to get fresh data
+        await loadPersona()
       } else {
         const error = await response.json()
-        alert('Failed to enhance persona: ' + (error.error || 'Unknown error'))
+        console.error('Enhancement error:', error) // Debug log
+        alert('Failed to apply perspective: ' + (error.error || 'Unknown error'))
       }
     } catch (error) {
       console.error('Failed to apply inclusivity suggestion:', error)
-      alert('Failed to enhance persona. Please try again.')
+      alert('Failed to apply perspective. Please check the console for details.')
     }
   }
 

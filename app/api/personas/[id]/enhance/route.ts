@@ -89,9 +89,9 @@ PREVIOUSLY APPLIED SUGGESTIONS:
 ${appliedSuggestions.length > 0 ? appliedSuggestions.map(s => `- ${s.label} (${s.icon_type})`).join('\n') : 'None applied yet'}
 
 INCLUSIVITY SUGGESTION TO APPLY:
-Category: ${suggestion.category}
-Suggestion: ${suggestion.suggestion}
-Research Prompt: ${suggestion.research_prompt}
+Label: ${suggestion.label}
+Category: ${suggestion.icon_type}
+Description: ${suggestion.description}
 
 TASK: Enhance this persona by incorporating the inclusivity suggestion. Provide realistic, specific details that make the persona more inclusive and representative. Keep the core identity intact while adding depth and authenticity.
 
@@ -128,7 +128,7 @@ Example: If the suggestion is about economic diversity, consider how it affects 
       },
       {
         role: "user" as const,
-        content: `Please enhance this persona by applying the inclusivity suggestion: "${suggestion.suggestion}". Generate realistic, specific details that incorporate this aspect naturally while keeping the core identity intact.`
+        content: `Please enhance this persona by applying the inclusivity suggestion: "${suggestion.label}". Generate realistic, specific details that incorporate this aspect naturally while keeping the core identity intact. Description: ${suggestion.description}`
       }
     ]
 
