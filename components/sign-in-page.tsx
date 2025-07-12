@@ -36,25 +36,36 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full space-y-6">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <User className="w-8 h-8 text-white" />
+    <div className="min-h-screen relative">
+      {/* Animated Liquid Background */}
+      <div className="sea-waves">
+        <div className="liquid-blob blob-1"></div>
+        <div className="liquid-blob blob-2"></div>
+        <div className="liquid-blob blob-3"></div>
+        <div className="liquid-blob blob-4"></div>
+        <div className="liquid-blob blob-5"></div>
+        <div className="wave"></div>
+        <div className="wave"></div>
+        <div className="wave"></div>
+      </div>
+      
+      <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
+        <div className="max-w-md w-full space-y-6 floating">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg ripple underwater-glow">
+              <User className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-4xl font-bold gradient-text mb-2">PersonaDock</h1>
+            <p className="text-white/80">Personify your research</p>
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">PersonaDock</h1>
-          <p className="text-gray-600">Personify you research</p>
-        </div>
 
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-center">Sign In</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+          <div className="glass-morphism rounded-2xl p-6">
+            <h2 className="text-center text-white text-xl font-semibold mb-6">Sign In</h2>
+            
             {/* Local Testing - Email/Password */}
             {process.env.NODE_ENV === 'development' && (
-              <div className="border-b pb-4 mb-4">
-                <h3 className="text-sm font-medium text-gray-700 mb-3">🧪 Local Testing</h3>
+              <div className="border-b border-white/20 pb-4 mb-4">
+                <h3 className="text-sm font-medium text-white/90 mb-3">🧪 Local Testing</h3>
                 <form onSubmit={handleCredentialsSignIn} className="space-y-3">
                   <Input
                     type="email"
@@ -62,6 +73,7 @@ export default function SignInPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    className="bg-white/10 border-white/20 text-white placeholder-white/60 focus:border-teal-400 focus:ring-teal-400/30 backdrop-blur-sm"
                   />
                   <Input
                     type="password"
@@ -69,32 +81,33 @@ export default function SignInPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    className="bg-white/10 border-white/20 text-white placeholder-white/60 focus:border-teal-400 focus:ring-teal-400/30 backdrop-blur-sm"
                   />
                   <Button 
                     type="submit" 
-                    className="w-full" 
+                    className="w-full bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white border-0 shadow-lg ripple underwater-glow" 
                     disabled={loading}
                   >
                     {loading ? 'Signing in...' : 'Sign In with Email'}
                   </Button>
                 </form>
                 
-                <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                  <p className="text-xs text-blue-700 font-medium">Test Credentials:</p>
-                  <p className="text-xs text-blue-600">📧 test@example.com | 🔑 password123</p>
-                  <p className="text-xs text-blue-600">📧 admin@test.com | 🔑 admin123</p>
+                <div className="mt-3 p-3 glass-card rounded-lg">
+                  <p className="text-xs text-white/90 font-medium">Test Credentials:</p>
+                  <p className="text-xs text-white/70">📧 test@example.com | 🔑 password123</p>
+                  <p className="text-xs text-white/70">📧 admin@test.com | 🔑 admin123</p>
                 </div>
               </div>
             )}
 
             {/* OAuth Providers */}
             <div className="space-y-3">
-              <h3 className="text-sm font-medium text-gray-700">🌐 OAuth Sign In</h3>
+              <h3 className="text-sm font-medium text-white/90">🌐 OAuth Sign In</h3>
               
               <Button
                 onClick={() => signIn('google')}
                 variant="outline"
-                className="w-full flex items-center justify-center gap-3 h-12 text-base"
+                className="w-full flex items-center justify-center gap-3 h-12 text-base border-white/20 text-black bg-white/90 hover:bg-white ripple underwater-glow backdrop-blur-sm"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -104,22 +117,13 @@ export default function SignInPage() {
                 </svg>
                 Continue with Google
               </Button>
-
-              <Button
-                onClick={() => signIn('github')}
-                variant="outline"
-                className="w-full flex items-center justify-center gap-3 h-12 text-base"
-              >
-                <Github className="w-5 h-5" />
-                Continue with GitHub
-              </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <p className="text-center text-sm text-gray-500">
-          By signing in, you agree to follow rules and permissions!
-        </p>
+          <p className="text-center text-sm text-white/60">
+            By signing in, you agree to follow rules and permissions!
+          </p>
+        </div>
       </div>
     </div>
   )

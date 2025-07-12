@@ -72,15 +72,19 @@ export default function Home() {
     return (
       <div className="min-h-screen relative">
         <div className="sea-waves">
-          <div className="wave"></div>
+          <div className="liquid-blob blob-1"></div>
+          <div className="liquid-blob blob-2"></div>
+          <div className="liquid-blob blob-3"></div>
+          <div className="liquid-blob blob-4"></div>
+          <div className="liquid-blob blob-5"></div>
           <div className="wave"></div>
           <div className="wave"></div>
           <div className="wave"></div>
         </div>
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <div className="text-center floating">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-cyan-400 mx-auto underwater-glow"></div>
-            <p className="mt-4 text-cyan-200">Loading PersonaDock...</p>
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-teal-400 mx-auto underwater-glow"></div>
+            <p className="mt-4 text-white/80">Loading PersonaDock...</p>
           </div>
         </div>
       </div>
@@ -177,20 +181,24 @@ export default function Home() {
 
   return (
     <div className="min-h-screen relative">
-      {/* Animated Sea Wave Background */}
+      {/* Animated Liquid Background */}
       <div className="sea-waves">
-        <div className="wave"></div>
+        <div className="liquid-blob blob-1"></div>
+        <div className="liquid-blob blob-2"></div>
+        <div className="liquid-blob blob-3"></div>
+        <div className="liquid-blob blob-4"></div>
+        <div className="liquid-blob blob-5"></div>
         <div className="wave"></div>
         <div className="wave"></div>
         <div className="wave"></div>
       </div>
 
       {/* Header */}
-      <div className="border-b border-blue-800/30 bg-black/20 backdrop-blur-sm breathing underwater-glow relative z-10">
+      <div className="border-b border-white/20 glass-morphism breathing underwater-glow relative z-10">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center shadow-lg ripple">
+              <div className="w-12 h-12 bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg ripple">
                 {session?.user?.image ? (
                   <img 
                     src={session.user.image} 
@@ -202,16 +210,16 @@ export default function Home() {
                 )}
               </div>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-300 via-cyan-300 to-blue-400 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold gradient-text">
                   PersonaDock
                 </h1>
-                <p className="text-blue-200/80 flex items-center gap-2">
+                <p className="text-white/80 flex items-center gap-2">
                   Welcome back, {session?.user?.name}! 
-                  <span className="flex items-center gap-1 text-sm bg-blue-900/30 px-3 py-1 rounded-full border border-cyan-500/30 underwater-glow">
+                  <span className="flex items-center gap-1 text-sm glass-card px-3 py-1 rounded-full">
                     <Users className="w-3 h-3" />
                     {personas.length} persona{personas.length !== 1 ? 's' : ''} 
                     {filterType !== 'all' && (
-                      <span className="text-cyan-300/70">
+                      <span className="text-white/70">
                         ({filterType === 'user' ? 'yours' : filterType})
                       </span>
                     )}
@@ -223,7 +231,7 @@ export default function Home() {
             <div className="flex gap-3">
               <Button 
                 onClick={createPersona} 
-                className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white border-0 shadow-lg ripple underwater-glow flex items-center gap-2 transition-all duration-300"
+                className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white border-0 shadow-lg ripple underwater-glow flex items-center gap-2 transition-all duration-300"
               >
                 <Plus className="w-4 h-4" />
                 Create New Persona
@@ -231,7 +239,7 @@ export default function Home() {
               <Button 
                 onClick={() => signOut()} 
                 variant="outline" 
-                className="border-cyan-500/50 text-red-400 hover:bg-cyan-900/30 ripple underwater-glow flex items-center gap-2"
+                className="border-white/30 text-red-400 hover:bg-white/10 ripple underwater-glow flex items-center gap-2"
               >
                 <LogOut className="w-4 h-4" />
                 Sign Out
@@ -246,26 +254,26 @@ export default function Home() {
         <div className="mb-8">
           {/* Search Bar */}
           <div className="relative max-w-2xl mx-auto search-float mb-6">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-cyan-300 w-5 h-5" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/60 w-5 h-5" />
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search personas by name, occupation, traits, or interests..."
-              className="pl-12 py-4 text-lg bg-black/30 border-cyan-500/30 text-cyan-100 placeholder-cyan-300/70 focus:border-cyan-400 focus:ring-cyan-400/30 rounded-xl underwater-glow backdrop-blur-sm"
+              className="pl-12 py-4 text-lg glass-morphism text-white placeholder-white/60 focus:border-teal-400 focus:ring-teal-400/30 rounded-xl underwater-glow"
             />
           </div>
 
           {/* Filter Tabs */}
           <div className="flex justify-center mb-4">
-            <div className="bg-black/30 border border-cyan-500/30 rounded-xl p-1 backdrop-blur-sm underwater-glow">
+            <div className="glass-morphism rounded-xl p-1 underwater-glow">
               <div className="flex gap-1">
                 <Button
                   variant={filterType === 'all' ? 'default' : 'outline'}
                   onClick={() => setFilterType('all')}
                   className={`px-4 py-2 text-sm rounded-lg transition-all duration-300 ${
                     filterType === 'all'
-                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg'
-                      : 'text-cyan-200 hover:text-cyan-100 hover:bg-cyan-900/20 border-cyan-500/30'
+                      ? 'bg-gradient-to-r from-teal-500 to-emerald-600 text-white shadow-lg'
+                      : 'text-white/80 hover:text-white hover:bg-white/10 border-white/20'
                   }`}
                 >
                   <Filter className="w-4 h-4 mr-2" />
@@ -276,8 +284,8 @@ export default function Home() {
                   onClick={() => setFilterType('user')}
                   className={`px-4 py-2 text-sm rounded-lg transition-all duration-300 ${
                     filterType === 'user'
-                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg'
-                      : 'text-cyan-200 hover:text-cyan-100 hover:bg-cyan-900/20 border-cyan-500/30'
+                      ? 'bg-gradient-to-r from-teal-500 to-emerald-600 text-white shadow-lg'
+                      : 'text-white/80 hover:text-white hover:bg-white/10 border-white/20'
                   }`}
                 >
                   <User className="w-4 h-4 mr-2" />
@@ -288,8 +296,8 @@ export default function Home() {
                   onClick={() => setFilterType('public')}
                   className={`px-4 py-2 text-sm rounded-lg transition-all duration-300 ${
                     filterType === 'public'
-                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg'
-                      : 'text-cyan-200 hover:text-cyan-100 hover:bg-cyan-900/20 border-cyan-500/30'
+                      ? 'bg-gradient-to-r from-teal-500 to-emerald-600 text-white shadow-lg'
+                      : 'text-white/80 hover:text-white hover:bg-white/10 border-white/20'
                   }`}
                 >
                   <Globe className="w-4 h-4 mr-2" />
@@ -300,8 +308,8 @@ export default function Home() {
                   onClick={() => setFilterType('shared')}
                   className={`px-4 py-2 text-sm rounded-lg transition-all duration-300 ${
                     filterType === 'shared'
-                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg'
-                      : 'text-cyan-200 hover:text-cyan-100 hover:bg-cyan-900/20 border-cyan-500/30'
+                      ? 'bg-gradient-to-r from-teal-500 to-emerald-600 text-white shadow-lg'
+                      : 'text-white/80 hover:text-white hover:bg-white/10 border-white/20'
                   }`}
                 >
                   <Share className="w-4 h-4 mr-2" />
@@ -314,7 +322,7 @@ export default function Home() {
           {/* Filter Description */}
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
-              <p className="text-cyan-300/80 text-sm">
+              <p className="text-white/70 text-sm">
                 {filterType === 'all' && 'Showing all personas you have access to'}
                 {filterType === 'user' && 'Showing personas you created'}
                 {filterType === 'public' && 'Showing publicly shared personas from the community'}
@@ -324,7 +332,7 @@ export default function Home() {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowGuide(true)}
-                className="h-6 px-2 text-xs border-cyan-500/30 text-cyan-300/80 hover:bg-cyan-900/20"
+                className="h-6 px-2 text-xs border-white/20 text-white/70 hover:bg-white/10"
               >
                 <HelpCircle className="w-3 h-3 mr-1" />
                 Help
@@ -336,21 +344,21 @@ export default function Home() {
         {/* Personas Grid */}
         {isLoading ? (
           <div className="text-center py-16 floating">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-cyan-400 mx-auto underwater-glow"></div>
-            <p className="mt-4 text-cyan-200">Loading personas...</p>
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-teal-400 mx-auto underwater-glow"></div>
+            <p className="mt-4 text-white/80">Loading personas...</p>
           </div>
         ) : filteredPersonas.length === 0 && personas.length === 0 ? (
           <div className="text-center py-16 floating">
-            <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl underwater-glow ripple">
+            <div className="w-24 h-24 bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl underwater-glow ripple">
               <Users className="w-12 h-12 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-cyan-100 mb-4">No Personas Yet</h2>
-            <p className="text-cyan-300/80 mb-8 max-w-md mx-auto">
+            <h2 className="text-2xl font-bold text-white/90 mb-4">No Personas Yet</h2>
+            <p className="text-white/70 mb-8 max-w-md mx-auto">
               Create your first persona to start building rich, interactive character profiles for research and development.
             </p>
             <Button 
               onClick={createPersona}
-              className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white border-0 shadow-lg underwater-glow ripple"
+              className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white border-0 shadow-lg underwater-glow ripple"
             >
               <Plus className="w-4 h-4 mr-2" />
               Create Your First Persona
@@ -358,24 +366,19 @@ export default function Home() {
           </div>
         ) : filteredPersonas.length === 0 ? (
           <div className="text-center py-16 floating">
-            <Search className="w-16 h-16 text-cyan-300 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-cyan-100 mb-2">No Results Found</h2>
-            <p className="text-cyan-300/80">Try adjusting your search terms</p>
+            <Search className="w-16 h-16 text-white/60 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-white/90 mb-2">No Results Found</h2>
+            <p className="text-white/70">Try adjusting your search terms</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredPersonas.map((persona, index) => (
               <Card
                 key={persona.id}
-                className="group relative cursor-pointer transition-all duration-700 hover:scale-[1.02] hover:z-10 floating overflow-hidden"
+                className="group relative cursor-pointer transition-all duration-700 hover:scale-[1.02] hover:z-10 floating overflow-hidden glass-morphism"
                 onClick={() => handlePersonaClick(persona.id)}
                 style={{
                   animationDelay: `${index * 0.1}s`,
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '20px',
-                  boxShadow: '0 8px 32px rgba(0, 255, 255, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.1)',
                 }}
               >
                 {/* Glassmorphic background overlay */}
@@ -391,12 +394,12 @@ export default function Home() {
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
                       <div className="relative group/avatar">
-                        <div className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg relative overflow-hidden transition-all duration-500 group-hover:shadow-2xl group-hover:shadow-blue-500/30"
+                        <div className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg relative overflow-hidden transition-all duration-500 group-hover:shadow-2xl group-hover:shadow-teal-500/30"
                              style={{
-                               background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.6) 0%, rgba(6, 182, 212, 0.6) 100%)',
+                               background: 'linear-gradient(135deg, rgba(74, 155, 142, 0.6) 0%, rgba(44, 122, 123, 0.6) 100%)',
                                backdropFilter: 'blur(10px)',
                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                               boxShadow: '0 8px 25px rgba(59, 130, 246, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.2)'
+                               boxShadow: '0 8px 25px rgba(74, 155, 142, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.2)'
                              }}>
                           {persona.profileImage || persona.metadata?.avatar?.dataUrl ? (
                             <img 
@@ -441,7 +444,7 @@ export default function Home() {
                     {/* Access Type Indicator */}
                     <div className="flex items-center gap-1">
                       {persona.accessType === 'owner' && (
-                        <Badge className="text-xs px-2 py-1 border-0 text-white/90 font-medium bg-blue-500/30 backdrop-blur-sm shadow-lg shadow-blue-500/20">
+                        <Badge className="text-xs px-2 py-1 border-0 text-white/90 font-medium bg-teal-500/30 backdrop-blur-sm shadow-lg shadow-teal-500/20">
                           <User className="w-3 h-3 mr-1" />
                           Mine
                         </Badge>
