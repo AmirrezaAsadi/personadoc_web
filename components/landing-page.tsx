@@ -299,7 +299,7 @@ export default function LandingPage() {
             <div className="glass-morphism p-12 rounded-3xl floating underwater-glow border border-white/20">
               <h2 className="text-4xl font-bold gradient-text mb-4">Ready to Transform Your Research?</h2>
               <p className="text-xl text-white/70 mb-8">
-                Join researchers, designers, and product teams using PersonaDock to unlock deeper user insights.
+                Join researchers, and designers using PersonaDock to unlock deeper user insights.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
