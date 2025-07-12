@@ -6,7 +6,16 @@ import { prisma } from '@/lib/prisma'
 // Helper function to check if user is admin
 async function isAdmin(req: NextRequest) {
   const session = await getServerSession(authOptions)
-  return session?.user?.email === 'amircincy@gmail.com'
+  if (!session?.user?.email) return false
+  
+  // Use raw query to check user role and active status
+  const result = await prisma.$queryRaw<{role: string, isActive: boolean}[]>`
+    SELECT role, "isActive" FROM "User" WHERE email = ${session.user.email}
+  `
+  
+  if (result.length === 0) return false
+  const user = result[0]
+  return user.role === 'ADMIN' && user.isActive === true
 }
 
 export async function GET(req: NextRequest) {
@@ -15,14 +24,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
+    // Get basic user data first
     const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        image: true,
-        createdAt: true,
-        updatedAt: true,
+      include: {
         _count: {
           select: {
             personas: true
@@ -34,18 +38,28 @@ export async function GET(req: NextRequest) {
       }
     })
 
+    // Get role and isActive data using raw query for all users
+    const userRoles = await prisma.$queryRaw<{id: string, role: string, isActive: boolean}[]>`
+      SELECT id, role, "isActive" FROM "User"
+    `
+    
+    const roleMap = new Map(userRoles.map(u => [u.id, { role: u.role, isActive: u.isActive }]))
+
     // Transform data for response
-    const usersWithStatus = users.map(user => ({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      image: user.image,
-      createdAt: user.createdAt.toISOString(),
-      isActive: true, // Default to true for now
-      role: user.email === 'amircincy@gmail.com' ? 'admin' : 'user',
-      personaCount: user._count.personas,
-      lastActive: user.updatedAt.toISOString()
-    }))
+    const usersWithStatus = users.map(user => {
+      const roleData = roleMap.get(user.id)
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        image: user.image,
+        createdAt: user.createdAt.toISOString(),
+        isActive: roleData?.isActive ?? true,
+        role: roleData?.role?.toLowerCase() || 'user',
+        personaCount: user._count.personas,
+        lastActive: user.updatedAt.toISOString()
+      }
+    })
 
     return NextResponse.json({ users: usersWithStatus })
   } catch (error) {

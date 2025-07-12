@@ -6,7 +6,16 @@ import { prisma } from '@/lib/prisma'
 // Helper function to check if user is admin
 async function isAdmin(req: NextRequest) {
   const session = await getServerSession(authOptions)
-  return session?.user?.email === 'amircincy@gmail.com'
+  if (!session?.user?.email) return false
+  
+  // Use raw query to check user role and active status
+  const result = await prisma.$queryRaw<{role: string, isActive: boolean}[]>`
+    SELECT role, "isActive" FROM "User" WHERE email = ${session.user.email}
+  `
+  
+  if (result.length === 0) return false
+  const user = result[0]
+  return user.role === 'ADMIN' && user.isActive === true
 }
 
 interface RouteParams {

@@ -53,9 +53,7 @@ export default function AdminPage() {
     totalPersonas: 0,
     publicPersonas: 0
   })
-
-  // Check if user is admin
-  const isAdmin = session?.user?.email === 'admin@test.com'
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -65,13 +63,36 @@ export default function AdminPage() {
       return
     }
 
-    if (!isAdmin) {
+    // Check admin status via API
+    checkAdminStatus()
+  }, [session, status, router])
+
+  const checkAdminStatus = async () => {
+    try {
+      const response = await fetch('/api/auth/check-admin')
+      const data = await response.json()
+      setIsAdmin(data.isAdmin)
+      
+      if (!data.isAdmin) {
+        router.push('/')
+        return
+      }
+      
+      // If user is admin, load admin data
+      loadAdminData()
+    } catch (error) {
+      console.error('Failed to check admin status:', error)
+      setIsAdmin(false)
+      router.push('/')
+    }
+  }
+
+  useEffect(() => {
+    if (isAdmin === false) {
       router.push('/')
       return
     }
-
-    loadAdminData()
-  }, [session, status, isAdmin, router])
+  }, [isAdmin, router])
 
   const loadAdminData = async () => {
     try {
@@ -162,7 +183,7 @@ export default function AdminPage() {
     persona.creator.email.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  if (status === 'loading' || loading) {
+  if (status === 'loading' || loading || isAdmin === null) {
     return (
       <div className="min-h-screen relative">
         <div className="sea-waves">
