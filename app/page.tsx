@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Search, Plus, User, LogOut, X, MessageCircle, Users, Eye, Calendar, MapPin, Brain, Heart, Star, Filter, Globe, Lock, Share, HelpCircle } from 'lucide-react'
-import SignInPage from '@/components/sign-in-page'
+import LandingPage from '@/components/landing-page'
 import PersonaWizard from '@/components/persona-wizard'
 import { PersonaTypesGuide } from '@/components/PersonaTypesGuide'
 
@@ -91,9 +91,9 @@ export default function Home() {
     )
   }
 
-  // Show sign-in page if not authenticated
+  // Show landing page if not authenticated
   if (!session) {
-    return <SignInPage />
+    return <LandingPage />
   }
 
   const loadPersonas = async () => {
