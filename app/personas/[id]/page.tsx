@@ -336,7 +336,7 @@ export default function PersonaDetailPage() {
               <Button 
                 variant="outline" 
                 size="sm"
-                className="bg-cyan-900/50 hover:bg-cyan-800/50 text-cyan-400/50 border-cyan-400/50 underwater-glow backdrop-blur-sm"
+                className="bg-white/20 backdrop-blur-[8px] border border-white/25 text-slate-800 hover:bg-white/30 hover:text-slate-900 underwater-glow"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back

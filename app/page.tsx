@@ -268,7 +268,6 @@ export default function Home() {
             <div className="bg-white/10 backdrop-blur-[8px] border border-white/25 rounded-xl p-1 underwater-glow">
               <div className="flex gap-1">
                 <Button
-                  variant={filterType === 'all' ? 'default' : 'outline'}
                   onClick={() => setFilterType('all')}
                   className={`px-4 py-2 text-sm rounded-lg transition-all duration-300 ${
                     filterType === 'all'
@@ -280,7 +279,6 @@ export default function Home() {
                   All Personas
                 </Button>
                 <Button
-                  variant={filterType === 'user' ? 'default' : 'outline'}
                   onClick={() => setFilterType('user')}
                   className={`px-4 py-2 text-sm rounded-lg transition-all duration-300 ${
                     filterType === 'user'
@@ -292,7 +290,6 @@ export default function Home() {
                   My Personas
                 </Button>
                 <Button
-                  variant={filterType === 'public' ? 'default' : 'outline'}
                   onClick={() => setFilterType('public')}
                   className={`px-4 py-2 text-sm rounded-lg transition-all duration-300 ${
                     filterType === 'public'
@@ -304,7 +301,6 @@ export default function Home() {
                   Public
                 </Button>
                 <Button
-                  variant={filterType === 'shared' ? 'default' : 'outline'}
                   onClick={() => setFilterType('shared')}
                   className={`px-4 py-2 text-sm rounded-lg transition-all duration-300 ${
                     filterType === 'shared'
@@ -332,7 +328,7 @@ export default function Home() {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowGuide(true)}
-                className="h-6 px-2 text-xs border-white/20 text-white/70 hover:bg-white/10"
+                className="h-6 px-2 text-xs bg-white/20 backdrop-blur-[8px] border border-white/25 text-slate-800 hover:bg-white/30 hover:text-slate-900"
               >
                 <HelpCircle className="w-3 h-3 mr-1" />
                 Help
