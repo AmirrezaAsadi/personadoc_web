@@ -375,7 +375,7 @@ export default function PersonaDetailPage() {
       } else {
         // Update current version
         const response = await fetch(`/api/personas/${params.id}`, {
-          method: 'PUT',
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(editedPersonaData)
         })

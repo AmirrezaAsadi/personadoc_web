@@ -145,7 +145,8 @@ export async function POST(
         personalityTraits: personaData.personalityTraits || [],
         interests: personaData.interests || [],
         inclusivityAttributes: personaData.inclusivityAttributes || {},
-        appliedSuggestions: personaData.appliedSuggestions || []
+        appliedSuggestions: personaData.appliedSuggestions || [],
+        metadata: personaData.metadata || {}
       },
       isActive: false, // New versions start as inactive
       isDraft: true,  // Mark as draft initially
@@ -173,6 +174,7 @@ export async function POST(
         updatedAt: new Date(),
         metadata: {
           ...metadata,
+          ...personaData.metadata,
           versions: updatedVersions
         }
       }
