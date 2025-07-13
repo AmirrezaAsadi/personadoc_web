@@ -161,22 +161,23 @@ export default function DetailsTab({ persona, isEditable = false }: DetailsTabPr
       </div>
 
       <div className="space-y-4">
+        {/* Gender - try multiple access patterns */}
+        {(persona.metadata?.demographics?.gender || persona.gender) && (
+          <div className="flex items-center gap-3">
+            <Users className="w-4 h-4 text-gray-500" />
+            <div>
+              <span className="text-sm text-gray-500">Gender</span>
+              <p className="font-medium">{persona.metadata?.demographics?.gender || persona.gender}</p>
+            </div>
+          </div>
+        )}
+
         {persona.metadata?.demographics?.education && (
           <div className="flex items-center gap-3">
             <GraduationCap className="w-4 h-4 text-gray-500" />
             <div>
               <span className="text-sm text-gray-500">Education</span>
               <p className="font-medium">{persona.metadata.demographics.education}</p>
-            </div>
-          </div>
-        )}
-
-        {persona.metadata?.demographics?.gender && (
-          <div className="flex items-center gap-3">
-            <Users className="w-4 h-4 text-gray-500" />
-            <div>
-              <span className="text-sm text-gray-500">Gender</span>
-              <p className="font-medium">{persona.metadata.demographics.gender}</p>
             </div>
           </div>
         )}
@@ -207,6 +208,24 @@ export default function DetailsTab({ persona, isEditable = false }: DetailsTabPr
             <div>
               <span className="text-sm text-gray-500">Children</span>
               <p className="font-medium">{persona.metadata.demographics.children}</p>
+            </div>
+          </div>
+        )}
+        
+        {/* Show avatar info if available */}
+        {persona.metadata?.avatar && (
+          <div className="flex items-center gap-3">
+            <User className="w-4 h-4 text-gray-500" />
+            <div>
+              <span className="text-sm text-gray-500">Avatar</span>
+              <div className="flex items-center gap-2 mt-1">
+                <img 
+                  src={persona.metadata.avatar.dataUrl} 
+                  alt="Avatar" 
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+                <span className="text-sm text-gray-600">{persona.metadata.avatar.name || 'Custom avatar'}</span>
+              </div>
             </div>
           </div>
         )}
@@ -458,6 +477,7 @@ export default function DetailsTab({ persona, isEditable = false }: DetailsTabPr
 
   const renderResearch = () => (
     <div className="space-y-6">
+      {/* Data Sources */}
       {persona.metadata?.research?.dataSourceTypes && persona.metadata.research.dataSourceTypes.length > 0 && (
         <div>
           <h4 className="font-medium text-gray-900 mb-3">Data Source Types</h4>
@@ -471,18 +491,63 @@ export default function DetailsTab({ persona, isEditable = false }: DetailsTabPr
         </div>
       )}
 
+      {/* Research Files */}
+      {persona.metadata?.research?.uploadedFiles && persona.metadata.research.uploadedFiles.length > 0 && (
+        <div>
+          <h4 className="font-medium text-gray-900 mb-3">Uploaded Research Files</h4>
+          <div className="space-y-2">
+            {persona.metadata.research.uploadedFiles.map((file: any, index: number) => (
+              <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <FileText className="w-4 h-4 text-gray-500" />
+                <div className="flex-1">
+                  <p className="font-medium text-sm">{file.name || `Research File ${index + 1}`}</p>
+                  {file.size && (
+                    <p className="text-xs text-gray-500">{(file.size / 1024).toFixed(1)} KB</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Existing files from metadata */}
+      {persona.metadata?.research?.existingFiles && persona.metadata.research.existingFiles.length > 0 && (
+        <div>
+          <h4 className="font-medium text-gray-900 mb-3">Previous Research Files</h4>
+          <div className="space-y-2">
+            {persona.metadata.research.existingFiles.map((file: any, index: number) => (
+              <div key={index} className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+                <FileText className="w-4 h-4 text-blue-500" />
+                <div className="flex-1">
+                  <p className="font-medium text-sm">{file.name || `Previous File ${index + 1}`}</p>
+                  {file.size && (
+                    <p className="text-xs text-blue-600">{(file.size / 1024).toFixed(1)} KB</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Knowledge and Methodology */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {persona.metadata?.research?.manualKnowledge && (
           <div>
             <h4 className="font-medium text-gray-900 mb-2">Manual Knowledge</h4>
-            <p className="text-gray-700 text-sm">{persona.metadata.research.manualKnowledge}</p>
+            <div className="p-3 bg-gray-50 rounded-lg">
+              <p className="text-gray-700 text-sm whitespace-pre-wrap">{persona.metadata.research.manualKnowledge}</p>
+            </div>
           </div>
         )}
         
         {persona.metadata?.research?.researchMethodology && (
           <div>
             <h4 className="font-medium text-gray-900 mb-2">Research Methodology</h4>
-            <p className="text-gray-700 text-sm">{persona.metadata.research.researchMethodology}</p>
+            <div className="p-3 bg-gray-50 rounded-lg">
+              <p className="text-gray-700 text-sm whitespace-pre-wrap">{persona.metadata.research.researchMethodology}</p>
+            </div>
           </div>
         )}
       </div>
@@ -537,6 +602,14 @@ export default function DetailsTab({ persona, isEditable = false }: DetailsTabPr
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Complete Persona Details</h2>
         <p className="text-gray-600">Comprehensive view of all persona information and attributes</p>
+        
+        {/* Debug info for development */}
+        {process.env.NODE_ENV === 'development' && (
+          <details className="mt-4 p-3 bg-gray-100 rounded text-xs">
+            <summary className="cursor-pointer font-medium">Debug: Persona Data Structure</summary>
+            <pre className="mt-2 overflow-auto">{JSON.stringify(persona, null, 2)}</pre>
+          </details>
+        )}
       </div>
 
       {/* Background/Introduction */}
