@@ -13,7 +13,7 @@ import SocialCircleTab from '@/components/persona-tabs/SocialCircleTab'
 import NarrativeTab from '@/components/persona-tabs/NarrativeTab'
 import { KnowledgeManagementTab } from '@/components/persona-tabs/KnowledgeManagementTab-Enhanced'
 import MediaTab from '@/components/persona-tabs/MediaTab'
-import BrandsAttributesTab from '@/components/persona-tabs/BrandsAttributesTab'
+import DetailsTab from '@/components/persona-tabs/DetailsTab'
 import { GlobalTimeline } from '@/components/GlobalTimeline'
 import { PersonaSharing } from '@/components/PersonaSharing'
 import PersonaWizard from '@/components/persona-wizard'
@@ -189,7 +189,7 @@ const TABS = [
   { id: 'social', label: 'Social Posts', icon: Share2, description: 'Generate social media content' },
   { id: 'circle', label: 'Social Circle', icon: Users, description: 'Visualize persona connections' },
   { id: 'narrative', label: 'Journey Map', icon: Map, description: 'Create scenario narratives' },
-  { id: 'brands', label: 'Brands & Attributes', icon: Heart, description: 'Brand preferences and custom attributes' },
+  { id: 'details', label: 'Details', icon: User, description: 'Complete persona information and attributes' },
   { id: 'media', label: 'Media Gallery', icon: Camera, description: 'Images, videos and social media content' },
   { id: 'knowledge', label: 'Knowledge Management', icon: Database, description: 'Research data, versioning, timeline & export' }
 ]
@@ -500,8 +500,8 @@ export default function PersonaDetailPage() {
         return <SocialCircleTab persona={persona} />
       case 'narrative':
         return <NarrativeTab persona={persona} />
-      case 'brands':
-        return <BrandsAttributesTab persona={persona} isEditable={persona?.isOwner || false} />
+      case 'details':
+        return <DetailsTab persona={persona} isEditable={persona?.isOwner || false} />
       case 'media':
         return <MediaTab personaId={personaId} personaName={persona?.name || 'Unknown'} isOwner={persona?.isOwner || false} />
       case 'knowledge':
