@@ -666,7 +666,25 @@ export default function DetailsTab({ persona, isEditable = false }: DetailsTabPr
         'political',
         'Political Orientation',
         Globe,
-        renderPoliticalCompass(),
+        <div>
+          {persona.metadata?.politicalCompass ? (
+            renderPoliticalCompass()
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <Globe className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <p>No political compass data available</p>
+              {process.env.NODE_ENV === 'development' && (
+                <details className="mt-2 text-xs text-left">
+                  <summary>Debug: Check metadata structure</summary>
+                  <pre className="mt-2 bg-gray-100 p-2 rounded overflow-auto">
+                    Political Compass in metadata: {JSON.stringify(persona.metadata?.politicalCompass, null, 2)}
+                    {'\n'}Full metadata keys: {JSON.stringify(Object.keys(persona.metadata || {}), null, 2)}
+                  </pre>
+                </details>
+              )}
+            </div>
+          )}
+        </div>,
         !persona.metadata?.politicalCompass
       )}
 
