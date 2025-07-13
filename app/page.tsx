@@ -280,6 +280,15 @@ export default function Home() {
                 Create New Persona
               </Button>
               
+              {/* Multi-Persona Analysis Button */}
+              <Button 
+                onClick={() => router.push('/multi-persona-analysis')}
+                className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white border-0 shadow-lg ripple underwater-glow flex items-center gap-2 transition-all duration-300"
+              >
+                <Brain className="w-4 h-4" />
+                Multi-Persona Analysis
+              </Button>
+              
               {/* Transcript Creation Button */}
               <Button 
                 onClick={() => setShowTranscriptWizard(true)}
