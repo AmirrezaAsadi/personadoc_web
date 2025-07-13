@@ -99,6 +99,18 @@ export async function PATCH(
     // Get update data from request
     const updateData = await request.json()
 
+    // Debug logging
+    console.log('=== PERSONA UPDATE DEBUG ===')
+    console.log('Persona ID:', id)
+    console.log('Update data keys:', Object.keys(updateData))
+    console.log('Metadata exists:', !!updateData.metadata)
+    if (updateData.metadata) {
+      console.log('Metadata keys:', Object.keys(updateData.metadata))
+      console.log('Political compass in metadata:', !!updateData.metadata.politicalCompass)
+      console.log('Political compass data:', updateData.metadata.politicalCompass)
+    }
+    console.log('=== END DEBUG ===')
+
     // Verify persona ownership
     const existingPersona = await prisma.persona.findFirst({
       where: { 

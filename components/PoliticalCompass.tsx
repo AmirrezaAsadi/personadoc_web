@@ -13,7 +13,6 @@ import {
   ArrowLeft, 
   ArrowRight,
   Info,
-  Save,
   RotateCcw
 } from 'lucide-react'
 
@@ -122,7 +121,12 @@ export function PoliticalCompass({ initialValues, onUpdate, readOnly = false }: 
     const hasChanged = economic !== (initialValues?.economic ?? 0) || 
                       social !== (initialValues?.social ?? 0)
     setHasChanges(hasChanged)
-  }, [economic, social, initialValues])
+    
+    // Auto-update when values change (consistent with other wizard components)
+    if (hasChanged && onUpdate) {
+      onUpdate({ economic, social })
+    }
+  }, [economic, social, initialValues, onUpdate])
 
   const getQuadrant = (econ: number, soc: number): CompassQuadrant => {
     return QUADRANTS.find(q => 
@@ -157,14 +161,17 @@ export function PoliticalCompass({ initialValues, onUpdate, readOnly = false }: 
     setEconomic(Math.max(-10, Math.min(10, newEconomic)))
     setSocial(Math.max(-10, Math.min(10, newSocial)))
     setShowQuestions(false)
-  }
-
-  const handleSave = () => {
+    
+    // Auto-update after calculating from questions
     if (onUpdate) {
-      onUpdate({ economic, social })
-      setHasChanges(false)
+      onUpdate({ 
+        economic: Math.max(-10, Math.min(10, newEconomic)), 
+        social: Math.max(-10, Math.min(10, newSocial)) 
+      })
     }
   }
+
+
 
   const handleReset = () => {
     setEconomic(initialValues?.economic ?? 0)
@@ -188,27 +195,15 @@ export function PoliticalCompass({ initialValues, onUpdate, readOnly = false }: 
             </p>
           </div>
           {!readOnly && (
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowQuestions(!showQuestions)}
-                className="text-xs"
-              >
-                <BarChart3 className="w-4 h-4 mr-1" />
-                {showQuestions ? 'Hide Questions' : 'Quick Assessment'}
-              </Button>
-              {hasChanges && (
-                <Button
-                  size="sm"
-                  onClick={handleSave}
-                  className="text-xs bg-blue-600 hover:bg-blue-700"
-                >
-                  <Save className="w-4 h-4 mr-1" />
-                  Save
-                </Button>
-              )}
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowQuestions(!showQuestions)}
+              className="text-xs"
+            >
+              <BarChart3 className="w-4 h-4 mr-1" />
+              {showQuestions ? 'Hide Questions' : 'Quick Assessment'}
+            </Button>
           )}
         </div>
       </CardHeader>
