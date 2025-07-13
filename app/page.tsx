@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Search, Plus, User, LogOut, X, MessageCircle, Users, Eye, Calendar, MapPin, Brain, Heart, Star, Filter, Globe, Lock, Share, HelpCircle, Shield, FileText, Wand2 } from 'lucide-react'
+import { Search, Plus, User, LogOut, X, MessageCircle, Users, Eye, Calendar, MapPin, Brain, Heart, Star, Filter, Globe, Lock, Share, HelpCircle, Shield, FileText } from 'lucide-react'
 import LandingPage from '@/components/landing-page'
 import PersonaWizard from '@/components/persona-wizard'
 import TranscriptWizard from '@/components/transcript-wizard'
@@ -287,15 +287,6 @@ export default function Home() {
               >
                 <Brain className="w-4 h-4" />
                 Multi-Persona Analysis
-              </Button>
-              
-              {/* Generative UI Sandbox Button */}
-              <Button 
-                onClick={() => router.push('/sandbox')}
-                className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white border-0 shadow-lg ripple underwater-glow flex items-center gap-2 transition-all duration-300"
-              >
-                <Wand2 className="w-4 h-4" />
-                Generative UI Sandbox
               </Button>
               
               {/* Transcript Creation Button */}

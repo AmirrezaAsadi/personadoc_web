@@ -29,7 +29,7 @@ interface SwimLaneAction {
 interface SwimLane {
   id: string
   name: string
-  personaIds: string[]  // Changed from personaId to personaIds array
+  personaId: string
   color: string
   description?: string
   actions: SwimLaneAction[]
@@ -145,7 +145,7 @@ export default function MultiPersonaAnalysisPage() {
     const newSwimLane: SwimLane = {
       id: `lane-${Date.now()}`,
       name: 'New Actor',
-      personaIds: [],  // Initialize as empty array
+      personaId: '',
       color: SWIMLANE_COLORS[currentWorkflow.swimLanes.length % SWIMLANE_COLORS.length],
       description: '',
       actions: []
@@ -216,13 +216,6 @@ export default function MultiPersonaAnalysisPage() {
       return
     }
 
-    // Check if at least one swim lane has personas assigned
-    const lanesWithPersonas = currentWorkflow.swimLanes.filter(lane => lane.personaIds.length > 0)
-    if (lanesWithPersonas.length === 0) {
-      alert('Please assign at least one persona to a swim lane before analyzing.')
-      return
-    }
-
     setIsAnalyzing(true)
     try {
       const response = await fetch('/api/multi-persona-analysis', {
@@ -269,12 +262,7 @@ export default function MultiPersonaAnalysisPage() {
     URL.revokeObjectURL(url)
   }
 
-  const getPersonaNames = (ids: string[]) => {
-    if (ids.length === 0) return 'No Personas'
-    if (ids.length === 1) return personas.find(p => p.id === ids[0])?.name || 'Unknown'
-    const names = ids.map(id => personas.find(p => p.id === id)?.name || 'Unknown').filter(Boolean)
-    return names.length <= 2 ? names.join(' & ') : `${names.slice(0, 2).join(', ')} +${names.length - 2} more`
-  }
+  const getPersonaName = (id: string) => personas.find(p => p.id === id)?.name || 'Select Persona'
 
   if (loading) {
     return (
@@ -548,30 +536,18 @@ export default function MultiPersonaAnalysisPage() {
                                   </Button>
                                 </div>
                                 
-                                <div className="space-y-2">
-                                  <label className="text-white text-xs font-medium">Assigned Personas:</label>
-                                  <div className="space-y-1 max-h-32 overflow-y-auto">
-                                    {personas.map(persona => (
-                                      <label key={persona.id} className="flex items-center space-x-2 text-xs">
-                                        <input
-                                          type="checkbox"
-                                          checked={lane.personaIds.includes(persona.id)}
-                                          onChange={(e) => {
-                                            const newPersonaIds = e.target.checked 
-                                              ? [...lane.personaIds, persona.id]
-                                              : lane.personaIds.filter(id => id !== persona.id)
-                                            updateSwimLane(lane.id, { personaIds: newPersonaIds })
-                                          }}
-                                          className="rounded"
-                                        />
-                                        <span className="text-white">{persona.name}</span>
-                                      </label>
-                                    ))}
-                                  </div>
-                                  {lane.personaIds.length === 0 && (
-                                    <p className="text-yellow-300 text-xs">No personas selected</p>
-                                  )}
-                                </div>
+                                <select
+                                  value={lane.personaId}
+                                  onChange={(e) => updateSwimLane(lane.id, { personaId: e.target.value })}
+                                  className="w-full bg-white/10 border border-white/20 text-white rounded px-2 py-1 text-xs mb-2"
+                                >
+                                  <option value="" className="bg-gray-800">Select Persona</option>
+                                  {personas.map(persona => (
+                                    <option key={persona.id} value={persona.id} className="bg-gray-800">
+                                      {persona.name}
+                                    </option>
+                                  ))}
+                                </select>
 
                                 <Input
                                   value={lane.description || ''}

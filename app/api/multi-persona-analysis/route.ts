@@ -24,7 +24,7 @@ interface SwimLaneAction {
 interface SwimLane {
   id: string
   name: string
-  personaIds: string[]  // Changed from personaId to personaIds array
+  personaId: string
   color: string
   description?: string
   actions: SwimLaneAction[]
@@ -77,8 +77,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'System title and description are required' }, { status: 400 })
     }
 
-    // Get unique persona IDs from swim lanes (flatten all personaIds arrays)
-    const personaIds = [...new Set(workflow.swimLanes.flatMap(lane => lane.personaIds).filter(Boolean))]
+    // Get unique persona IDs from swim lanes
+    const personaIds = [...new Set(workflow.swimLanes.map(lane => lane.personaId).filter(Boolean))]
 
     if (personaIds.length === 0) {
       return NextResponse.json({ error: 'No personas assigned to swim lanes' }, { status: 400 })
@@ -102,187 +102,162 @@ export async function POST(request: NextRequest) {
     // Generate individual analysis for each persona in the workflow using Grok AI
     implications = await Promise.all(
       personas.map(async (persona) => {
-        // Find swim lanes where this persona is assigned
-        const assignedLanes = workflow.swimLanes.filter(lane => lane.personaIds.includes(persona.id))
+        const swimLane = workflow.swimLanes.find(lane => lane.personaId === persona.id)
         
-        if (assignedLanes.length === 0) return null
+        const personaData = {
+          name: persona.name,
+          age: persona.age,
+          occupation: persona.occupation,
+          location: persona.location,
+          introduction: persona.introduction,
+          personalityTraits: persona.personalityTraits,
+          interests: persona.interests,
+          metadata: persona.metadata,
+          swimLane: swimLane
+        }
 
-        // Analyze this persona across all their assigned lanes
-        const results = await Promise.all(
-          assignedLanes.map(async (swimLane) => {
-            const personaData = {
-              name: persona.name,
-              age: persona.age,
-              occupation: persona.occupation,
-              location: persona.location,
-              introduction: persona.introduction,
-              personalityTraits: persona.personalityTraits,
-              interests: persona.interests,
-              metadata: persona.metadata,
-              swimLane: swimLane
-            }
-
-            const prompt = createWorkflowAnalysisPrompt(systemInfo, personaData, workflow)
-            
-            try {
-              // Use Grok AI for real analysis (same AI service used in interview tab)
-              const response = await grok.chat.completions.create({
-                model: "grok-3",
-                messages: [
-                  {
-                    role: "system" as const,
-                    content: "You are a UX design expert specializing in multi-persona workflow analysis. Respond with a JSON object containing detailed design implications for the given persona in their workflow role."
-                  },
-                  {
-                    role: "user" as const,
-                    content: prompt
-                  }
-                ],
-                temperature: 0.7,
-                max_tokens: 1500,
-              })
-
-              const aiResponse = response.choices[0]?.message?.content || ''
-              
-              // Try to parse AI response as JSON, fallback to mock if needed
-              try {
-                const jsonMatch = aiResponse.match(/\{[\s\S]*\}/)
-                if (jsonMatch) {
-                  const aiImplication = JSON.parse(jsonMatch[0])
-                  // Ensure required fields exist
-                  return {
-                    personaId: persona.id,
-                    personaName: persona.name,
-                    swimLaneId: swimLane.id,
-                    swimLaneName: swimLane.name,
-                    rationale: aiImplication.rationale || `AI analysis for ${persona.name} in ${swimLane.name}.`,
-                    priority: aiImplication.priority || 'medium',
-                    implications: {
-                      userInterface: aiImplication.implications?.userInterface || [],
-                      functionality: aiImplication.implications?.functionality || [],
-                      accessibility: aiImplication.implications?.accessibility || [],
-                      content: aiImplication.implications?.content || [],
-                      technical: aiImplication.implications?.technical || [],
-                      behavioral: aiImplication.implications?.behavioral || []
-                    }
-                  }
-                } else {
-                  throw new Error('No JSON found in AI response')
-                }
-              } catch (parseError) {
-                console.error('Failed to parse AI workflow analysis:', parseError)
-                console.log('AI Response:', aiResponse)
-                // Fall back to mock if AI response can't be parsed
-                return createMockWorkflowImplication(persona.id, persona.name, personaData, swimLane)
+        const prompt = createWorkflowAnalysisPrompt(systemInfo, personaData, workflow)
+        
+        try {
+          // Use Grok AI for real analysis (same AI service used in interview tab)
+          const response = await grok.chat.completions.create({
+            model: "grok-3",
+            messages: [
+              {
+                role: "system" as const,
+                content: "You are a UX design expert specializing in multi-persona workflow analysis. Respond with a JSON object containing detailed design implications for the given persona in their workflow role."
+              },
+              {
+                role: "user" as const,
+                content: prompt
               }
-            } catch (aiError) {
-              console.error(`AI analysis failed for persona ${persona.name}:`, aiError)
-              return createMockWorkflowImplication(persona.id, persona.name, personaData, swimLane)
-            }
+            ],
+            temperature: 0.7,
+            max_tokens: 1500,
           })
-        )
 
-        return results.filter(Boolean)
+          const aiResponse = response.choices[0]?.message?.content || ''
+          
+          // Try to parse AI response as JSON, fallback to mock if needed
+          try {
+            const jsonMatch = aiResponse.match(/\{[\s\S]*\}/)
+            if (jsonMatch) {
+              const aiImplication = JSON.parse(jsonMatch[0])
+              // Ensure required fields exist
+              return {
+                personaId: persona.id,
+                personaName: persona.name,
+                rationale: aiImplication.rationale || `AI analysis for ${persona.name} in workflow context.`,
+                priority: aiImplication.priority || 'medium',
+                implications: {
+                  userInterface: aiImplication.implications?.userInterface || [],
+                  functionality: aiImplication.implications?.functionality || [],
+                  accessibility: aiImplication.implications?.accessibility || [],
+                  content: aiImplication.implications?.content || [],
+                  technical: aiImplication.implications?.technical || [],
+                  behavioral: aiImplication.implications?.behavioral || []
+                }
+              }
+            } else {
+              throw new Error('No JSON found in AI response')
+            }
+          } catch (parseError) {
+            console.error('Failed to parse AI workflow analysis:', parseError)
+            console.log('AI Response:', aiResponse)
+            // Fall back to mock if AI response can't be parsed
+            return createMockWorkflowImplication(persona.id, persona.name, personaData, swimLane)
+          }
+        } catch (aiError) {
+          console.error(`AI analysis failed for persona ${persona.name}:`, aiError)
+          return createMockWorkflowImplication(persona.id, persona.name, personaData, swimLane)
+        }
       })
     )
-
-    // Flatten results and filter out null values
-    implications = implications.flat().filter(Boolean)
 
     // Generate collaborative analysis for swim lane interactions
     if (workflow.swimLanes.length > 1) {
       collaborativePainPoints = await Promise.all(
         workflow.swimLanes.map(async (lane) => {
-          // Get all personas assigned to this lane
-          const lanePersonas = personas.filter(p => lane.personaIds.includes(p.id))
-          if (lanePersonas.length === 0) return null
+          const persona = personas.find(p => p.id === lane.personaId)
+          if (!persona) return null
 
-          // Get other lanes that have personas assigned
-          const otherLanes = workflow.swimLanes.filter(l => l.id !== lane.id && l.personaIds.length > 0)
-          const otherPersonas = otherLanes.flatMap(l => 
-            personas.filter(p => l.personaIds.includes(p.id))
-          )
+          const otherLanes = workflow.swimLanes.filter(l => l.id !== lane.id && l.personaId)
+          const otherPersonas = otherLanes.map(l => 
+            personas.find(p => p.id === l.personaId)
+          ).filter(Boolean)
 
           if (otherPersonas.length === 0) {
             return null // Skip lanes with no interaction partners
           }
 
-          // Create analysis for each persona in this lane
-          const laneAnalyses = await Promise.all(
-            lanePersonas.map(async (persona) => {
-              const prompt = createSwimLaneAnalysisPrompt(
-                systemInfo, 
-                lane,
-                persona,
-                otherPersonas, 
-                otherLanes,
-                workflow
-              )
-
-              try {
-                // Use Grok AI for collaborative analysis (same AI service used in interview tab)
-                const response = await grok.chat.completions.create({
-                  model: "grok-3",
-                  messages: [
-                    {
-                      role: "system" as const,
-                      content: "You are a UX design expert specializing in collaborative sequence analysis. Respond with a JSON object containing potential pain points and recommendations for multi-persona collaboration in swim lanes."
-                    },
-                    {
-                      role: "user" as const,
-                      content: prompt
-                    }
-                  ],
-                  temperature: 0.7,
-                  max_tokens: 1500,
-                })
-
-                const aiResponse = response.choices[0]?.message?.content || ''
-                
-                // Try to parse AI response as JSON, fallback to mock if needed
-                try {
-                  const jsonMatch = aiResponse.match(/\{[\s\S]*\}/)
-                  if (jsonMatch) {
-                    const aiPainPoint = JSON.parse(jsonMatch[0])
-                    // Ensure required fields exist
-                    return {
-                      workflowId: workflow.id,
-                      laneId: lane.id,
-                      laneName: lane.name,
-                      primaryPersona: persona.name,
-                      involvedPersonas: [persona.name, ...otherPersonas.map(p => p?.name || 'Unknown')].filter(Boolean),
-                      severity: aiPainPoint.severity || 'medium',
-                      painPoints: {
-                        communication: aiPainPoint.painPoints?.communication || [],
-                        coordination: aiPainPoint.painPoints?.coordination || [],
-                        trust: aiPainPoint.painPoints?.trust || [],
-                        efficiency: aiPainPoint.painPoints?.efficiency || [],
-                        technical: aiPainPoint.painPoints?.technical || []
-                      },
-                      recommendations: aiPainPoint.recommendations || []
-                    }
-                  } else {
-                    throw new Error('No JSON found in AI response')
-                  }
-                } catch (parseError) {
-                  console.error('Failed to parse AI collaborative analysis:', parseError)
-                  console.log('AI Response:', aiResponse)
-                  // Fall back to mock if AI response can't be parsed
-                  return createMockSwimLanePainPoint(lane, persona, otherPersonas, otherLanes, workflow)
-                }
-              } catch (aiError) {
-                console.error(`Swim lane analysis failed:`, aiError)
-                return createMockSwimLanePainPoint(lane, persona, otherPersonas, otherLanes, workflow)
-              }
-            })
+          const prompt = createSwimLaneAnalysisPrompt(
+            systemInfo, 
+            lane,
+            persona,
+            otherPersonas, 
+            otherLanes,
+            workflow
           )
 
-          return laneAnalyses.filter(Boolean)
+          try {
+            // Use Grok AI for collaborative analysis (same AI service used in interview tab)
+            const response = await grok.chat.completions.create({
+              model: "grok-3",
+              messages: [
+                {
+                  role: "system" as const,
+                  content: "You are a UX design expert specializing in collaborative sequence analysis. Respond with a JSON object containing potential pain points and recommendations for multi-persona collaboration in swim lanes."
+                },
+                {
+                  role: "user" as const,
+                  content: prompt
+                }
+              ],
+              temperature: 0.7,
+              max_tokens: 1500,
+            })
+
+            const aiResponse = response.choices[0]?.message?.content || ''
+            
+            // Try to parse AI response as JSON, fallback to mock if needed
+            try {
+              const jsonMatch = aiResponse.match(/\{[\s\S]*\}/)
+              if (jsonMatch) {
+                const aiPainPoint = JSON.parse(jsonMatch[0])
+                // Ensure required fields exist
+                return {
+                  workflowId: workflow.id,
+                  laneId: lane.id,
+                  laneName: lane.name,
+                  involvedPersonas: [persona.name, ...otherPersonas.map(p => p?.name || 'Unknown')].filter(Boolean),
+                  severity: aiPainPoint.severity || 'medium',
+                  painPoints: {
+                    communication: aiPainPoint.painPoints?.communication || [],
+                    coordination: aiPainPoint.painPoints?.coordination || [],
+                    trust: aiPainPoint.painPoints?.trust || [],
+                    efficiency: aiPainPoint.painPoints?.efficiency || [],
+                    technical: aiPainPoint.painPoints?.technical || []
+                  },
+                  recommendations: aiPainPoint.recommendations || []
+                }
+              } else {
+                throw new Error('No JSON found in AI response')
+              }
+            } catch (parseError) {
+              console.error('Failed to parse AI collaborative analysis:', parseError)
+              console.log('AI Response:', aiResponse)
+              // Fall back to mock if AI response can't be parsed
+              return createMockSwimLanePainPoint(lane, persona, otherPersonas, otherLanes, workflow)
+            }
+          } catch (aiError) {
+            console.error(`Swim lane analysis failed:`, aiError)
+            return createMockSwimLanePainPoint(lane, persona, otherPersonas, otherLanes, workflow)
+          }
         })
       )
 
-      // Flatten and filter out null results
-      collaborativePainPoints = collaborativePainPoints.flat().filter(point => point !== null)
+      // Filter out null results
+      collaborativePainPoints = collaborativePainPoints.filter(point => point !== null)
     }
 
     return NextResponse.json({
@@ -393,7 +368,7 @@ Primary Persona:
 
 Collaborating Personas:
 ${otherPersonas.map((p, index) => {
-  const otherLane = otherLanes.find(l => l.personaIds.includes(p?.id || ''))
+  const otherLane = otherLanes.find(l => l.personaId === p?.id)
   return `${index + 1}. ${p?.name || 'Unknown'} (Lane: ${otherLane?.name || 'Unknown'})
      - Actions: ${otherLane?.actions?.map(a => a.description).join(', ') || 'No actions'}
      - Occupation: ${p?.occupation || 'Not specified'}`
