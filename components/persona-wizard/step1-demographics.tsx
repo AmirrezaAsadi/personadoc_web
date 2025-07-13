@@ -160,7 +160,7 @@ export default function Step1Demographics({ data, onUpdate }: Step1Props) {
             </label>
             <Card className="border-dashed border-2 border-gray-300 hover:border-gray-400 transition-colors">
               <CardContent className="flex flex-col items-center justify-center py-8">
-                {data.avatar ? (
+                {data.avatar && data.avatar !== 'existing' ? (
                   <div className="text-center">
                     <User className="w-16 h-16 mx-auto text-gray-400 mb-2" />
                     <p className="text-sm text-gray-600">{data.avatar.name}</p>
@@ -172,6 +172,31 @@ export default function Step1Demographics({ data, onUpdate }: Step1Props) {
                     >
                       Remove
                     </Button>
+                  </div>
+                ) : data.avatar === 'existing' && data.existingAvatarData ? (
+                  <div className="text-center">
+                    <img 
+                      src={data.existingAvatarData.dataUrl} 
+                      alt="Current avatar" 
+                      className="w-16 h-16 mx-auto rounded-full object-cover mb-2"
+                    />
+                    <p className="text-sm text-gray-600">Current avatar</p>
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => document.getElementById('avatar-upload')?.click()}
+                      >
+                        Change
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onUpdate({ avatar: null, existingAvatarData: null })}
+                      >
+                        Remove
+                      </Button>
+                    </div>
                   </div>
                 ) : (
                   <div className="text-center">
@@ -192,6 +217,13 @@ export default function Step1Demographics({ data, onUpdate }: Step1Props) {
                     </Button>
                   </div>
                 )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="avatar-upload"
+                />
               </CardContent>
             </Card>
           </div>

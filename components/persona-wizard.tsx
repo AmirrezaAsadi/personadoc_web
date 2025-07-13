@@ -28,47 +28,55 @@ const STEPS = [
 
 export default function PersonaWizard({ onComplete, onCancel, initialData, isEditing = false }: PersonaWizardProps) {
   const [currentStep, setCurrentStep] = useState(1)
+  
+  // Helper to safely get nested values with proper defaults
+  const getNestedValue = (obj: any, path: string, defaultValue: any = null) => {
+    return path.split('.').reduce((current, key) => current?.[key], obj) ?? defaultValue
+  }
+  
   const [personaData, setPersonaData] = useState({
     // Step 1: Demographics
     name: initialData?.name || '',
     age: initialData?.age?.toString() || '',
-    gender: initialData?.metadata?.demographics?.gender || '',
+    gender: getNestedValue(initialData, 'metadata.demographics.gender', ''),
     location: initialData?.location || '',
     occupation: initialData?.occupation || '',
-    incomeLevel: initialData?.metadata?.demographics?.incomeLevel || '',
-    education: initialData?.metadata?.demographics?.education || '',
-    backgroundStory: initialData?.backgroundStory || initialData?.introduction || '',
-    avatar: null as File | null,
+    incomeLevel: getNestedValue(initialData, 'metadata.demographics.incomeLevel', ''),
+    education: getNestedValue(initialData, 'metadata.demographics.education', ''),
+    backgroundStory: initialData?.introduction || initialData?.backgroundStory || '',
+    // Preserve existing avatar data during editing
+    avatar: isEditing && getNestedValue(initialData, 'metadata.avatar') ? 'existing' : null as any,
+    existingAvatarData: isEditing ? getNestedValue(initialData, 'metadata.avatar') : null,
     
     // Step 2: Personality
-    personalityTraits: initialData?.personalityTraits || [],
-    interests: initialData?.interests || [],
-    techSavvy: initialData?.metadata?.personality?.techSavvy || 5,
-    socialness: initialData?.metadata?.personality?.socialness || 5,
-    creativity: initialData?.metadata?.personality?.creativity || 5,
-    organization: initialData?.metadata?.personality?.organization || 5,
-    riskTaking: initialData?.metadata?.personality?.riskTaking || 5,
-    adaptability: initialData?.metadata?.personality?.adaptability || 5,
-    values: initialData?.metadata?.personality?.values || '',
-    motivations: initialData?.metadata?.personality?.motivations || '',
-    politicalCompass: initialData?.metadata?.politicalCompass || undefined,
+    personalityTraits: Array.isArray(initialData?.personalityTraits) ? initialData.personalityTraits : [],
+    interests: Array.isArray(initialData?.interests) ? initialData.interests : [],
+    techSavvy: getNestedValue(initialData, 'metadata.personality.techSavvy', 5),
+    socialness: getNestedValue(initialData, 'metadata.personality.socialness', 5),
+    creativity: getNestedValue(initialData, 'metadata.personality.creativity', 5),
+    organization: getNestedValue(initialData, 'metadata.personality.organization', 5),
+    riskTaking: getNestedValue(initialData, 'metadata.personality.riskTaking', 5),
+    adaptability: getNestedValue(initialData, 'metadata.personality.adaptability', 5),
+    values: getNestedValue(initialData, 'metadata.personality.values', ''),
+    motivations: getNestedValue(initialData, 'metadata.personality.motivations', ''),
+    politicalCompass: getNestedValue(initialData, 'metadata.politicalCompass'),
     
     // Step 3: Technology
-    devicesOwned: initialData?.metadata?.technology?.devicesOwned || [],
-    appPreferences: initialData?.metadata?.technology?.appPreferences || [],
-    techProficiency: initialData?.metadata?.technology?.techProficiency || 5,
-    digitalHabits: initialData?.metadata?.technology?.digitalHabits || '',
-    communicationPreferences: initialData?.metadata?.technology?.communicationPreferences || [],
+    devicesOwned: getNestedValue(initialData, 'metadata.technology.devicesOwned', []),
+    appPreferences: getNestedValue(initialData, 'metadata.technology.appPreferences', []),
+    techProficiency: getNestedValue(initialData, 'metadata.technology.techProficiency', 5),
+    digitalHabits: getNestedValue(initialData, 'metadata.technology.digitalHabits', ''),
+    communicationPreferences: getNestedValue(initialData, 'metadata.technology.communicationPreferences', []),
     
     // Step 4: Research
-    researchFiles: [],
-    dataSourceTypes: initialData?.metadata?.research?.dataSourceTypes || [],
-    manualKnowledge: initialData?.metadata?.research?.manualKnowledge || '',
-    researchMethodology: initialData?.metadata?.research?.researchMethodology || '',
+    researchFiles: [], // Always start empty for new uploads
+    dataSourceTypes: getNestedValue(initialData, 'metadata.research.dataSourceTypes', []),
+    manualKnowledge: getNestedValue(initialData, 'metadata.research.manualKnowledge', ''),
+    researchMethodology: getNestedValue(initialData, 'metadata.research.researchMethodology', ''),
 
     // Step 5: Brands & Custom Attributes
-    preferredBrands: initialData?.metadata?.brands?.preferredBrands || [],
-    customAttributes: initialData?.metadata?.brands?.customAttributes || {},
+    preferredBrands: getNestedValue(initialData, 'metadata.brands.preferredBrands', []),
+    customAttributes: getNestedValue(initialData, 'metadata.brands.customAttributes', {}),
   })
 
   const updatePersonaData = (stepData: any) => {
@@ -111,9 +119,10 @@ export default function PersonaWizard({ onComplete, onCancel, initialData, isEdi
       })
     )
 
-    // Process avatar if present
+    // Process avatar - handle both new uploads and existing avatar preservation
     let avatarData = null
-    if (personaData.avatar) {
+    if (personaData.avatar && personaData.avatar !== 'existing') {
+      // New avatar file uploaded
       const avatarBase64 = await new Promise<string>((resolve) => {
         const reader = new FileReader()
         reader.onload = () => {
@@ -129,6 +138,9 @@ export default function PersonaWizard({ onComplete, onCancel, initialData, isEdi
         size: personaData.avatar.size,
         dataUrl: avatarBase64
       }
+    } else if (personaData.avatar === 'existing' && personaData.existingAvatarData) {
+      // Preserve existing avatar data
+      avatarData = personaData.existingAvatarData
     }
 
     // Transform data to match your existing persona structure
@@ -140,6 +152,9 @@ export default function PersonaWizard({ onComplete, onCancel, initialData, isEdi
       introduction: personaData.backgroundStory,
       personalityTraits: personaData.personalityTraits,
       interests: personaData.interests,
+      // Preserve existing persona attributes that aren't in the wizard
+      inclusivityAttributes: initialData?.inclusivityAttributes || {},
+      appliedSuggestions: initialData?.appliedSuggestions || [],
       // Add new fields for extended data
       metadata: {
         avatar: avatarData,
@@ -170,12 +185,23 @@ export default function PersonaWizard({ onComplete, onCancel, initialData, isEdi
           dataSourceTypes: personaData.dataSourceTypes,
           manualKnowledge: personaData.manualKnowledge,
           researchMethodology: personaData.researchMethodology,
-          uploadedFiles: processedFiles
+          uploadedFiles: processedFiles,
+          // Preserve existing uploaded files from metadata
+          ...(initialData?.metadata?.research?.uploadedFiles && {
+            existingFiles: initialData.metadata.research.uploadedFiles
+          })
         },
         brands: {
           preferredBrands: personaData.preferredBrands,
           customAttributes: personaData.customAttributes
-        }
+        },
+        // Preserve any other metadata that might exist
+        ...Object.keys(initialData?.metadata || {}).reduce((acc, key) => {
+          if (!['avatar', 'demographics', 'personality', 'politicalCompass', 'technology', 'research', 'brands'].includes(key)) {
+            acc[key] = initialData.metadata[key]
+          }
+          return acc
+        }, {} as any)
       }
     }
     
