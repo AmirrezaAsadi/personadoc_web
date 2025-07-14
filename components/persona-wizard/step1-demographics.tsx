@@ -73,10 +73,11 @@ export default function Step1Demographics({ data, onUpdate }: Step1Props) {
                 value={data.age || ''}
                 onChange={(e) => handleInputChange('age', e.target.value)}
                 placeholder="25"
-                min="13"
+                min="18"
                 max="100"
                 required
               />
+              <p className="text-xs text-gray-500 mt-1">Minimum age is 18 years</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

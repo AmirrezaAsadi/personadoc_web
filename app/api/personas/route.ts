@@ -49,6 +49,13 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     
+    // Validate minimum age
+    if (body.age && body.age < 18) {
+      return NextResponse.json({ 
+        error: 'Age must be 18 or older. We do not allow simulation of minors.' 
+      }, { status: 400 })
+    }
+    
     // For credentials provider, use the session user ID directly
     let userId = (session.user as any).id
 

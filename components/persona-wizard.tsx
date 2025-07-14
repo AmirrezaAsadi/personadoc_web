@@ -96,6 +96,13 @@ export default function PersonaWizard({ onComplete, onCancel, initialData, isEdi
   }
 
   const handleComplete = async () => {
+    // Validate minimum age
+    const age = parseInt(personaData.age) || null
+    if (age && age < 18) {
+      alert('Age must be 18 or older. We do not allow simulation of minors.')
+      return
+    }
+    
     // Convert uploaded files to base64 for API transmission
     const processedFiles = await Promise.all(
       (personaData.researchFiles || []).map(async (file: File) => {
@@ -228,7 +235,8 @@ export default function PersonaWizard({ onComplete, onCancel, initialData, isEdi
   const isStepValid = () => {
     switch (currentStep) {
       case 1:
-        return personaData.name && personaData.age && personaData.occupation && personaData.location
+        const age = parseInt(personaData.age) || 0
+        return personaData.name && personaData.age && personaData.occupation && personaData.location && age >= 18
       case 2:
         return personaData.personalityTraits.length > 0 && personaData.interests.length > 0
       case 3:

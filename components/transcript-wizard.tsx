@@ -141,6 +141,13 @@ export default function TranscriptWizard({ onComplete, onCancel }: TranscriptWiz
   }
 
   const handleComplete = () => {
+    // Validate minimum age
+    const age = parseInt(personaData.age) || 0
+    if (age && age < 18) {
+      alert('Age must be 18 or older. We do not allow simulation of minors.')
+      return
+    }
+    
     // Prepare final persona data with transcript metadata
     const finalPersonaData = {
       ...personaData,
@@ -313,7 +320,10 @@ export default function TranscriptWizard({ onComplete, onCancel }: TranscriptWiz
             value={personaData.age}
             onChange={(e) => updatePersonaData('age', e.target.value)}
             placeholder="Estimated age"
+            min="18"
+            max="100"
           />
+          <p className="text-xs text-gray-500 mt-1">Minimum age is 18 years</p>
         </div>
 
         <div>

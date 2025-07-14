@@ -59,9 +59,17 @@ export function PersonaEditModal({ isOpen, onClose, persona, onSave }: PersonaEd
   }, [persona, isOpen])
 
   const handleSave = () => {
+    const age = editedPersona.age ? parseInt(editedPersona.age) : null
+    
+    // Validate minimum age
+    if (age && age < 18) {
+      alert('Age must be 18 or older. We do not allow simulation of minors.')
+      return
+    }
+    
     const updatedPersona = {
       ...editedPersona,
-      age: editedPersona.age ? parseInt(editedPersona.age) : null,
+      age: age,
       personalityTraits: personalityInput.split(',').map(t => t.trim()).filter(t => t),
       interests: interestsInput.split(',').map(i => i.trim()).filter(i => i),
       inclusivityAttributes: editedPersona.inclusivityAttributes,
@@ -133,7 +141,10 @@ export function PersonaEditModal({ isOpen, onClose, persona, onSave }: PersonaEd
                 value={editedPersona.age}
                 onChange={(e) => setEditedPersona(prev => ({ ...prev, age: e.target.value }))}
                 className="mt-1"
+                min="18"
+                max="100"
               />
+              <p className="text-xs text-gray-500 mt-1">Minimum age is 18 years</p>
             </div>
           </div>
 

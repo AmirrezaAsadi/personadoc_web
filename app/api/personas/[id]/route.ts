@@ -98,6 +98,13 @@ export async function PATCH(
 
     // Get update data from request
     const updateData = await request.json()
+    
+    // Validate minimum age if age is being updated
+    if (updateData.age && updateData.age < 18) {
+      return NextResponse.json({ 
+        error: 'Age must be 18 or older. We do not allow simulation of minors.' 
+      }, { status: 400 })
+    }
 
     // Debug logging
     console.log('=== PERSONA UPDATE DEBUG ===')
