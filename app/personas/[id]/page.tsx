@@ -18,7 +18,6 @@ import { GlobalTimeline } from '@/components/GlobalTimeline'
 import { PersonaSharing } from '@/components/PersonaSharing'
 import PersonaWizard from '@/components/persona-wizard'
 import { InclusivitySuggestions } from '@/components/InclusivitySuggestions'
-import { PoliticalCompass } from '@/components/PoliticalCompass'
 
 // Edit Wizard Modal Component
 interface EditWizardModalProps {
@@ -676,19 +675,6 @@ export default function PersonaDetailPage() {
                           </div>
                         )
                       })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Political Compass */}
-                {persona.metadata?.politicalCompass && (
-                  <div className="mt-6 pt-6 border-t border-slate-200">
-                    <h3 className="font-semibold text-slate-800 mb-4">Political Orientation</h3>
-                    <div className="max-w-md mx-auto">
-                      <PoliticalCompass
-                        initialValues={persona.metadata.politicalCompass}
-                        readOnly={true}
-                      />
                     </div>
                   </div>
                 )}
