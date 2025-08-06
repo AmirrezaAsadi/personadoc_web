@@ -231,7 +231,7 @@ export default function Dashboard() {
               {/* Transcript Creation Button */}
               <Button 
                 onClick={() => setShowTranscriptWizard(true)}
-                className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white border-0 shadow-lg ripple underwater-glow flex items-center gap-2 transition-all duration-300"
+                className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white border-0 shadow-lg ripple underwater-glow flex items-center gap-2 transition-all duration-300"
               >
                 <FileText className="w-4 h-4" />
                 From Transcripts

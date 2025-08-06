@@ -276,7 +276,7 @@ export default function Home() {
               {/* Multi-Persona Analysis Button */}
               <Button 
                 onClick={() => router.push('/multi-persona-analysis')}
-                className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white border-0 shadow-lg ripple underwater-glow flex items-center gap-2 transition-all duration-300"
+                className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white border-0 shadow-lg ripple underwater-glow flex items-center gap-2 transition-all duration-300"
               >
                 <Brain className="w-4 h-4" />
                 Multi-Persona Analysis
@@ -285,7 +285,7 @@ export default function Home() {
               {/* Multi-Agent Interview System Button */}
               <Button 
                 onClick={() => setShowMultiAgent(true)}
-                className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white border-0 shadow-lg ripple underwater-glow flex items-center gap-2 transition-all duration-300"
+                className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white border-0 shadow-lg ripple underwater-glow flex items-center gap-2 transition-all duration-300"
               >
                 <MessageCircle className="w-4 h-4" />
                 Interview Bots
@@ -294,7 +294,7 @@ export default function Home() {
               {/* Transcript Creation Button */}
               <Button 
                 onClick={() => setShowTranscriptWizard(true)}
-                className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white border-0 shadow-lg ripple underwater-glow flex items-center gap-2 transition-all duration-300 ring-4 ring-yellow-400 ring-offset-2"
+                className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white border-0 shadow-lg ripple underwater-glow flex items-center gap-2 transition-all duration-300 ring-4 ring-yellow-400 ring-offset-2"
                 style={{ minWidth: '150px' }}
               >
                 <FileText className="w-4 h-4" />
