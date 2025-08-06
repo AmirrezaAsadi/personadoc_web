@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Users, Brain, Lightbulb, Download, Loader2, Network, AlertTriangle, Plus, Trash2, ArrowRight, Bot, Play, MessageSquare } from 'lucide-react';
+import { Users, Brain, Lightbulb, Download, Loader2, Network, AlertTriangle, Plus, Trash2, ArrowRight, Bot, Play, MessageSquare, Database } from 'lucide-react';
 import Link from 'next/link';
 import MultiAgentSystemInterface from '@/components/multi-agent-system-interface';
 
@@ -101,6 +101,7 @@ export default function MultiPersonaAnalysisPage() {
   const [analysisResults, setAnalysisResults] = useState<DesignImplication[]>([]);
   const [collaborativePainPoints, setCollaborativePainPoints] = useState<CollaborativePainPoint[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isLoadingExample, setIsLoadingExample] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -292,6 +293,36 @@ export default function MultiPersonaAnalysisPage() {
     }
   };
 
+  const loadExample = async () => {
+    setIsLoadingExample(true);
+    try {
+      const response = await fetch('/api/example-template', {
+        method: 'POST',
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Load personas
+        await loadPersonas();
+        
+        // Set up the example workflow
+        setSystemInfo(data.template.systemInfo);
+        setCurrentWorkflow(data.template.workflow);
+        
+        alert('Example template loaded successfully! You now have 5 example personas and a complete e-commerce checkout workflow ready to test.');
+      } else {
+        const error = await response.json();
+        alert('Failed to load example template: ' + (error.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Failed to load example template:', error);
+      alert('Failed to load example template. Please try again.');
+    } finally {
+      setIsLoadingExample(false);
+    }
+  };
+
   const exportResults = () => {
     const exportData = {
       systemInfo,
@@ -379,46 +410,61 @@ export default function MultiPersonaAnalysisPage() {
         {/* Tab Navigation */}
         <div className="mb-6">
           <div className="glass-morphism border-white/20 underwater-glow rounded-lg p-2">
-            <div className="flex gap-2">
+            <div className="flex gap-2 justify-between">
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setActiveTab('workflows')}
+                  variant={activeTab === 'workflows' ? 'default' : 'outline'}
+                  className={`flex items-center gap-2 ${
+                    activeTab === 'workflows' 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+                  }`}
+                >
+                  <Network className="w-4 h-4" />
+                  Workflow Designer
+                </Button>
+                <Button
+                  onClick={() => setActiveTab('multiagent')}
+                  variant={activeTab === 'multiagent' ? 'default' : 'outline'}
+                  className={`flex items-center gap-2 ${
+                    activeTab === 'multiagent' 
+                      ? 'bg-purple-500 text-white' 
+                      : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+                  }`}
+                >
+                  <Bot className="w-4 h-4" />
+                  Multi-Agent System
+                </Button>
+                <Button
+                  onClick={() => setActiveTab('analysis')}
+                  variant={activeTab === 'analysis' ? 'default' : 'outline'}
+                  className={`flex items-center gap-2 ${
+                    activeTab === 'analysis' 
+                      ? 'bg-green-500 text-white' 
+                      : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+                  }`}
+                  disabled={analysisResults.length === 0}
+                >
+                  <Brain className="w-4 h-4" />
+                  Analysis Results
+                  {analysisResults.length > 0 && (
+                    <Badge className="ml-1 bg-green-600 text-white">{analysisResults.length}</Badge>
+                  )}
+                </Button>
+              </div>
+              
               <Button
-                onClick={() => setActiveTab('workflows')}
-                variant={activeTab === 'workflows' ? 'default' : 'outline'}
-                className={`flex items-center gap-2 ${
-                  activeTab === 'workflows' 
-                    ? 'bg-blue-500 text-white' 
-                    : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
-                }`}
+                onClick={loadExample}
+                disabled={isLoadingExample}
+                className="bg-orange-500 hover:bg-orange-600 text-white flex items-center gap-2"
               >
-                <Network className="w-4 h-4" />
-                Workflow Designer
-              </Button>
-              <Button
-                onClick={() => setActiveTab('multiagent')}
-                variant={activeTab === 'multiagent' ? 'default' : 'outline'}
-                className={`flex items-center gap-2 ${
-                  activeTab === 'multiagent' 
-                    ? 'bg-purple-500 text-white' 
-                    : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
-                }`}
-              >
-                <Bot className="w-4 h-4" />
-                Multi-Agent System
-              </Button>
-              <Button
-                onClick={() => setActiveTab('analysis')}
-                variant={activeTab === 'analysis' ? 'default' : 'outline'}
-                className={`flex items-center gap-2 ${
-                  activeTab === 'analysis' 
-                    ? 'bg-green-500 text-white' 
-                    : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
-                }`}
-                disabled={analysisResults.length === 0}
-              >
-                <Brain className="w-4 h-4" />
-                Analysis Results
-                {analysisResults.length > 0 && (
-                  <Badge className="ml-1 bg-green-600 text-white">{analysisResults.length}</Badge>
+                {isLoadingExample ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Database className="w-4 h-4" />
                 )}
+                Load Example
               </Button>
             </div>
           </div>
