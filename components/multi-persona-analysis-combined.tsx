@@ -244,6 +244,54 @@ export default function MultiPersonaAnalysisPage() {
     }
   };
 
+  const executeWorkflowWithAgents = async () => {
+    if (!currentWorkflow || currentWorkflow.swimLanes.length === 0 || !systemInfo.title || !systemInfo.description) {
+      alert('Please create a sequence with swim lanes and provide system information before executing with agents.');
+      return;
+    }
+
+    // Validate that all swim lanes have personas assigned
+    const unassignedLanes = currentWorkflow.swimLanes.filter(lane => !lane.personaId);
+    if (unassignedLanes.length > 0) {
+      alert('Please assign personas to all swim lanes before executing the workflow.');
+      return;
+    }
+
+    setIsAnalyzing(true);
+    try {
+      // Extract persona IDs from swim lanes
+      const personaIds = currentWorkflow.swimLanes.map(lane => lane.personaId);
+
+      // Create multi-agent session with workflow
+      const response = await fetch('/api/multi-agent-sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: `${systemInfo.title} - Workflow Execution`,
+          description: `Multi-agent execution of ${currentWorkflow.name} workflow`,
+          personaIds,
+          workflow: currentWorkflow,
+          systemInfo
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        // Switch to multi-agent tab to show the execution
+        setActiveTab('multiagent');
+        alert('Workflow execution started! Switch to the Multi-Agent System tab to watch the agents perform their actions.');
+      } else {
+        const error = await response.json();
+        alert('Failed to start workflow execution: ' + (error.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Workflow execution failed:', error);
+      alert('Workflow execution failed. Please try again.');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   const exportResults = () => {
     const exportData = {
       systemInfo,
@@ -510,24 +558,44 @@ export default function MultiPersonaAnalysisPage() {
                 </CardContent>
               </Card>
 
-              {/* Analyze Button */}
-              <Button
-                onClick={handleAnalyze}
-                disabled={isAnalyzing || !currentWorkflow || currentWorkflow.swimLanes.length === 0 || !systemInfo.title}
-                className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white border-0 shadow-xl py-6 text-lg underwater-glow"
-              >
-                {isAnalyzing ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Analyzing Sequence...
-                  </>
-                ) : (
-                  <>
-                    <Lightbulb className="w-5 h-5 mr-2" />
-                    Analyze Sequence
-                  </>
-                )}
-              </Button>
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                <Button
+                  onClick={executeWorkflowWithAgents}
+                  disabled={isAnalyzing || !currentWorkflow || currentWorkflow.swimLanes.length === 0 || !systemInfo.title}
+                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white border-0 shadow-xl py-6 text-lg underwater-glow"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Starting Workflow...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-5 h-5 mr-2" />
+                      Execute Workflow with AI Agents
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  onClick={handleAnalyze}
+                  disabled={isAnalyzing || !currentWorkflow || currentWorkflow.swimLanes.length === 0 || !systemInfo.title}
+                  className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white border-0 shadow-xl py-6 text-lg underwater-glow"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Analyzing Sequence...
+                    </>
+                  ) : (
+                    <>
+                      <Lightbulb className="w-5 h-5 mr-2" />
+                      Generate Static Analysis
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
 
             {/* Right Columns: Sequence Diagram */}

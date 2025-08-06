@@ -8,36 +8,67 @@ const openai = new OpenAI({
   baseURL: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
 });
 
+export interface WorkflowAction {
+  id: string;
+  title: string;
+  description: string;
+  order: number;
+  estimatedTime?: string;
+}
+
+export interface WorkflowLane {
+  id: string;
+  name: string;
+  personaId: string;
+  color: string;
+  description?: string;
+  actions: WorkflowAction[];
+}
+
+export interface Workflow {
+  id: string;
+  name: string;
+  description: string;
+  swimLanes: WorkflowLane[];
+  collaborationType: 'sequential' | 'parallel' | 'hybrid';
+}
+
 export interface PersonaAgent {
   id: string;
   personaId: string;
   name: string;
   personality: any;
   demographics: any;
-  status: 'idle' | 'thinking' | 'responding' | 'listening';
+  status: 'idle' | 'thinking' | 'responding' | 'listening' | 'acting';
   lastActivity: Date;
   messageCount: number;
+  currentAction?: WorkflowAction;
+  workflowLane?: WorkflowLane;
 }
 
 export interface AgentMessage {
   sessionId: string;
   fromAgentId: string;
   toAgentId?: string; // Optional for broadcast messages
-  type: 'direct' | 'broadcast' | 'coordination' | 'analysis';
+  type: 'direct' | 'broadcast' | 'coordination' | 'analysis' | 'workflow_action' | 'system_feedback';
   content: string;
   timestamp: number;
   metadata?: any;
+  workflowAction?: WorkflowAction;
 }
 
 export interface MultiAgentSession {
   id: string;
   name: string;
   description: string;
+  workflow?: Workflow;
+  systemInfo?: any;
   agents: PersonaAgent[];
   status: 'initializing' | 'active' | 'completed' | 'error';
   startedAt: Date;
   messages: AgentMessage[];
   analysisResults?: any;
+  currentStep?: number;
 }
 
 class MultiAgentPersonaSystem {
@@ -80,7 +111,9 @@ class MultiAgentPersonaSystem {
     name: string,
     description: string,
     personaIds: string[],
-    topic: string
+    workflow?: Workflow,
+    systemInfo?: any,
+    topic?: string
   ): Promise<MultiAgentSession> {
     await this.initialize();
 
@@ -103,33 +136,41 @@ class MultiAgentPersonaSystem {
       }
     });
 
-    // Create agent instances
-    const agents: PersonaAgent[] = personas.map(persona => ({
-      id: `agent_${persona.id}_${Date.now()}`,
-      personaId: persona.id,
-      name: persona.name,
-      personality: persona.personalityTraits,
-      demographics: {
-        age: persona.age,
-        occupation: persona.occupation,
-        location: persona.location,
-        introduction: persona.introduction
-      },
-      status: 'idle',
-      lastActivity: new Date(),
-      messageCount: 0
-    }));
+    // Create agent instances with workflow context
+    const agents: PersonaAgent[] = personas.map(persona => {
+      const workflowLane = workflow?.swimLanes.find(lane => lane.personaId === persona.id);
+      return {
+        id: `agent_${persona.id}_${Date.now()}`,
+        personaId: persona.id,
+        name: persona.name,
+        personality: persona.personalityTraits,
+        demographics: {
+          age: persona.age,
+          occupation: persona.occupation,
+          location: persona.location,
+          introduction: persona.introduction
+        },
+        status: 'idle',
+        lastActivity: new Date(),
+        messageCount: 0,
+        workflowLane,
+        currentAction: workflowLane?.actions[0] // Start with first action
+      };
+    });
 
     // Create session
     const session: MultiAgentSession = {
       id: sessionId,
       name,
       description,
+      workflow,
+      systemInfo,
       agents,
       status: 'initializing',
       startedAt: new Date(),
       messages: [],
-      analysisResults: null
+      analysisResults: null,
+      currentStep: 0
     };
 
     this.sessions.set(sessionId, session);
@@ -139,10 +180,259 @@ class MultiAgentPersonaSystem {
       this.agents.set(agent.id, agent);
     });
 
-    // Start the multi-agent conversation
-    await this.initiateAgentConversation(session, topic);
+    // Start the workflow execution or conversation
+    if (workflow) {
+      await this.initiateWorkflowExecution(session);
+    } else if (topic) {
+      await this.initiateAgentConversation(session, topic);
+    }
 
     return session;
+  }
+
+  private async initiateWorkflowExecution(session: MultiAgentSession): Promise<void> {
+    if (!session.workflow) return;
+    
+    session.status = 'active';
+    
+    // Send workflow initialization message
+    const initMessage: AgentMessage = {
+      sessionId: session.id,
+      fromAgentId: 'system',
+      type: 'workflow_action',
+      content: `Starting workflow execution: "${session.workflow.name}". Each agent will perform their assigned actions based on their persona characteristics.`,
+      timestamp: Date.now(),
+      metadata: { 
+        workflowName: session.workflow.name,
+        totalAgents: session.agents.length,
+        systemInfo: session.systemInfo
+      }
+    };
+
+    session.messages.push(initMessage);
+
+    // Publish workflow start message
+    await rabbitmqService.publishMessage(
+      'agent_coordination',
+      '',
+      initMessage
+    );
+
+    // Start each agent with their first workflow action
+    for (const agent of session.agents) {
+      if (agent.workflowLane && agent.currentAction) {
+        await this.executeWorkflowAction(agent, session);
+      }
+    }
+  }
+
+  private async executeWorkflowAction(agent: PersonaAgent, session: MultiAgentSession): Promise<void> {
+    if (!agent.currentAction || !agent.workflowLane) return;
+
+    agent.status = 'acting';
+    agent.lastActivity = new Date();
+
+    try {
+      // Create persona-specific workflow action prompt
+      const systemPrompt = this.createWorkflowActionPrompt(agent, session);
+      
+      // Generate response using AI based on the workflow action
+      const response = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { 
+            role: "user", 
+            content: `Execute this workflow action: "${agent.currentAction.title}" - ${agent.currentAction.description}`
+          }
+        ],
+        max_tokens: 400,
+        temperature: 0.8
+      });
+
+      const actionResponse = response.choices[0]?.message?.content || "I'm working on this action...";
+
+      // Create workflow action message
+      const actionMessage: AgentMessage = {
+        sessionId: session.id,
+        fromAgentId: agent.id,
+        type: 'workflow_action',
+        content: actionResponse,
+        timestamp: Date.now(),
+        workflowAction: agent.currentAction,
+        metadata: { 
+          agentName: agent.name,
+          actionTitle: agent.currentAction.title,
+          laneId: agent.workflowLane.id,
+          step: session.currentStep
+        }
+      };
+
+      agent.messageCount++;
+      session.messages.push(actionMessage);
+
+      // Publish to RabbitMQ
+      await rabbitmqService.publishMessage(
+        'persona_agents',
+        `workflow.action.${agent.id}`,
+        actionMessage
+      );
+
+      // Move to next action or complete
+      await this.advanceAgentToNextAction(agent, session);
+
+    } catch (error) {
+      console.error(`Error executing workflow action for agent ${agent.id}:`, error);
+      agent.status = 'idle';
+    }
+  }
+
+  private createWorkflowActionPrompt(agent: PersonaAgent, session: MultiAgentSession): string {
+    const systemInfo = session.systemInfo || {};
+    
+    return `You are ${agent.name}, a persona with these characteristics:
+- Age: ${agent.demographics.age}
+- Occupation: ${agent.demographics.occupation}
+- Location: ${agent.demographics.location}
+- Personality: ${agent.personality}
+- Introduction: ${agent.demographics.introduction}
+
+You are participating in a workflow for the system: "${systemInfo.title || 'Unknown System'}"
+System Description: ${systemInfo.description || 'No description provided'}
+System Requirements: ${systemInfo.requirements || 'No requirements specified'}
+Target Platform: ${systemInfo.targetPlatform || 'Not specified'}
+Business Goals: ${systemInfo.businessGoals || 'No goals specified'}
+
+Your role in this workflow: ${agent.workflowLane?.name || 'Participant'}
+Lane description: ${agent.workflowLane?.description || 'No description'}
+
+When performing workflow actions:
+1. Stay in character as ${agent.name}
+2. Consider your persona's limitations, preferences, and behavior patterns
+3. Express realistic concerns, frustrations, or satisfaction based on your characteristics
+4. Mention specific UI/UX needs that would help you complete this action
+5. Be authentic to your persona's context and constraints
+
+Respond as if you're actually trying to use the system and performing this action. Include:
+- What you're trying to do
+- Any difficulties you encounter (based on your persona)
+- What would make this easier for someone like you
+- Your emotional state during this action`;
+  }
+
+  private async advanceAgentToNextAction(agent: PersonaAgent, session: MultiAgentSession): Promise<void> {
+    if (!agent.workflowLane || !agent.currentAction) return;
+
+    const currentIndex = agent.workflowLane.actions.findIndex(a => a.id === agent.currentAction!.id);
+    const nextAction = agent.workflowLane.actions[currentIndex + 1];
+
+    if (nextAction) {
+      // Move to next action
+      agent.currentAction = nextAction;
+      agent.status = 'idle';
+      
+      // Wait a moment then execute next action
+      setTimeout(() => {
+        this.executeWorkflowAction(agent, session);
+      }, 2000);
+    } else {
+      // Agent completed all actions
+      agent.status = 'idle';
+      agent.currentAction = undefined;
+      
+      // Check if all agents completed their workflows
+      const allCompleted = session.agents.every(a => !a.currentAction);
+      if (allCompleted) {
+        await this.completeWorkflowExecution(session);
+      }
+    }
+  }
+
+  private async completeWorkflowExecution(session: MultiAgentSession): Promise<void> {
+    session.status = 'completed';
+    
+    // Generate workflow analysis
+    session.analysisResults = await this.generateWorkflowAnalysis(session);
+    
+    // Send completion message
+    const completionMessage: AgentMessage = {
+      sessionId: session.id,
+      fromAgentId: 'system',
+      type: 'analysis',
+      content: 'Workflow execution completed. Generating design implications based on agent interactions...',
+      timestamp: Date.now(),
+      metadata: { 
+        completed: true,
+        totalMessages: session.messages.length,
+        analysisGenerated: true
+      }
+    };
+
+    session.messages.push(completionMessage);
+  }
+
+  private async generateWorkflowAnalysis(session: MultiAgentSession): Promise<any> {
+    try {
+      const workflowMessages = session.messages.filter(m => m.type === 'workflow_action');
+      
+      const analysisPrompt = `Analyze this workflow execution with ${session.agents.length} different personas:
+
+System Information:
+- Title: ${session.systemInfo?.title || 'Unknown System'}
+- Description: ${session.systemInfo?.description || 'No description'}
+- Requirements: ${session.systemInfo?.requirements || 'No requirements'}
+- Target Platform: ${session.systemInfo?.targetPlatform || 'Not specified'}
+- Business Goals: ${session.systemInfo?.businessGoals || 'No goals'}
+
+Workflow: ${session.workflow?.name}
+Type: ${session.workflow?.collaborationType}
+
+Agent Actions and Responses:
+${workflowMessages.map(m => `
+Agent: ${m.metadata?.agentName}
+Action: ${m.metadata?.actionTitle}
+Response: ${m.content}
+`).join('\n')}
+
+Generate comprehensive design implications including:
+
+1. **User Interface Requirements** (specific UI elements, layouts, controls needed)
+2. **Functionality Needs** (features, capabilities, integrations required)
+3. **Accessibility Considerations** (accommodations for different personas)
+4. **Content Strategy** (messaging, help text, guidance needed)
+5. **Technical Requirements** (performance, compatibility, infrastructure)
+6. **Behavioral Insights** (user patterns, preferences, pain points revealed)
+7. **Collaboration Pain Points** (where personas struggle to work together)
+8. **Priority Recommendations** (what to build first, critical vs nice-to-have)
+
+Provide specific, actionable insights based on the actual workflow execution.`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [{ role: "user", content: analysisPrompt }],
+        max_tokens: 2000,
+        temperature: 0.3
+      });
+
+      return {
+        summary: response.choices[0]?.message?.content,
+        workflowName: session.workflow?.name,
+        agentCount: session.agents.length,
+        messageCount: workflowMessages.length,
+        executionTime: Date.now() - session.startedAt.getTime(),
+        generatedAt: new Date()
+      };
+    } catch (error) {
+      console.error('Error generating workflow analysis:', error);
+      return {
+        summary: 'Analysis generation failed',
+        workflowName: session.workflow?.name,
+        agentCount: session.agents.length,
+        messageCount: session.messages.length,
+        executionTime: Date.now() - session.startedAt.getTime(),
+        generatedAt: new Date()
+      };
+    }
   }
 
   private async initiateAgentConversation(session: MultiAgentSession, topic: string): Promise<void> {

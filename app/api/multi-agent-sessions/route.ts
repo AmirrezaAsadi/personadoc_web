@@ -9,7 +9,35 @@ const createSessionSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(500).optional(),
   personaIds: z.array(z.string()).min(2).max(10),
-  topic: z.string().min(1).max(200)
+  topic: z.string().min(1).max(200).optional(),
+  workflow: z.object({
+    id: z.string(),
+    name: z.string(),
+    description: z.string(),
+    swimLanes: z.array(z.object({
+      id: z.string(),
+      name: z.string(),
+      personaId: z.string(),
+      color: z.string(),
+      description: z.string().optional(),
+      actions: z.array(z.object({
+        id: z.string(),
+        title: z.string(),
+        description: z.string(),
+        order: z.number(),
+        estimatedTime: z.string().optional()
+      }))
+    })),
+    collaborationType: z.enum(['sequential', 'parallel', 'hybrid'])
+  }).optional(),
+  systemInfo: z.object({
+    title: z.string().optional(),
+    description: z.string().optional(),
+    requirements: z.string().optional(),
+    constraints: z.string().optional(),
+    targetPlatform: z.string().optional(),
+    businessGoals: z.string().optional()
+  }).optional()
 });
 
 export async function POST(req: NextRequest) {
@@ -27,6 +55,8 @@ export async function POST(req: NextRequest) {
       validated.name,
       validated.description || '',
       validated.personaIds,
+      validated.workflow,
+      validated.systemInfo,
       validated.topic
     );
 
