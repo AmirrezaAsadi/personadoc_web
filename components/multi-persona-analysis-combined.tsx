@@ -473,7 +473,11 @@ export default function MultiPersonaAnalysisPage() {
         {/* Tab Content */}
         {activeTab === 'multiagent' && (
           <div className="bg-white/5 backdrop-blur-sm rounded-lg p-1">
-            <MultiAgentSystemInterface />
+            <MultiAgentSystemInterface 
+              workflow={currentWorkflow}
+              systemInfo={systemInfo}
+              personas={personas}
+            />
           </div>
         )}
 

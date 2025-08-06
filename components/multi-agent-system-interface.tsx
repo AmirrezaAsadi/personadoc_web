@@ -5,7 +5,56 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Users, MessageSquare, Bot, Play, Square, Loader2 } from 'lucide-react';
+import { Users, MessageSquare, Bot, Play, Square, Loader2, Workflow } from 'lucide-react';
+
+interface Persona {
+  id: string;
+  name: string;
+  age?: number;
+  occupation?: string;
+  location?: string;
+  metadata?: any;
+}
+
+interface SwimLaneAction {
+  id: string;
+  title: string;
+  description: string;
+  order: number;
+  estimatedTime?: string;
+}
+
+interface SwimLane {
+  id: string;
+  name: string;
+  personaId: string;
+  color: string;
+  description?: string;
+  actions: SwimLaneAction[];
+}
+
+interface Workflow {
+  id: string;
+  name: string;
+  description: string;
+  swimLanes: SwimLane[];
+  collaborationType: 'sequential' | 'parallel' | 'hybrid';
+}
+
+interface SystemInfo {
+  title: string;
+  description: string;
+  requirements: string;
+  constraints: string;
+  targetPlatform: string;
+  businessGoals: string;
+}
+
+interface Props {
+  workflow?: Workflow | null;
+  systemInfo?: SystemInfo;
+  personas?: Persona[];
+}
 
 interface PersonaAgent {
   id: string;
@@ -33,22 +82,38 @@ interface MultiAgentSession {
   messages: AgentMessage[];
 }
 
-export default function MultiAgentSystemInterface() {
+export default function MultiAgentSystemInterface({ workflow, systemInfo, personas: propPersonas }: Props) {
   const [sessions, setSessions] = useState<MultiAgentSession[]>([]);
   const [currentSession, setCurrentSession] = useState<MultiAgentSession | null>(null);
   const [personas, setPersonas] = useState<any[]>([]);
   const [selectedPersonas, setSelectedPersonas] = useState<string[]>([]);
   const [sessionName, setSessionName] = useState('');
   const [sessionDescription, setSessionDescription] = useState('');
-  const [topic, setTopic] = useState('');
   const [userMessage, setUserMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
 
+  // Use workflow data if provided, otherwise load from API
   useEffect(() => {
-    loadPersonas();
+    if (propPersonas && propPersonas.length > 0) {
+      setPersonas(propPersonas);
+    } else {
+      loadPersonas();
+    }
     loadSessions();
-  }, []);
+  }, [propPersonas]);
+
+  // Auto-populate session details from workflow
+  useEffect(() => {
+    if (workflow && systemInfo) {
+      setSessionName(workflow.name || 'Workflow Analysis Session');
+      setSessionDescription(`${systemInfo.title}: ${workflow.description}`);
+      
+      // Auto-select personas from workflow swim lanes
+      const workflowPersonaIds = workflow.swimLanes.map(lane => lane.personaId).filter(Boolean);
+      setSelectedPersonas(workflowPersonaIds);
+    }
+  }, [workflow, systemInfo]);
 
   const loadPersonas = async () => {
     try {
@@ -71,8 +136,8 @@ export default function MultiAgentSystemInterface() {
   };
 
   const createSession = async () => {
-    if (!sessionName || selectedPersonas.length < 2 || !topic) {
-      alert('Please provide session name, at least 2 personas, and a topic');
+    if (!sessionName || selectedPersonas.length < 2) {
+      alert('Please provide session name and at least 2 personas');
       return;
     }
 
@@ -85,7 +150,8 @@ export default function MultiAgentSystemInterface() {
           name: sessionName,
           description: sessionDescription,
           personaIds: selectedPersonas,
-          topic
+          workflow,
+          systemInfo
         })
       });
 
@@ -97,7 +163,6 @@ export default function MultiAgentSystemInterface() {
         setSessionName('');
         setSessionDescription('');
         setSelectedPersonas([]);
-        setTopic('');
       }
     } catch (error) {
       console.error('Failed to create session:', error);
@@ -291,13 +356,35 @@ export default function MultiAgentSystemInterface() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Multi-Agent Persona System
+            Multi-Agent Workflow Analysis System
           </CardTitle>
           <p className="text-muted-foreground">
-            Create conversations between multiple AI personas with real-time messaging
+            {workflow 
+              ? `Execute workflow "${workflow.name}" with AI personas and analyze the results`
+              : "Design a workflow in the Workflow Designer tab, then return here to execute it with AI agents"
+            }
           </p>
         </CardHeader>
       </Card>
+
+      {/* Workflow Status */}
+      {!workflow && (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+                <Workflow className="w-4 h-4 text-amber-600" />
+              </div>
+              <div>
+                <p className="font-medium text-amber-800">No Workflow Selected</p>
+                <p className="text-sm text-amber-600">
+                  Create a workflow in the "Workflow Designer" tab first. The multi-agent system will execute your workflow steps and provide analysis.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Create New Session */}
@@ -324,14 +411,21 @@ export default function MultiAgentSystemInterface() {
               />
             </div>
 
-            <div>
-              <label className="text-sm font-medium">Discussion Topic</label>
-              <Input
-                placeholder="What should the agents discuss?"
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-              />
-            </div>
+            {workflow && (
+              <div>
+                <label className="text-sm font-medium">Workflow Information</label>
+                <div className="p-3 bg-gray-50 rounded-md">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Workflow className="w-4 h-4" />
+                    <span className="font-medium">{workflow.name}</span>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-2">{workflow.description}</p>
+                  <div className="text-xs text-gray-500">
+                    {workflow.swimLanes.length} swim lanes • {workflow.collaborationType} execution
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div>
               <label className="text-sm font-medium">
@@ -364,7 +458,7 @@ export default function MultiAgentSystemInterface() {
 
             <Button 
               onClick={createSession}
-              disabled={creating || !sessionName || selectedPersonas.length < 2 || !topic}
+              disabled={creating || !sessionName || selectedPersonas.length < 2}
               className="w-full"
             >
               {creating ? (
