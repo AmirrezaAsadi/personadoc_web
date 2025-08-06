@@ -273,13 +273,13 @@ export default function Home() {
                 Create New Persona
               </Button>
               
-              {/* Multi-Persona Analysis Button */}
+              {/* Multi-Agent System Button */}
               <Button 
-                onClick={() => router.push('/multi-persona-analysis')}
+                onClick={() => router.push('/multi-agent-system')}
                 className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white border-0 shadow-lg ripple underwater-glow flex items-center gap-2 transition-all duration-300"
               >
                 <Brain className="w-4 h-4" />
-                Multi-Persona Analysis
+                Multi-Agent System
               </Button>
               
               {/* Multi-Agent Interview System Button */}
