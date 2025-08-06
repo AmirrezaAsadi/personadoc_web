@@ -212,17 +212,8 @@ export default function Dashboard() {
                 <h1 className="text-3xl font-bold gradient-text">
                   PersonaDock
                 </h1>
-                <p className="text-white/80 flex items-center gap-2">
-                  Welcome back, {session?.user?.name}! 
-                  <span className="flex items-center gap-1 text-sm glass-card px-3 py-1 rounded-full">
-                    <Users className="w-3 h-3" />
-                    {personas.length} persona{personas.length !== 1 ? 's' : ''} 
-                    {filterType !== 'all' && (
-                      <span className="text-white/70">
-                        ({filterType === 'user' ? 'yours' : filterType})
-                      </span>
-                    )}
-                  </span>
+                <p className="text-white/80">
+                  Welcome back, {session?.user?.name}!
                 </p>
               </div>
             </div>
@@ -338,6 +329,15 @@ export default function Dashboard() {
                 {filterType === 'public' && 'Showing publicly shared personas from the community'}
                 {filterType === 'shared' && 'Showing personas that have been privately shared with you'}
               </p>
+              <span className="flex items-center gap-1 text-sm glass-card px-3 py-1 rounded-full text-white">
+                <Users className="w-3 h-3" />
+                {personas.length} persona{personas.length !== 1 ? 's' : ''} 
+                {filterType !== 'all' && (
+                  <span className="text-white/70">
+                    ({filterType === 'user' ? 'yours' : filterType})
+                  </span>
+                )}
+              </span>
               <Button
                 variant="outline"
                 size="sm"
