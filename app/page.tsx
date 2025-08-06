@@ -11,6 +11,7 @@ import { Search, Plus, User, LogOut, X, MessageCircle, Users, Eye, Calendar, Map
 import LandingPage from '@/components/landing-page'
 import PersonaWizard from '@/components/persona-wizard'
 import TranscriptWizard from '@/components/transcript-wizard'
+import MultiAgentSystem from '@/components/multi-agent-system-clean'
 import { PersonaTypesGuide } from '@/components/PersonaTypesGuide'
 import { useIsAdmin } from '@/lib/hooks/useIsAdmin'
 
@@ -55,6 +56,7 @@ export default function Home() {
   const [filterType, setFilterType] = useState<'all' | 'user' | 'public' | 'shared'>('all')
   const [showWizard, setShowWizard] = useState(false)
   const [showTranscriptWizard, setShowTranscriptWizard] = useState(false)
+  const [showMultiAgent, setShowMultiAgent] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [showGuide, setShowGuide] = useState(false)
 
@@ -287,6 +289,15 @@ export default function Home() {
               >
                 <Brain className="w-4 h-4" />
                 Multi-Persona Analysis
+              </Button>
+              
+              {/* Multi-Agent Interview System Button */}
+              <Button 
+                onClick={() => setShowMultiAgent(true)}
+                className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white border-0 shadow-lg ripple underwater-glow flex items-center gap-2 transition-all duration-300"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Interview Bots
               </Button>
               
               {/* Transcript Creation Button */}
@@ -649,6 +660,25 @@ export default function Home() {
               onComplete={handleTranscriptWizardComplete}
               onCancel={handleTranscriptWizardCancel}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Multi-Agent Interview System Modal */}
+      {showMultiAgent && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="relative bg-white rounded-xl shadow-2xl max-w-7xl w-full max-h-[95vh] overflow-y-auto">
+            <div className="absolute top-4 right-4 z-10">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowMultiAgent(false)}
+                className="rounded-full"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <MultiAgentSystem />
           </div>
         </div>
       )}

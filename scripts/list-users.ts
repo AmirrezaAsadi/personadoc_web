@@ -10,7 +10,6 @@ async function main() {
         email: true,
         name: true,
         role: true,
-        isActive: true,
         createdAt: true,
         _count: {
           select: {
@@ -31,7 +30,6 @@ async function main() {
       console.log(`\n${index + 1}. Email: ${user.email}`)
       console.log(`   Name: ${user.name || 'No name set'}`)
       console.log(`   Role: ${user.role}`)
-      console.log(`   Active: ${user.isActive}`)
       console.log(`   ID: ${user.id}`)
       console.log(`   Personas: ${user._count.personas}`)
       console.log(`   Joined: ${user.createdAt.toISOString().split('T')[0]}`)

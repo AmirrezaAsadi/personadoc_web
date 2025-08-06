@@ -8,22 +8,27 @@ datasource db {
 }
 
 model User {
-  id              String           @id @default(cuid())
-  email           String           @unique
-  name            String?
-  image           String?
-  role            Role             @default(USER)
-  isActive        Boolean          @default(true)
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  emailVerified   DateTime?
-  accounts        Account[]
-  interactions    Interaction[]
-  personas        Persona[]
-  personaVersions PersonaVersion[]
-  researchData    ResearchData[]
-  sessions        Session[]
-  timelineEvents  TimelineEvent[]
+  id                        String             @id @default(cuid())
+  name                      String?
+  email                     String             @unique
+  emailVerified             DateTime?
+  image                     String?
+  role                      Role               @default(USER)
+  createdAt                 DateTime           @default(now())
+  updatedAt                 DateTime           @updatedAt
+  accounts                  Account[]
+  sessions                  Session[]
+  personas                  Persona[]
+  interactions              Interaction[]
+  personaVersions           PersonaVersion[]
+  researchData              ResearchData[]
+  timelineEvents            TimelineEvent[]
+  interviewBots             InterviewBot[]
+  interviewSessions         InterviewSession[]
+  participantSessions       ParticipantSession[]
+  validationAgents          ValidationAgent[]
+
+  @@map("users")
 }
 
 model Account {
@@ -94,6 +99,7 @@ model Persona {
   versions              PersonaVersion[]
   researchData          ResearchData[]
   timelineEvents        TimelineEvent[]
+  interviewSessions     InterviewSession[]
 
   @@index([appliedSuggestions], map: "idx_persona_applied_suggestions", type: Gin)
   @@index([inclusivityAttributes], map: "idx_persona_inclusivity_attributes", type: Gin)
@@ -203,4 +209,184 @@ model TimelineEvent {
 enum Role {
   USER
   ADMIN
+}
+
+model InterviewBot {
+  id                    String            @id @default(cuid())
+  name                  String
+  description           String?
+  personality           Json              // Bot personality traits
+  interviewStyle        Json              // Interview approach settings
+  researchQuestions     Json              // Predefined research questions
+  adaptiveBehavior      Json              // How bot adapts based on responses
+  isActive              Boolean           @default(true)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  createdBy             String
+  creator               User              @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  interviewSessions     InterviewSession[]
+  validationRules       ValidationRule[]
+
+  @@index([isActive])
+}
+
+model InterviewSession {
+  id                    String            @id @default(cuid())
+  botId                 String
+  personaId             String?           // Linked to persona being created/enhanced
+  sessionToken          String            @unique // For sharing interview links
+  title                 String
+  description           String?
+  status                InterviewStatus   @default(PENDING)
+  participantEmail      String?
+  participantName       String?
+  researchFocus         Json              // Areas to focus research on
+  questions             Json              // Dynamic question list
+  responses             Json              // Collected responses
+  insights              Json?             // Generated insights
+  validationResults     Json?             // Validation agent results
+  estimatedDuration     Int?              // In minutes
+  actualDuration        Int?              // In minutes
+  scheduledAt           DateTime?
+  startedAt             DateTime?
+  completedAt           DateTime?
+  expiresAt             DateTime
+  maxParticipants       Int               @default(1)
+  currentParticipants   Int               @default(0)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  createdBy             String
+  creator               User              @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  bot                   InterviewBot      @relation(fields: [botId], references: [id], onDelete: Cascade)
+  persona               Persona?          @relation(fields: [personaId], references: [id], onDelete: Cascade)
+  participantSessions   ParticipantSession[]
+  validationResults_rel ValidationResult[]
+
+  @@index([sessionToken])
+  @@index([status])
+  @@index([createdBy])
+}
+
+model ParticipantSession {
+  id                    String            @id @default(cuid())
+  sessionId             String
+  participantId         String?           // Optional - for registered users
+  anonymousId           String?           // For anonymous participants
+  responses             Json              // All responses in this session
+  currentQuestionIndex  Int               @default(0)
+  progress              Float             @default(0.0)
+  status                ParticipantStatus @default(ACTIVE)
+  startedAt             DateTime          @default(now())
+  lastActiveAt          DateTime          @default(now())
+  completedAt           DateTime?
+  session               InterviewSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  participant           User?             @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([status])
+}
+
+model ValidationAgent {
+  id                    String            @id @default(cuid())
+  name                  String
+  description           String?
+  agentType             ValidationType
+  rules                 Json              // Validation criteria
+  thresholds            Json              // Quality thresholds
+  isActive              Boolean           @default(true)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  createdBy             String
+  creator               User              @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  validationRules       ValidationRule[]
+  validationResults     ValidationResult[]
+
+  @@index([agentType, isActive])
+}
+
+model ValidationRule {
+  id                    String            @id @default(cuid())
+  botId                 String
+  agentId               String
+  priority              Int               @default(5)
+  isRequired            Boolean           @default(false)
+  conditions            Json              // When to apply this rule
+  actions               Json              // What to do when rule triggers
+  createdAt             DateTime          @default(now())
+  bot                   InterviewBot      @relation(fields: [botId], references: [id], onDelete: Cascade)
+  agent                 ValidationAgent   @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@unique([botId, agentId])
+}
+
+model ValidationResult {
+  id                    String            @id @default(cuid())
+  sessionId             String
+  agentId               String
+  score                 Float             // 0.0 - 1.0
+  issues                Json              // Array of identified issues
+  recommendations       Json              // Suggested improvements
+  status                ValidationStatus
+  processedAt           DateTime          @default(now())
+  session               InterviewSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  agent                 ValidationAgent   @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([agentId])
+}
+
+model QueueMessage {
+  id                    String            @id @default(cuid())
+  messageType           String
+  payload               Json
+  status                MessageStatus     @default(PENDING)
+  priority              Int               @default(5)
+  retryCount            Int               @default(0)
+  maxRetries            Int               @default(3)
+  scheduledFor          DateTime?
+  processedAt           DateTime?
+  errorMessage          String?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  @@index([status, priority])
+  @@index([messageType])
+}
+
+enum InterviewStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  EXPIRED
+  CANCELLED
+}
+
+enum ParticipantStatus {
+  ACTIVE
+  COMPLETED
+  ABANDONED
+  EXPIRED
+}
+
+enum ValidationType {
+  QUALITY
+  COMPLETENESS
+  CONSISTENCY
+  BIAS_DETECTION
+  RELEVANCE
+}
+
+enum ValidationStatus {
+  PASSED
+  FAILED
+  WARNING
+  PENDING
+}
+
+enum MessageStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  RETRY
 }

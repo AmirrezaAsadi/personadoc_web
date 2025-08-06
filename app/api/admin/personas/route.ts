@@ -10,10 +10,10 @@ async function isAdmin(req: NextRequest) {
   
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
-    select: { role: true, isActive: true }
+    select: { role: true }
   })
   
-  return user?.role === 'ADMIN' && user?.isActive === true
+  return user?.role === 'ADMIN'
 }
 
 export async function GET(req: NextRequest) {

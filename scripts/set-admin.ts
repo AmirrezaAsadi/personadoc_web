@@ -12,8 +12,7 @@ async function main() {
         email: adminEmail
       },
       data: {
-        role: 'ADMIN',
-        isActive: true
+        role: 'ADMIN'
       }
     })
 
@@ -21,21 +20,19 @@ async function main() {
     console.log(`   Email: ${updatedUser.email}`)
     console.log(`   Name: ${updatedUser.name}`)
     console.log(`   Role: ${updatedUser.role}`)
-    console.log(`   Active: ${updatedUser.isActive}`)
     
     // Check all users and their roles
     const allUsers = await prisma.user.findMany({
       select: {
         email: true,
         name: true,
-        role: true,
-        isActive: true
+        role: true
       }
     })
     
     console.log('\n=== ALL USERS AND THEIR ROLES ===')
     allUsers.forEach((user, index) => {
-      console.log(`${index + 1}. ${user.email} - ${user.name} - Role: ${user.role} - Active: ${user.isActive}`)
+      console.log(`${index + 1}. ${user.email} - ${user.name} - Role: ${user.role}`)
     })
     
   } catch (error) {
