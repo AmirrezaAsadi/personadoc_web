@@ -11,17 +11,21 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ isAdmin: false })
     }
 
-    // Use raw query to check user role and active status
-    const result = await prisma.$queryRaw<{role: string, isActive: boolean}[]>`
-      SELECT role, "isActive" FROM "User" WHERE email = ${session.user.email}
-    `
+    // Check user role using Prisma ORM
+    const user = await prisma.user.findUnique({
+      where: {
+        email: session.user.email
+      },
+      select: {
+        role: true
+      }
+    })
     
-    if (result.length === 0) {
+    if (!user) {
       return NextResponse.json({ isAdmin: false })
     }
     
-    const user = result[0]
-    const isAdmin = user.role === 'ADMIN' && user.isActive === true
+    const isAdmin = user.role === 'ADMIN'
 
     return NextResponse.json({ isAdmin })
   } catch (error) {

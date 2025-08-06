@@ -8,14 +8,12 @@ async function isAdmin(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.email) return false
   
-  // Use raw query to check user role and active status
-  const result = await prisma.$queryRaw<{role: string, isActive: boolean}[]>`
-    SELECT role, "isActive" FROM "User" WHERE email = ${session.user.email}
-  `
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { role: true }
+  })
   
-  if (result.length === 0) return false
-  const user = result[0]
-  return user.role === 'ADMIN' && user.isActive === true
+  return user?.role === 'ADMIN'
 }
 
 export async function GET(req: NextRequest) {
@@ -24,7 +22,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    // Get basic user data first
+    // Get all users with their data
     const users = await prisma.user.findMany({
       include: {
         _count: {
@@ -38,24 +36,16 @@ export async function GET(req: NextRequest) {
       }
     })
 
-    // Get role and isActive data using raw query for all users
-    const userRoles = await prisma.$queryRaw<{id: string, role: string, isActive: boolean}[]>`
-      SELECT id, role, "isActive" FROM "User"
-    `
-    
-    const roleMap = new Map(userRoles.map(u => [u.id, { role: u.role, isActive: u.isActive }]))
-
     // Transform data for response
     const usersWithStatus = users.map(user => {
-      const roleData = roleMap.get(user.id)
       return {
         id: user.id,
         email: user.email,
         name: user.name,
         image: user.image,
+        role: user.role,
+        isActive: true, // Default to true since we removed isActive field
         createdAt: user.createdAt.toISOString(),
-        isActive: roleData?.isActive ?? true,
-        role: roleData?.role?.toLowerCase() || 'user',
         personaCount: user._count.personas,
         lastActive: user.updatedAt.toISOString()
       }

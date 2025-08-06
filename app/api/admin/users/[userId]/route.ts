@@ -8,14 +8,12 @@ async function isAdmin(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.email) return false
   
-  // Use raw query to check user role and active status
-  const result = await prisma.$queryRaw<{role: string, isActive: boolean}[]>`
-    SELECT role, "isActive" FROM "User" WHERE email = ${session.user.email}
-  `
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { role: true }
+  })
   
-  if (result.length === 0) return false
-  const user = result[0]
-  return user.role === 'ADMIN' && user.isActive === true
+  return user?.role === 'ADMIN'
 }
 
 interface RouteParams {
