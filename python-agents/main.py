@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 import asyncio
@@ -7,6 +8,7 @@ import httpx
 import os
 from dotenv import load_dotenv
 import json
+from datetime import datetime
 
 # Import agent systems
 try:
@@ -247,6 +249,108 @@ async def run_google_adk_analysis(request: MultiAgentRequest, background_tasks: 
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Google ADK analysis failed: {str(e)}")
+
+@app.post("/google-adk/analyze-stream")
+async def stream_google_adk_analysis(request: MultiAgentRequest):
+    """Stream Google ADK coordination process in real-time"""
+    
+    if not google_adk_system:
+        raise HTTPException(status_code=503, detail="Google ADK system not available")
+    
+    async def generate_stream():
+        try:
+            # Initial event
+            yield f"data: {json.dumps({'type': 'start', 'message': 'Starting Google ADK coordination...', 'timestamp': datetime.now().isoformat()})}\n\n"
+            
+            # Fetch personas
+            yield f"data: {json.dumps({'type': 'event', 'message': 'Fetching persona data...', 'timestamp': datetime.now().isoformat()})}\n\n"
+            
+            personas = []
+            api_base_url = os.getenv('TYPESCRIPT_API_URL', 'http://localhost:3000')
+            
+            async with httpx.AsyncClient() as client:
+                for persona_id in request.persona_ids:
+                    try:
+                        yield f"data: {json.dumps({'type': 'event', 'message': f'Loading persona {persona_id}...', 'timestamp': datetime.now().isoformat()})}\n\n"
+                        
+                        response = await client.get(
+                            f"{api_base_url}/api/personas/{persona_id}",
+                            headers={"Authorization": f"Bearer {os.getenv('API_TOKEN')}"},
+                            timeout=10.0
+                        )
+                        if response.status_code == 200:
+                            persona_data = response.json()
+                            personas.append(persona_data)
+                            yield f"data: {json.dumps({'type': 'persona_loaded', 'persona': {'name': persona_data.get('name', 'Unknown'), 'id': persona_id}, 'timestamp': datetime.now().isoformat()})}\n\n"
+                        else:
+                            yield f"data: {json.dumps({'type': 'error', 'message': f'Failed to load persona {persona_id}', 'timestamp': datetime.now().isoformat()})}\n\n"
+                    except Exception as e:
+                        yield f"data: {json.dumps({'type': 'error', 'message': f'Error loading persona {persona_id}: {str(e)}', 'timestamp': datetime.now().isoformat()})}\n\n"
+            
+            if not personas:
+                yield f"data: {json.dumps({'type': 'error', 'message': 'No valid personas found', 'timestamp': datetime.now().isoformat()})}\n\n"
+                return
+            
+            # Start coordination
+            yield f"data: {json.dumps({'type': 'coordination_start', 'message': f'Starting coordination with {len(personas)} personas...', 'timestamp': datetime.now().isoformat()})}\n\n"
+            
+            # Process each persona
+            persona_responses = {}
+            for i, persona in enumerate(personas):
+                persona_name = persona.get('name', f'Persona {i+1}')
+                yield f"data: {json.dumps({'type': 'persona_thinking', 'persona': {'name': persona_name, 'id': persona.get('id')}, 'message': f'{persona_name} is analyzing the query...', 'timestamp': datetime.now().isoformat()})}\n\n"
+                
+                # Simulate some thinking time
+                await asyncio.sleep(2)
+                
+                yield f"data: {json.dumps({'type': 'persona_responding', 'persona': {'name': persona_name, 'id': persona.get('id')}, 'message': f'{persona_name} is formulating response...', 'timestamp': datetime.now().isoformat()})}\n\n"
+                
+                # Get actual response (this would call the real Google ADK agent)
+                try:
+                    # For now, simulate the response - in real implementation, this would call the agent
+                    await asyncio.sleep(3)  # Simulate processing time
+                    
+                    # This would be replaced with actual agent execution
+                    response_content = f"Response from {persona_name} analyzing: {request.user_query}"
+                    
+                    persona_responses[persona_name] = {
+                        "response": response_content,
+                        "persona_id": persona.get('id'),
+                        "timestamp": datetime.now().isoformat()
+                    }
+                    
+                    yield f"data: {json.dumps({'type': 'persona_completed', 'persona': {'name': persona_name, 'id': persona.get('id')}, 'response': response_content, 'timestamp': datetime.now().isoformat()})}\n\n"
+                    
+                except Exception as e:
+                    yield f"data: {json.dumps({'type': 'persona_error', 'persona': {'name': persona_name, 'id': persona.get('id')}, 'error': str(e), 'timestamp': datetime.now().isoformat()})}\n\n"
+            
+            # Synthesis phase
+            yield f"data: {json.dumps({'type': 'synthesis_start', 'message': 'Generating synthesis from all perspectives...', 'timestamp': datetime.now().isoformat()})}\n\n"
+            
+            await asyncio.sleep(2)  # Simulate synthesis time
+            
+            synthesis = f"Synthesis of perspectives from {len(personas)} personas regarding: {request.user_query}"
+            
+            # Final result
+            result = {
+                "session_id": request.session_id,
+                "synthesis": synthesis,
+                "persona_responses": persona_responses,
+                "coordination_events": [],
+                "analysis": {
+                    "total_personas": len(personas),
+                    "successful_responses": len(persona_responses),
+                    "execution_framework": "google-adk-streaming",
+                    "model_used": "grok-3"
+                }
+            }
+            
+            yield f"data: {json.dumps({'type': 'completed', 'result': result, 'timestamp': datetime.now().isoformat()})}\n\n"
+            
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'message': f'Stream error: {str(e)}', 'timestamp': datetime.now().isoformat()})}\n\n"
+    
+    return StreamingResponse(generate_stream(), media_type="text/plain")
 
 @app.post("/multi-agent/analyze", response_model=MultiAgentResponse)
 async def run_multi_agent_analysis(request: MultiAgentRequest, background_tasks: BackgroundTasks):
