@@ -99,13 +99,21 @@ class GoogleADKCoordinator:
     async def coordinate_agents(self, state: GoogleADKAgentState) -> GoogleADKAgentState:
         """Coordinate agent interactions using Google ADK patterns"""
         
+        print(f"🎯 Starting coordination for {len(self.agents)} registered agents")
+        
         # Analyze coordination needs
         coordination_plan = await self._analyze_coordination_needs(state)
+        print(f"📋 Coordination plan: {coordination_plan}")
         
         # Execute coordination plan
-        for step in coordination_plan.get("steps", []):
+        steps = coordination_plan.get("steps", [])
+        print(f"📝 Executing {len(steps)} coordination steps")
+        
+        for i, step in enumerate(steps):
+            print(f"🔄 Step {i+1}/{len(steps)}: {step}")
             await self._execute_coordination_step(step, state)
         
+        print(f"✅ Coordination complete. Agent responses: {len(state.agent_responses)}")
         return state
     
     async def _analyze_coordination_needs(self, state: GoogleADKAgentState) -> Dict[str, Any]:
@@ -129,11 +137,18 @@ class GoogleADKCoordinator:
         
         system_prompt = "You are a multi-agent coordination specialist. Create efficient coordination plans."
         
-        response = await self.grok.complete(prompt, system_prompt)
+        print(f"🧠 Analyzing coordination needs with Grok-3...")
         
         try:
-            return json.loads(response)
-        except:
+            response = await self.grok.complete(prompt, system_prompt)
+            print(f"📋 Grok-3 coordination response: {response}")
+            
+            coordination_plan = json.loads(response)
+            print(f"✅ Parsed coordination plan successfully")
+            return coordination_plan
+        except Exception as e:
+            print(f"❌ Error in coordination analysis: {e}")
+            print(f"🔄 Using fallback coordination plan")
             # Fallback coordination plan
             return {
                 "steps": [
