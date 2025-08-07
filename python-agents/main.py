@@ -199,13 +199,17 @@ async def run_google_adk_analysis(request: MultiAgentRequest, background_tasks: 
             raise HTTPException(status_code=400, detail="No valid personas found")
         
         # Run Google ADK analysis with Grok-3
+        print(f"🔄 Starting Google ADK analysis with {len(personas)} personas")
         result = await google_adk_system.run_analysis(
             session_id=request.session_id,
             user_query=request.user_query,
             personas=personas
         )
         
-        print(f"📊 Google ADK result: {result}")
+        print(f"📊 Google ADK result keys: {list(result.keys())}")
+        print(f"📊 Persona responses keys: {list(result.get('persona_responses', {}).keys())}")
+        print(f"📊 Synthesis length: {len(str(result.get('synthesis', '')))}")
+        print(f"📊 Coordination events count: {len(result.get('coordination_events', []))}")
         
         # Ensure synthesis is not None
         if result.get("synthesis") is None:

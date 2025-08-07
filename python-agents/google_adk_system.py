@@ -146,28 +146,44 @@ class GoogleADKCoordinator:
         """Execute a coordination step"""
         
         step_type = step.get("type")
+        print(f"🔄 Executing coordination step: {step_type}")
         
         if step_type == "parallel_execution":
             # Execute agents in parallel
             agents_to_run = step.get("agents", [])
+            print(f"🤖 Running {len(agents_to_run)} agents: {agents_to_run}")
             tasks = []
             
             for agent_name in agents_to_run:
                 if agent_name in self.agents:
+                    print(f"✅ Adding task for agent: {agent_name}")
                     tasks.append(self.agents[agent_name].execute(state))
+                else:
+                    print(f"❌ Agent not found: {agent_name}")
             
             # Wait for all agents to complete
+            print(f"⏳ Waiting for {len(tasks)} agents to complete...")
             results = await asyncio.gather(*tasks, return_exceptions=True)
             
             # Process results
             for i, result in enumerate(results):
+                agent_name = agents_to_run[i] if i < len(agents_to_run) else f"unknown_{i}"
                 if not isinstance(result, Exception):
-                    agent_name = agents_to_run[i]
+                    print(f"✅ Agent {agent_name} completed successfully")
                     state.agent_responses[agent_name] = result
+                else:
+                    print(f"❌ Agent {agent_name} failed: {result}")
+                    state.agent_responses[agent_name] = {
+                        "error": str(result),
+                        "agent": agent_name,
+                        "timestamp": datetime.now().isoformat()
+                    }
         
         elif step_type == "synthesis":
             # Synthesize all agent responses
+            print(f"🧠 Starting synthesis with {len(state.agent_responses)} agent responses")
             await self._synthesize_responses(state)
+            print(f"📝 Synthesis completed, length: {len(str(state.synthesis))}")
         
         # Emit coordination event
         await self._emit_coordination_event({
