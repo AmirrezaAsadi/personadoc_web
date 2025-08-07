@@ -258,6 +258,9 @@ class GoogleADKAgent:
         # Get response from Grok-3
         try:
             print(f"💭 Generating response for {self.config.name}...")
+            print(f"🔑 API key available: {bool(self.grok.api_key)}")
+            print(f"📝 Prompt length: {len(persona_prompt)} characters")
+            
             response = await self.grok.complete(
                 prompt=persona_prompt,
                 system_prompt=f"You are {self.config.name}, an expert {self.config.role}. Provide thoughtful, persona-appropriate responses."
@@ -276,6 +279,9 @@ class GoogleADKAgent:
             
         except Exception as e:
             print(f"❌ Error executing agent {self.config.name}: {e}")
+            print(f"🔍 Exception type: {type(e).__name__}")
+            import traceback
+            print(f"🔍 Traceback: {traceback.format_exc()}")
             return {
                 "agent": self.config.name,
                 "role": self.config.role,
