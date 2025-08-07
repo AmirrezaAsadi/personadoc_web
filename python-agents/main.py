@@ -101,6 +101,28 @@ async def debug_persona_fetch(persona_id: str):
             "error": str(e)
         }
 
+@app.get("/debug/last-analysis")
+async def debug_last_analysis():
+    """Debug endpoint to show the last analysis details"""
+    if not google_adk_system:
+        return {"error": "Google ADK system not available"}
+    
+    # Get the coordinator's current state
+    coordinator = getattr(google_adk_system, '_last_coordinator', None)
+    if coordinator:
+        return {
+            "registered_agents": list(coordinator.agents.keys()),
+            "agent_details": {
+                name: {
+                    "role": agent.config.role,
+                    "persona_id": getattr(agent.config, 'persona_id', None)
+                }
+                for name, agent in coordinator.agents.items()
+            }
+        }
+    else:
+        return {"error": "No coordinator found"}
+
 @app.get("/debug/grok-test")
 async def debug_grok_test():
     """Debug endpoint to test Grok API directly"""

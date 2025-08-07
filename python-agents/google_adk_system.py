@@ -463,6 +463,9 @@ class GoogleADKMultiAgentSystem:
             # Initialize Google ADK coordinator for orchestration
             coordinator = GoogleADKCoordinator()
             
+            # Store for debugging
+            self._last_coordinator = coordinator
+            
             # Phase 1: Create and register agents
             agents = []
             
