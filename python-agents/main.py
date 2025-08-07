@@ -64,6 +64,39 @@ async def health_check():
         "available_frameworks": available_frameworks
     }
 
+@app.get("/debug/environment")
+async def debug_environment():
+    """Debug endpoint to check environment variables"""
+    return {
+        "TYPESCRIPT_API_URL": os.getenv('TYPESCRIPT_API_URL', 'not_set'),
+        "API_TOKEN": "***" if os.getenv('API_TOKEN') else 'not_set',
+        "has_grok_api_key": bool(os.getenv('GROK_API_KEY')),
+    }
+
+@app.get("/debug/persona-fetch/{persona_id}")
+async def debug_persona_fetch(persona_id: str):
+    """Debug endpoint to test persona fetching"""
+    api_base_url = os.getenv('TYPESCRIPT_API_URL', 'http://localhost:3000')
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{api_base_url}/api/personas/{persona_id}",
+                headers={"Authorization": f"Bearer {os.getenv('API_TOKEN')}"},
+                timeout=10.0
+            )
+            return {
+                "url": f"{api_base_url}/api/personas/{persona_id}",
+                "status_code": response.status_code,
+                "headers": dict(response.headers),
+                "response": response.text if response.status_code != 200 else response.json()
+            }
+    except Exception as e:
+        return {
+            "url": f"{api_base_url}/api/personas/{persona_id}",
+            "error": str(e)
+        }
+
 class MultiAgentRequest(BaseModel):
     session_id: str
     user_query: str
