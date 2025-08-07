@@ -1,12 +1,8 @@
 import { rabbitmqService } from './rabbitmq';
 import { prisma } from './prisma';
-import OpenAI from 'openai';
+import { grok } from './grok';
 
-// Initialize OpenAI
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_EMBEDDINGS_API_KEY,
-  baseURL: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
-});
+// Use Grok-3 for AI completions
 
 export interface WorkflowAction {
   id: string;
@@ -298,8 +294,8 @@ class MultiAgentPersonaSystem {
       const systemPrompt = this.createWorkflowActionPrompt(agent, session);
       
       // Generate response using AI based on the workflow action
-      const response = await openai.chat.completions.create({
-        model: "gpt-4",
+      const response = await grok.chat.completions.create({
+        model: "grok-3",
         messages: [
           { role: "system", content: systemPrompt },
           { 
@@ -468,8 +464,8 @@ Generate comprehensive design implications including:
 
 Provide specific, actionable insights based on the actual workflow execution.`;
 
-      const response = await openai.chat.completions.create({
-        model: "gpt-4",
+      const response = await grok.chat.completions.create({
+        model: "grok-3",
         messages: [{ role: "user", content: analysisPrompt }],
         max_tokens: 2000,
         temperature: 0.3
@@ -535,8 +531,8 @@ Provide specific, actionable insights based on the actual workflow execution.`;
       const systemPrompt = this.createPersonaPrompt(agent, session, promptMessage);
       
       // Generate response using AI
-      const response = await openai.chat.completions.create({
-        model: "gpt-4",
+      const response = await grok.chat.completions.create({
+        model: "grok-3",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: promptMessage.content }
@@ -690,8 +686,8 @@ Respond naturally as ${agent.name}:`;
       // Create system response prompt
       const systemPrompt = this.createSystemResponsePrompt(session, agentMessage, agent);
       
-      const response = await openai.chat.completions.create({
-        model: "gpt-4",
+      const response = await grok.chat.completions.create({
+        model: "grok-3",
         messages: [
           { role: "system", content: systemPrompt },
           { 
@@ -929,8 +925,8 @@ Provide analysis including:
 
 Analysis:`;
 
-      const response = await openai.chat.completions.create({
-        model: "gpt-4",
+      const response = await grok.chat.completions.create({
+        model: "grok-3",
         messages: [{ role: "user", content: analysisPrompt }],
         max_tokens: 1000,
         temperature: 0.3
