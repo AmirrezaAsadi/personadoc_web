@@ -122,9 +122,9 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
   const [userMessage, setUserMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [framework, setFramework] = useState<'typescript' | 'google-adk'>('google-adk');
-  const [langGraphHealth, setLangGraphHealth] = useState<boolean>(false);
+  const [framework, setFramework] = useState<'typescript' | 'google-adk' | 'langgraph'>('google-adk');
   const [googleADKHealth, setGoogleADKHealth] = useState<boolean>(false);
+  const [langGraphHealth, setLangGraphHealth] = useState<boolean>(false);
 
   // Use workflow data if provided, otherwise load from API
   useEffect(() => {
@@ -189,9 +189,11 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
     try {
       const endpoint = framework === 'google-adk' 
         ? '/api/multi-agent-sessions/google-adk'
+        : framework === 'langgraph'
+        ? '/api/multi-agent-sessions/langgraph'
         : '/api/multi-agent-sessions';
         
-      const requestBody = framework === 'google-adk'
+      const requestBody = framework === 'google-adk' || framework === 'langgraph'
         ? {
             userQuery: sessionDescription || userMessage,
             personaIds: selectedPersonas,
@@ -214,16 +216,16 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
       const data = await response.json();
       
       if (data.success || data.sessionId) {
-        const newSession = framework === 'google-adk' 
+        const newSession = framework === 'google-adk' || framework === 'langgraph'
           ? {
               id: data.sessionId,
-              name: `Google ADK Analysis - ${new Date().toLocaleString()}`,
+              name: `${framework === 'google-adk' ? 'Google ADK' : 'LangGraph'} Analysis - ${new Date().toLocaleString()}`,
               description: sessionDescription,
               status: data.status,
               startedAt: new Date().toISOString(),
               agents: [],
               messages: [],
-              framework: 'google-adk',
+              framework: framework,
               synthesis: data.synthesis,
               personaResponses: data.personaResponses,
               coordinationEvents: data.coordinationEvents
@@ -573,7 +575,7 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
             {/* Framework Selection */}
             <div>
               <label className="text-sm font-medium">Multi-Agent Framework</label>
-              <div className="grid grid-cols-2 gap-3 mt-2">
+              <div className="grid grid-cols-3 gap-3 mt-2">
                 <div 
                   className={`p-3 border rounded-lg cursor-pointer transition-colors ${
                     framework === 'google-adk' 
@@ -602,6 +604,32 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
                 
                 <div 
                   className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                    framework === 'langgraph' 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                  onClick={() => setFramework('langgraph')}
+                >
+                  <div className="flex items-center gap-2">
+                    <Workflow className="w-4 h-4" />
+                    <span className="font-medium">LangGraph</span>
+                    {langGraphHealth ? (
+                      <Badge variant="outline" className="text-xs bg-green-50 text-green-700">
+                        Online
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-xs bg-red-50 text-red-700">
+                        Offline
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    LangGraph framework with Grok-3
+                  </p>
+                </div>
+                
+                <div 
+                  className={`p-3 border rounded-lg cursor-pointer transition-colors ${
                     framework === 'typescript' 
                       ? 'border-blue-500 bg-blue-50' 
                       : 'border-gray-200 hover:border-gray-300'
@@ -621,9 +649,15 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
                 </div>
               </div>
               
-              {framework === 'google-adk' && !googleADKHealth && (
+              {(framework === 'google-adk' && !googleADKHealth) && (
                 <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm">
                   ⚠️ Google ADK service is offline. Run: <code className="bg-gray-100 px-1 rounded">cd python-agents && python main.py</code>
+                </div>
+              )}
+              
+              {(framework === 'langgraph' && !langGraphHealth) && (
+                <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm">
+                  ⚠️ LangGraph service is offline. Run: <code className="bg-gray-100 px-1 rounded">cd python-agents && python main.py</code>
                 </div>
               )}
             </div>

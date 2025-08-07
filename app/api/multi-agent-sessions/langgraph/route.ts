@@ -1,16 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { langGraphIntegration } from '@/lib/langgraph-integration';
-import { prisma } from '@/lib/prisma';
 
+// This route redirects to Google ADK since we're using Google ADK instead of LangGraph
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { userQuery, personaIds, sessionId } = await request.json();
 
     if (!userQuery || !personaIds || !Array.isArray(personaIds)) {
@@ -20,111 +12,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if Python LangGraph service is available
-    const isHealthy = await langGraphIntegration.healthCheck();
-    if (!isHealthy) {
-      return NextResponse.json(
-        { error: 'LangGraph multi-agent service is unavailable. Please check Python service.' },
-        { status: 503 }
-      );
-    }
-
-    // Generate session ID if not provided
-    const finalSessionId = sessionId || `langgraph_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-    // Create session record in database
-    const dbSession = await prisma.multiAgentSession.create({
-      data: {
-        id: finalSessionId,
-        userId: session.user.id,
-        name: `LangGraph Analysis - ${new Date().toLocaleString()}`,
-        description: `Multi-agent analysis using LangGraph: ${userQuery.substring(0, 100)}...`,
-        personaIds,
-        userQuery,
-        status: 'running',
-        results: {},
-        systemEvents: [],
-        workflow: {
-          id: 'langgraph_workflow',
-          name: 'LangGraph Multi-Agent Workflow',
-          description: 'Professional multi-agent analysis using LangGraph framework',
-          swimLanes: []
-        },
-        createdAt: new Date(),
-        updatedAt: new Date(),
+    // Redirect to Google ADK endpoint since we're using Google ADK instead of LangGraph
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : 'http://localhost:3000';
+      
+    const googleADKResponse = await fetch(`${baseUrl}/api/multi-agent-sessions/google-adk`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        userQuery,
+        personaIds,
+        sessionId: sessionId || `google_adk_${Date.now()}`
+      })
     });
 
-    try {
-      // Run LangGraph multi-agent analysis
-      console.log(`Starting LangGraph analysis for session ${finalSessionId}`);
-      
-      const analysis = await langGraphIntegration.runMultiAgentAnalysis(
-        finalSessionId,
-        userQuery,
-        personaIds
-      );
-
-      console.log(`LangGraph analysis completed for session ${finalSessionId}`);
-
-      // Update session with results
-      await prisma.multiAgentSession.update({
-        where: { id: finalSessionId },
-        data: {
-          status: 'completed',
-          results: {
-            synthesis: analysis.synthesis,
-            persona_responses: analysis.persona_responses,
-            analysis: analysis.analysis,
-            framework: 'langgraph'
-          },
-          systemEvents: analysis.coordination_events,
-          updatedAt: new Date(),
-        },
-      });
-
-      return NextResponse.json({
-        sessionId: finalSessionId,
-        synthesis: analysis.synthesis,
-        personaResponses: analysis.persona_responses,
-        coordinationEvents: analysis.coordination_events,
-        analysis: analysis.analysis,
-        status: 'completed',
-        framework: 'langgraph',
-        message: 'Analysis completed using LangGraph multi-agent system'
-      });
-
-    } catch (analysisError) {
-      console.error('LangGraph analysis failed:', analysisError);
-      
-      // Update session status to failed
-      await prisma.multiAgentSession.update({
-        where: { id: finalSessionId },
-        data: {
-          status: 'failed',
-          results: { 
-            error: 'LangGraph analysis failed',
-            framework: 'langgraph'
-          },
-          updatedAt: new Date(),
-        },
-      });
-
-      return NextResponse.json(
-        { 
-          error: 'LangGraph multi-agent analysis failed',
-          sessionId: finalSessionId,
-          details: analysisError instanceof Error ? analysisError.message : 'Unknown error',
-          suggestion: 'Check if Python LangGraph service is running on port 8000'
-        },
-        { status: 500 }
-      );
+    if (!googleADKResponse.ok) {
+      throw new Error(`Google ADK service responded with ${googleADKResponse.status}`);
     }
 
+    const result = await googleADKResponse.json();
+    
+    return NextResponse.json({
+      ...result,
+      message: 'Request processed via Google ADK (redirected from LangGraph endpoint)',
+      framework: 'google-adk-with-grok3'
+    });
+
   } catch (error) {
-    console.error('LangGraph session creation failed:', error);
+    console.error('LangGraph route (redirected to Google ADK) failed:', error);
     return NextResponse.json(
-      { error: 'Failed to create LangGraph session' },
+      { 
+        error: 'Failed to process multi-agent request',
+        details: 'Using Google ADK coordination with Grok-3 intelligence',
+        suggestion: 'Ensure Google ADK service is available'
+      },
       { status: 500 }
     );
   }
@@ -132,59 +56,39 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get('sessionId');
 
-    if (!sessionId) {
-      // Return all LangGraph sessions for this user
-      const sessions = await prisma.multiAgentSession.findMany({
-        where: { 
-          userId: session.user.id,
-          results: {
-            path: ['framework'],
-            equals: 'langgraph'
-          }
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 20,
-      });
-
-      return NextResponse.json({ sessions });
+    // Redirect to Google ADK endpoint
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : 'http://localhost:3000';
+    
+    const url = sessionId 
+      ? `${baseUrl}/api/multi-agent-sessions/google-adk?sessionId=${sessionId}`
+      : `${baseUrl}/api/multi-agent-sessions/google-adk`;
+      
+    const googleADKResponse = await fetch(url);
+    
+    if (!googleADKResponse.ok) {
+      throw new Error(`Google ADK service responded with ${googleADKResponse.status}`);
     }
-
-    // Return specific session
-    const dbSession = await prisma.multiAgentSession.findUnique({
-      where: { 
-        id: sessionId,
-        userId: session.user.id
-      },
-    });
-
-    if (!dbSession) {
-      return NextResponse.json(
-        { error: 'Session not found' },
-        { status: 404 }
-      );
-    }
-
-    // Get real-time coordination events from LangGraph service
-    const coordinationEvents = await langGraphIntegration.getSessionEvents(sessionId);
-
+    
+    const result = await googleADKResponse.json();
+    
     return NextResponse.json({
-      ...dbSession,
-      coordinationEvents,
-      isLangGraph: true
+      ...result,
+      note: 'Data served via Google ADK (LangGraph endpoint redirected)',
+      framework: 'google-adk-with-grok3'
     });
 
   } catch (error) {
-    console.error('Failed to get LangGraph sessions:', error);
+    console.error('Failed to get sessions:', error);
     return NextResponse.json(
-      { error: 'Failed to get LangGraph sessions' },
+      { 
+        error: 'Failed to get sessions',
+        details: 'Using Google ADK coordination system'
+      },
       { status: 500 }
     );
   }
