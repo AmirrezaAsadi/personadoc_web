@@ -28,7 +28,7 @@ app = FastAPI(title="PersonaDoc Multi-Agent Service")
 # Enable CORS for Vercel integration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://your-vercel-app.vercel.app"],
+    allow_origins=["http://localhost:3000", "https://www.personadock.com"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -63,17 +63,6 @@ async def health_check():
         "service": "PersonaDoc Multi-Agent",
         "available_frameworks": available_frameworks
     }
-
-app = FastAPI(title="PersonaDoc Multi-Agent Service")
-
-# Enable CORS for Vercel integration
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://your-vercel-app.vercel.app"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 class MultiAgentRequest(BaseModel):
     session_id: str
@@ -163,15 +152,21 @@ async def run_multi_agent_analysis(request: MultiAgentRequest, background_tasks:
     try:
         # Fetch persona data from TypeScript API
         personas = []
+        # Use environment variable for API base URL, fallback to localhost for development
+        api_base_url = os.getenv('TYPESCRIPT_API_URL', 'http://localhost:3000')
+        
         async with httpx.AsyncClient() as client:
             for persona_id in request.persona_ids:
                 try:
                     response = await client.get(
-                        f"http://localhost:3000/api/personas/{persona_id}",
-                        headers={"Authorization": f"Bearer {os.getenv('API_TOKEN')}"}
+                        f"{api_base_url}/api/personas/{persona_id}",
+                        headers={"Authorization": f"Bearer {os.getenv('API_TOKEN')}"},
+                        timeout=10.0
                     )
                     if response.status_code == 200:
                         personas.append(response.json())
+                    else:
+                        print(f"Failed to fetch persona {persona_id}: {response.status_code}")
                 except Exception as e:
                     print(f"Error fetching persona {persona_id}: {e}")
         
@@ -234,9 +229,10 @@ async def send_updates_to_typescript(session_id: str, result: Dict[str, Any]):
     """Send analysis results back to TypeScript API"""
     
     try:
+        api_base_url = os.getenv('TYPESCRIPT_API_URL', 'http://localhost:3000')
         async with httpx.AsyncClient() as client:
             await client.post(
-                f"http://localhost:3000/api/multi-agent-sessions/{session_id}/update",
+                f"{api_base_url}/api/multi-agent-sessions/{session_id}/update",
                 json=result,
                 headers={"Authorization": f"Bearer {os.getenv('API_TOKEN')}"}
             )
