@@ -140,7 +140,7 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
   // Check Google ADK service health
   const checkLangGraphHealth = async () => {
     try {
-      const response = await fetch('/api/multi-agent-sessions/google-adk/health');
+      const response = await fetch('/api/multi-agent-sessions/google-adk');
       setGoogleADKHealth(response.ok);
     } catch {
       setGoogleADKHealth(false);
