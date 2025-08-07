@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if Python Google ADK service is available
-    const pythonServiceUrl = process.env.PYTHON_AGENT_SERVICE_URL || 'http://localhost:8000';
+    const pythonServiceUrl = (process.env.PYTHON_AGENT_SERVICE_URL || 'http://localhost:8000').replace(/\/$/, '');
     
     try {
       const healthResponse = await fetch(`${pythonServiceUrl}/health`, {
