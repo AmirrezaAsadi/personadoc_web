@@ -205,6 +205,12 @@ async def run_google_adk_analysis(request: MultiAgentRequest, background_tasks: 
             personas=personas
         )
         
+        print(f"📊 Google ADK result: {result}")
+        
+        # Ensure synthesis is not None
+        if result.get("synthesis") is None:
+            result["synthesis"] = "Analysis completed but synthesis was not generated."
+        
         # Store updates for streaming
         session_updates[request.session_id] = result
         
