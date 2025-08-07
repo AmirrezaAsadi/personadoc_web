@@ -69,12 +69,21 @@ export async function POST(req: NextRequest) {
         status: agentSession.status,
         agentCount: agentSession.agents.length,
         startedAt: agentSession.startedAt,
+        systemAgent: {
+          id: agentSession.systemAgent.id,
+          name: agentSession.systemAgent.name,
+          type: agentSession.systemAgent.type,
+          status: agentSession.systemAgent.status
+        },
         agents: agentSession.agents.map(agent => ({
           id: agent.id,
           name: agent.name,
           status: agent.status,
-          messageCount: agent.messageCount
-        }))
+          messageCount: agent.messageCount,
+          pendingSystemResponse: agent.pendingSystemResponse
+        })),
+        coordinationEvents: agentSession.coordinationLog.length,
+        systemEvents: agentSession.systemEvents.length
       }
     });
   } catch (error) {
@@ -103,13 +112,20 @@ export async function GET(req: NextRequest) {
         status: s.status,
         agentCount: s.agents.length,
         messageCount: s.messages.length,
+        systemEvents: s.systemEvents?.length || 0,
+        coordinationEvents: s.coordinationLog?.length || 0,
         startedAt: s.startedAt,
+        systemAgent: {
+          name: s.systemAgent?.name || 'System',
+          status: s.systemAgent?.status || 'active'
+        },
         agents: s.agents.map(agent => ({
           id: agent.id,
           name: agent.name,
           status: agent.status,
           messageCount: agent.messageCount,
-          lastActivity: agent.lastActivity
+          lastActivity: agent.lastActivity,
+          pendingSystemResponse: agent.pendingSystemResponse
         }))
       }))
     });

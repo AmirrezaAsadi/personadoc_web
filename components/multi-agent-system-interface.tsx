@@ -59,9 +59,36 @@ interface Props {
 interface PersonaAgent {
   id: string;
   name: string;
-  status: 'idle' | 'thinking' | 'responding' | 'listening';
+  status: 'idle' | 'thinking' | 'responding' | 'listening' | 'acting' | 'waiting_for_system';
   messageCount: number;
   lastActivity: string;
+  pendingSystemResponse?: boolean;
+  currentAction?: string;
+}
+
+interface SystemAgent {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+}
+
+interface SystemEvent {
+  id: string;
+  type: string;
+  content: string;
+  timestamp: number;
+  severity: 'info' | 'warning' | 'error' | 'success';
+  affectedAgents: string[];
+}
+
+interface CoordinationEvent {
+  id: string;
+  type: string;
+  description: string;
+  participants: string[];
+  outcome: string;
+  timestamp: number;
 }
 
 interface AgentMessage {
@@ -79,7 +106,10 @@ interface MultiAgentSession {
   status: 'initializing' | 'active' | 'completed';
   startedAt: string;
   agents: PersonaAgent[];
+  systemAgent?: SystemAgent;
   messages: AgentMessage[];
+  systemEvents?: SystemEvent[];
+  coordinationLog?: CoordinationEvent[];
 }
 
 export default function MultiAgentSystemInterface({ workflow, systemInfo, personas: propPersonas }: Props) {
@@ -267,6 +297,11 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
                 <Bot className="h-5 w-5" />
                 Active Agents ({currentSession.agents?.length || 0})
               </CardTitle>
+              {currentSession.systemAgent && (
+                <div className="text-sm text-muted-foreground">
+                  System Agent: {currentSession.systemAgent.name} ({currentSession.systemAgent.status})
+                </div>
+              )}
             </CardHeader>
             <CardContent className="space-y-3">
               {(currentSession.agents || []).map((agent) => (
@@ -275,6 +310,9 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
                     <div className="font-medium">{agent.name}</div>
                     <div className="text-sm text-muted-foreground">
                       {agent.messageCount} messages
+                      {agent.pendingSystemResponse && (
+                        <span className="ml-2 text-yellow-600">⏳ Waiting for system</span>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -345,6 +383,79 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
             </CardContent>
           </Card>
         </div>
+
+        {/* System Events Panel */}
+        {currentSession.systemEvents && currentSession.systemEvents.length > 0 && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Workflow className="h-5 w-5" />
+                System Events ({currentSession.systemEvents.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-48">
+                <div className="space-y-2">
+                  {currentSession.systemEvents.map((event, index) => (
+                    <div key={event.id} className={`p-2 rounded border-l-4 ${
+                      event.severity === 'error' ? 'bg-red-50 border-red-400' :
+                      event.severity === 'warning' ? 'bg-yellow-50 border-yellow-400' :
+                      event.severity === 'success' ? 'bg-green-50 border-green-400' :
+                      'bg-blue-50 border-blue-400'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium capitalize">{event.type.replace('_', ' ')}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatTime(event.timestamp)}
+                        </span>
+                      </div>
+                      <p className="text-sm mt-1">{event.content}</p>
+                      {event.affectedAgents.length > 0 && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Affects: {event.affectedAgents.map(id => 
+                            currentSession.agents?.find(a => a.id === id)?.name || id
+                          ).join(', ')}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Coordination Log */}
+        {currentSession.coordinationLog && currentSession.coordinationLog.length > 0 && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Coordination Events ({currentSession.coordinationLog.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-48">
+                <div className="space-y-2">
+                  {currentSession.coordinationLog.map((coord, index) => (
+                    <div key={coord.id} className="p-2 border rounded bg-purple-50">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium capitalize">{coord.type.replace('_', ' ')}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatTime(coord.timestamp)}
+                        </span>
+                      </div>
+                      <p className="text-sm mt-1">{coord.description}</p>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Outcome: {coord.outcome}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        )}
       </div>
     );
   }

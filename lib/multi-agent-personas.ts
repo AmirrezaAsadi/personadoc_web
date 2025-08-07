@@ -39,11 +39,27 @@ export interface PersonaAgent {
   name: string;
   personality: any;
   demographics: any;
-  status: 'idle' | 'thinking' | 'responding' | 'listening' | 'acting';
+  status: 'idle' | 'thinking' | 'responding' | 'listening' | 'acting' | 'waiting_for_system';
   lastActivity: Date;
   messageCount: number;
   currentAction?: WorkflowAction;
   workflowLane?: WorkflowLane;
+  pendingSystemResponse?: boolean;
+  lastSystemInteraction?: Date;
+}
+
+export interface SystemAgent {
+  id: string;
+  name: string;
+  type: 'coordinator' | 'feedback_provider' | 'event_generator';
+  status: 'active' | 'monitoring' | 'responding';
+  capabilities: string[];
+  responsePatterns: {
+    success: string[];
+    error: string[];
+    guidance: string[];
+    confirmation: string[];
+  };
 }
 
 export interface AgentMessage {
@@ -57,6 +73,29 @@ export interface AgentMessage {
   workflowAction?: WorkflowAction;
 }
 
+export interface SystemEvent {
+  id: string;
+  sessionId: string;
+  type: 'system_response' | 'error' | 'notification' | 'state_change' | 'validation';
+  content: string;
+  timestamp: number;
+  triggeredBy?: string;
+  affectedAgents: string[];
+  severity: 'info' | 'warning' | 'error' | 'success';
+  metadata?: any;
+}
+
+export interface CoordinationEvent {
+  id: string;
+  sessionId: string;
+  type: 'agent_interaction' | 'system_intervention' | 'workflow_coordination' | 'conflict_resolution';
+  description: string;
+  participants: string[];
+  outcome: string;
+  timestamp: number;
+  metadata?: any;
+}
+
 export interface MultiAgentSession {
   id: string;
   name: string;
@@ -64,11 +103,14 @@ export interface MultiAgentSession {
   workflow?: Workflow;
   systemInfo?: any;
   agents: PersonaAgent[];
+  systemAgent: SystemAgent;
   status: 'initializing' | 'active' | 'completed' | 'error';
   startedAt: Date;
   messages: AgentMessage[];
+  systemEvents: SystemEvent[];
   analysisResults?: any;
   currentStep?: number;
+  coordinationLog: CoordinationEvent[];
 }
 
 class MultiAgentPersonaSystem {
@@ -158,6 +200,21 @@ class MultiAgentPersonaSystem {
       };
     });
 
+    // Create system agent
+    const systemAgent: SystemAgent = {
+      id: `system_${sessionId}`,
+      name: 'System Coordinator',
+      type: 'coordinator',
+      status: 'active',
+      capabilities: ['event_simulation', 'feedback_generation', 'coordination', 'validation'],
+      responsePatterns: {
+        success: ['Action completed successfully', 'System updated', 'Changes saved'],
+        error: ['Operation failed', 'System error occurred', 'Please try again'],
+        guidance: ['Try this approach', 'Consider this option', 'Here\'s a suggestion'],
+        confirmation: ['Please confirm', 'Are you sure?', 'Verify this action']
+      }
+    };
+
     // Create session
     const session: MultiAgentSession = {
       id: sessionId,
@@ -166,11 +223,14 @@ class MultiAgentPersonaSystem {
       workflow,
       systemInfo,
       agents,
+      systemAgent,
       status: 'initializing',
       startedAt: new Date(),
       messages: [],
+      systemEvents: [],
       analysisResults: null,
-      currentStep: 0
+      currentStep: 0,
+      coordinationLog: []
     };
 
     this.sessions.set(sessionId, session);
@@ -231,6 +291,7 @@ class MultiAgentPersonaSystem {
 
     agent.status = 'acting';
     agent.lastActivity = new Date();
+    agent.pendingSystemResponse = true; // Mark as waiting for potential system response
 
     try {
       // Create persona-specific workflow action prompt
@@ -578,10 +639,202 @@ Respond naturally as ${agent.name}:`;
       from: message.metadata?.agentName,
       content: message.content.slice(0, 100) + '...'
     });
+
+    // System agent analyzes and potentially responds
+    await this.systemAgentAnalyzeAndRespond(session, message);
+  }
+
+  private async systemAgentAnalyzeAndRespond(session: MultiAgentSession, agentMessage: AgentMessage): Promise<void> {
+    const agent = this.agents.get(agentMessage.fromAgentId);
+    if (!agent || agentMessage.fromAgentId === 'system') return;
+
+    // Determine if system should respond based on content analysis
+    const shouldRespond = await this.shouldSystemRespond(agentMessage, session);
+    
+    if (shouldRespond) {
+      await this.generateSystemResponse(session, agentMessage, agent);
+    }
+
+    // Log coordination event
+    const coordinationEvent: CoordinationEvent = {
+      id: `coord_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      sessionId: session.id,
+      type: 'agent_interaction',
+      description: `${agent.name} performed action: ${agentMessage.workflowAction?.title || 'interaction'}`,
+      participants: [agent.id, session.systemAgent.id],
+      outcome: shouldRespond ? 'System provided feedback' : 'System monitoring',
+      timestamp: Date.now(),
+      metadata: { agentAction: agentMessage.workflowAction, systemResponse: shouldRespond }
+    };
+
+    session.coordinationLog.push(coordinationEvent);
+  }
+
+  private async shouldSystemRespond(message: AgentMessage, session: MultiAgentSession): Promise<boolean> {
+    // System responds to workflow actions, questions, or errors
+    const triggers = [
+      'help', 'error', 'problem', 'stuck', 'confused', 'how to', 'can\'t', 'unable',
+      'submit', 'save', 'confirm', 'delete', 'create', 'update'
+    ];
+
+    const content = message.content.toLowerCase();
+    const hasKeyword = triggers.some(trigger => content.includes(trigger));
+    const isWorkflowAction = message.type === 'workflow_action';
+    const randomResponse = Math.random() < 0.3; // 30% random system interaction
+
+    return hasKeyword || isWorkflowAction || randomResponse;
+  }
+
+  private async generateSystemResponse(session: MultiAgentSession, agentMessage: AgentMessage, agent: PersonaAgent): Promise<void> {
+    try {
+      // Create system response prompt
+      const systemPrompt = this.createSystemResponsePrompt(session, agentMessage, agent);
+      
+      const response = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { 
+            role: "user", 
+            content: `Agent ${agent.name} just: ${agentMessage.content}`
+          }
+        ],
+        max_tokens: 300,
+        temperature: 0.7
+      });
+
+      const systemResponse = response.choices[0]?.message?.content || "System processing...";
+
+      // Create system message
+      const systemMessage: AgentMessage = {
+        sessionId: session.id,
+        fromAgentId: 'system',
+        toAgentId: agent.id,
+        type: 'system_feedback',
+        content: systemResponse,
+        timestamp: Date.now(),
+        metadata: { 
+          respondingTo: agentMessage.fromAgentId,
+          agentName: agent.name,
+          responseType: this.determineResponseType(agentMessage.content)
+        }
+      };
+
+      session.messages.push(systemMessage);
+
+      // Create system event
+      const systemEvent: SystemEvent = {
+        id: `event_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        sessionId: session.id,
+        type: 'system_response',
+        content: systemResponse,
+        timestamp: Date.now(),
+        triggeredBy: agent.id,
+        affectedAgents: [agent.id],
+        severity: 'info',
+        metadata: { originalAction: agentMessage.workflowAction }
+      };
+
+      session.systemEvents.push(systemEvent);
+
+      // Publish to RabbitMQ
+      await rabbitmqService.publishMessage(
+        'persona_agents',
+        `system.response.${agent.id}`,
+        systemMessage
+      );
+
+      // Update agent status
+      agent.pendingSystemResponse = false;
+      agent.lastSystemInteraction = new Date();
+
+    } catch (error) {
+      console.error('Error generating system response:', error);
+    }
+  }
+
+  private createSystemResponsePrompt(session: MultiAgentSession, agentMessage: AgentMessage, agent: PersonaAgent): string {
+    const systemInfo = session.systemInfo || {};
+    
+    return `You are an intelligent system responding to user ${agent.name} in a ${systemInfo.title || 'software system'}.
+
+System Context:
+- System: ${systemInfo.title || 'Software Application'}
+- Description: ${systemInfo.description || 'Interactive system'}
+- Platform: ${systemInfo.targetPlatform || 'Web application'}
+
+User Context:
+- User: ${agent.name} (${agent.demographics.occupation}, ${agent.demographics.age} years old)
+- User's action: ${agentMessage.workflowAction?.title || 'System interaction'}
+- User's personality: ${JSON.stringify(agent.personality).slice(0, 100)}
+
+System Response Guidelines:
+1. Respond as the system interface would (confirmation messages, error alerts, guidance)
+2. Be realistic about system behavior (loading states, validation messages, success confirmations)
+3. Consider the user's technical level and provide appropriate feedback
+4. Include realistic system responses like "Processing...", "Saved successfully", "Error: Please check..."
+5. Simulate realistic system events (notifications, state changes, confirmations)
+
+Respond as the system would to this user's action:`;
+  }
+
+  private determineResponseType(content: string): string {
+    const lower = content.toLowerCase();
+    if (lower.includes('error') || lower.includes('problem')) return 'error_handling';
+    if (lower.includes('save') || lower.includes('submit')) return 'confirmation';
+    if (lower.includes('help') || lower.includes('how')) return 'guidance';
+    return 'feedback';
   }
 
   private async handleCoordinationMessage(message: any): Promise<void> {
     console.log('🤝 Coordination message:', message);
+    
+    const session = this.sessions.get(message.sessionId);
+    if (!session) return;
+
+    // System coordinates between agents based on workflow
+    await this.systemCoordination(session, message);
+  }
+
+  private async systemCoordination(session: MultiAgentSession, message: any): Promise<void> {
+    if (!session.workflow) return;
+
+    // Check for workflow dependencies and coordination needs
+    const activeAgents = session.agents.filter(a => a.status === 'acting' || a.currentAction);
+    
+    // Simulate system coordination events
+    if (activeAgents.length > 1) {
+      const coordinationEvent: CoordinationEvent = {
+        id: `coord_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        sessionId: session.id,
+        type: 'workflow_coordination',
+        description: `System coordinating ${activeAgents.length} simultaneous actions`,
+        participants: activeAgents.map(a => a.id),
+        outcome: 'Coordination protocols activated',
+        timestamp: Date.now(),
+        metadata: { 
+          concurrentActions: activeAgents.map(a => a.currentAction?.title),
+          coordinationType: session.workflow.collaborationType
+        }
+      };
+
+      session.coordinationLog.push(coordinationEvent);
+
+      // Generate system coordination message
+      const coordinationMessage: AgentMessage = {
+        sessionId: session.id,
+        fromAgentId: 'system',
+        type: 'coordination',
+        content: `System note: ${activeAgents.length} users are working simultaneously. Coordination protocols active.`,
+        timestamp: Date.now(),
+        metadata: { 
+          coordinationType: session.workflow.collaborationType,
+          activeUsers: activeAgents.map(a => a.name)
+        }
+      };
+
+      session.messages.push(coordinationMessage);
+    }
   }
 
   // Public methods for API

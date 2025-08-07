@@ -32,20 +32,45 @@ export async function GET(
         description: agentSession.description,
         status: agentSession.status,
         startedAt: agentSession.startedAt,
+        systemAgent: {
+          id: agentSession.systemAgent?.id,
+          name: agentSession.systemAgent?.name,
+          type: agentSession.systemAgent?.type,
+          status: agentSession.systemAgent?.status
+        },
         agents: agentSession.agents.map(agent => ({
           id: agent.id,
           name: agent.name,
           status: agent.status,
           messageCount: agent.messageCount,
-          lastActivity: agent.lastActivity
+          lastActivity: agent.lastActivity,
+          pendingSystemResponse: agent.pendingSystemResponse,
+          currentAction: agent.currentAction?.title
         })),
         messages: agentSession.messages.map(msg => ({
           fromAgentId: msg.fromAgentId,
           toAgentId: msg.toAgentId,
           content: msg.content,
           timestamp: msg.timestamp,
-          type: msg.type
-        }))
+          type: msg.type,
+          metadata: msg.metadata
+        })),
+        systemEvents: agentSession.systemEvents?.map(event => ({
+          id: event.id,
+          type: event.type,
+          content: event.content,
+          timestamp: event.timestamp,
+          severity: event.severity,
+          affectedAgents: event.affectedAgents
+        })) || [],
+        coordinationLog: agentSession.coordinationLog?.map(coord => ({
+          id: coord.id,
+          type: coord.type,
+          description: coord.description,
+          participants: coord.participants,
+          outcome: coord.outcome,
+          timestamp: coord.timestamp
+        })) || []
       }
     });
   } catch (error) {
