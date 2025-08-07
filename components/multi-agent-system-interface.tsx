@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Users, MessageSquare, Bot, Play, Square, Loader2, Workflow, Zap, Settings } from 'lucide-react';
+import { Users, MessageSquare, Bot, Play, Square, Loader2, Workflow, Zap, Settings, Brain } from 'lucide-react';
 
 interface Persona {
   id: string;
@@ -313,6 +313,124 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
   };
 
   if (currentSession) {
+    // Check if this is a Google ADK session
+    const isGoogleADK = (currentSession as any).framework === 'google-adk';
+    const isLangGraph = (currentSession as any).framework === 'langgraph';
+    
+    if (isGoogleADK || isLangGraph) {
+      // Google ADK / LangGraph session view
+      return (
+        <div className="max-w-6xl mx-auto p-6 space-y-6">
+          {/* Session Header */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  {currentSession.name}
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">{currentSession.description}</p>
+                <div className="flex items-center gap-2 mt-2">
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                    {isGoogleADK ? 'Google ADK' : 'LangGraph'} Framework
+                  </Badge>
+                  <Badge variant={currentSession.status === 'completed' ? 'default' : 'secondary'}>
+                    {currentSession.status}
+                  </Badge>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setCurrentSession(null)}>
+                  Back to Sessions
+                </Button>
+              </div>
+            </CardHeader>
+          </Card>
+
+          {/* Synthesis Result */}
+          {(currentSession as any).synthesis && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Brain className="h-5 w-5" />
+                  AI Synthesis & Analysis
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="prose prose-sm max-w-none">
+                  <p className="whitespace-pre-wrap">{(currentSession as any).synthesis}</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Persona Responses */}
+          {(currentSession as any).personaResponses && (currentSession as any).personaResponses.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Persona Responses ({(currentSession as any).personaResponses.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {(currentSession as any).personaResponses.map((response: any, index: number) => (
+                  <div key={index} className="p-4 border rounded-lg bg-gray-50">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-medium text-lg">{response.persona_name}</h4>
+                      <Badge variant="outline" className="bg-green-50 text-green-700">
+                        {response.success ? 'Success' : 'Failed'}
+                      </Badge>
+                    </div>
+                    {response.success && response.response && (
+                      <div className="prose prose-sm max-w-none">
+                        <p className="whitespace-pre-wrap text-gray-700">{response.response}</p>
+                      </div>
+                    )}
+                    {!response.success && (
+                      <div className="text-red-600 text-sm">
+                        Error: {response.error || 'Unknown error'}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Coordination Events */}
+          {(currentSession as any).coordinationEvents && (currentSession as any).coordinationEvents.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Workflow className="h-5 w-5" />
+                  Coordination Events ({(currentSession as any).coordinationEvents.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-48">
+                  <div className="space-y-2">
+                    {(currentSession as any).coordinationEvents.map((event: any, index: number) => (
+                      <div key={index} className="p-2 rounded border-l-4 border-blue-500 bg-blue-50">
+                        <div className="text-sm font-medium">{event.event || event.type}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {event.timestamp ? new Date(event.timestamp).toLocaleString() : `Event ${index + 1}`}
+                        </div>
+                        {event.details && (
+                          <div className="text-xs mt-1">{event.details}</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      );
+    }
+    
+    // Traditional multi-agent session view
     return (
       <div className="max-w-6xl mx-auto p-6 space-y-6">
         {/* Session Header */}
