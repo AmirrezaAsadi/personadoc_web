@@ -120,130 +120,190 @@ export async function POST(req: NextRequest) {
       )
     );
 
-    // Example workflow for E-commerce Checkout
+    // Create example workflow
     const exampleWorkflow = {
-      id: 'example-ecommerce-checkout',
-      name: 'E-commerce Checkout Process',
-      description: 'Multi-persona checkout flow for mobile e-commerce application',
+      id: `example-collaborative-document-${Date.now()}`,
+      name: 'Collaborative Document Editing System',
+      description: 'Multi-user document collaboration with real-time editing, comments, and version control',
       collaborationType: 'parallel' as const,
       swimLanes: [
         {
-          id: 'lane-busy-parent',
-          name: 'Busy Parent (Sarah)',
-          personaId: 'example-busy-parent',
-          color: '#3B82F6',
-          description: 'Time-pressured parent needing quick, efficient checkout',
+          id: `lane-system-${Date.now()}`,
+          name: 'System Coordinator',
+          personaId: 'system-agent',
+          color: '#6366F1',
+          description: 'System that manages collaboration, conflicts, and user interactions',
           actions: [
             {
-              id: 'action-1-sarah',
-              title: 'Quick Product Review',
-              description: 'Rapidly scan product details while managing distractions',
+              id: `action-system-1-${Date.now()}`,
+              title: 'Initialize Collaborative Session',
+              description: 'Create shared workspace, set permissions, enable real-time sync',
               order: 0,
-              estimatedTime: '30 seconds'
+              estimatedTime: 'Instant'
             },
             {
-              id: 'action-2-sarah',
-              title: 'Auto-fill Shipping Info',
-              description: 'Use saved address and payment info for speed',
+              id: `action-system-2-${Date.now()}`,
+              title: 'Manage Concurrent Edits',
+              description: 'Handle simultaneous edits, resolve conflicts, show user cursors',
               order: 1,
-              estimatedTime: '15 seconds'
+              estimatedTime: 'Continuous'
             },
             {
-              id: 'action-3-sarah',
-              title: 'One-Click Purchase',
-              description: 'Complete purchase with minimal steps',
+              id: `action-system-3-${Date.now()}`,
+              title: 'Coordinate Communication',
+              description: 'Route comments, notifications, and status updates between users',
               order: 2,
-              estimatedTime: '10 seconds'
+              estimatedTime: 'Continuous'
             }
           ]
         },
         {
-          id: 'lane-tech-student',
-          name: 'Tech Student (Alex)',
-          personaId: 'example-tech-student',
-          color: '#10B981',
-          description: 'Budget-conscious student seeking best deals',
+          id: `lane-sarah-${Date.now()}`,
+          name: 'Busy Parent (Sarah)',
+          personaId: 'example-busy-parent',
+          color: '#3B82F6',
+          description: 'Quick edits during breaks, needs mobile-friendly interface',
           actions: [
             {
-              id: 'action-1-alex',
-              title: 'Compare Prices',
-              description: 'Check for better deals and price comparisons',
+              id: `action-sarah-1-${Date.now()}`,
+              title: 'Quick Mobile Review',
+              description: 'Scan document for urgent changes while commuting',
               order: 0,
               estimatedTime: '2 minutes'
             },
             {
-              id: 'action-2-alex',
-              title: 'Apply Discount Codes',
-              description: 'Search for and apply multiple coupon codes',
+              id: `action-sarah-2-${Date.now()}`,
+              title: 'Add Priority Comments',
+              description: 'Flag critical issues that need immediate attention',
               order: 1,
-              estimatedTime: '1 minute'
+              estimatedTime: '30 seconds'
             },
             {
-              id: 'action-3-alex',
-              title: 'Split Payment Methods',
-              description: 'Use gift cards, store credit, and card for payment',
+              id: `action-sarah-3-${Date.now()}`,
+              title: 'Voice-to-Text Edits',
+              description: 'Use voice input for quick changes during multitasking',
               order: 2,
-              estimatedTime: '45 seconds'
+              estimatedTime: '1 minute'
             }
           ]
         },
         {
-          id: 'lane-senior-user',
-          name: 'Senior User (Robert)',
-          personaId: 'example-senior-user',
-          color: '#F59E0B',
-          description: 'Cautious user needing clear guidance and confirmation',
+          id: `lane-alex-${Date.now()}`,
+          name: 'Tech Student (Alex)',
+          personaId: 'example-tech-student',
+          color: '#10B981',
+          description: 'Power user who tests edge cases and collaboration features',
           actions: [
             {
-              id: 'action-1-robert',
-              title: 'Read Product Details',
-              description: 'Carefully review all product information and policies',
+              id: `action-alex-1-${Date.now()}`,
+              title: 'Stress Test Collaboration',
+              description: 'Make rapid edits to test real-time sync and conflict resolution',
               order: 0,
+              estimatedTime: '5 minutes'
+            },
+            {
+              id: `action-alex-2-${Date.now()}`,
+              title: 'Test Advanced Features',
+              description: 'Try simultaneous editing, version history, and rollback functions',
+              order: 1,
               estimatedTime: '3 minutes'
             },
             {
-              id: 'action-2-robert',
-              title: 'Contact Customer Service',
-              description: 'Call support to verify order details and policies',
+              id: `action-alex-3-${Date.now()}`,
+              title: 'Report System Issues',
+              description: 'Document bugs, performance issues, and improvement suggestions',
+              order: 2,
+              estimatedTime: '2 minutes'
+            }
+          ]
+        },
+        {
+          id: `lane-robert-${Date.now()}`,
+          name: 'Senior User (Robert)',
+          personaId: 'example-senior-user',
+          color: '#F59E0B',
+          description: 'Careful reviewer who needs clear change tracking and guidance',
+          actions: [
+            {
+              id: `action-robert-1-${Date.now()}`,
+              title: 'Review Change History',
+              description: 'Carefully examine what others have modified using track changes',
+              order: 0,
+              estimatedTime: '8 minutes'
+            },
+            {
+              id: `action-robert-2-${Date.now()}`,
+              title: 'Add Detailed Comments',
+              description: 'Provide thorough feedback and ask clarifying questions',
               order: 1,
               estimatedTime: '5 minutes'
             },
             {
-              id: 'action-3-robert',
-              title: 'Print Receipt Confirmation',
-              description: 'Get physical confirmation of the order',
+              id: `action-robert-3-${Date.now()}`,
+              title: 'Request System Help',
+              description: 'Use help features to understand collaboration tools',
               order: 2,
-              estimatedTime: '1 minute'
+              estimatedTime: '3 minutes'
             }
           ]
         },
         {
-          id: 'lane-business-pro',
+          id: `lane-maria-${Date.now()}`,
           name: 'Business Professional (Maria)',
           personaId: 'example-business-pro',
           color: '#EF4444',
-          description: 'Professional requiring detailed records and efficiency',
+          description: 'Project coordinator managing workflow and deadlines',
           actions: [
             {
-              id: 'action-1-maria',
-              title: 'Expense Category Setup',
-              description: 'Assign purchase to correct business expense category',
+              id: `action-maria-1-${Date.now()}`,
+              title: 'Assign Tasks and Roles',
+              description: 'Delegate sections to team members and set editing permissions',
               order: 0,
-              estimatedTime: '30 seconds'
+              estimatedTime: '2 minutes'
             },
             {
-              id: 'action-2-maria',
-              title: 'Tax Documentation',
-              description: 'Ensure proper tax documentation for business records',
+              id: `action-maria-2-${Date.now()}`,
+              title: 'Monitor Progress',
+              description: 'Track completion status and coordinate team communication',
               order: 1,
-              estimatedTime: '45 seconds'
+              estimatedTime: '4 minutes'
             },
             {
-              id: 'action-3-maria',
-              title: 'Integration with Accounting',
-              description: 'Sync purchase with enterprise accounting system',
+              id: `action-maria-3-${Date.now()}`,
+              title: 'Finalize and Approve',
+              description: 'Review final version and manage approval workflow',
               order: 2,
-              estimatedTime: '20 seconds'
+              estimatedTime: '3 minutes'
+            }
+          ]
+        },
+        {
+          id: `lane-jordan-${Date.now()}`,
+          name: 'UX Designer (Jordan)',
+          personaId: 'example-creative-pro',
+          color: '#8B5CF6',
+          description: 'Evaluates collaboration UX and interface design',
+          actions: [
+            {
+              id: `action-jordan-1-${Date.now()}`,
+              title: 'Assess Collaboration UX',
+              description: 'Evaluate ease of seeing others\' changes and understanding workflow',
+              order: 0,
+              estimatedTime: '4 minutes'
+            },
+            {
+              id: `action-jordan-2-${Date.now()}`,
+              title: 'Test User Awareness',
+              description: 'Check visibility of user presence, cursors, and activity indicators',
+              order: 1,
+              estimatedTime: '3 minutes'
+            },
+            {
+              id: `action-jordan-3-${Date.now()}`,
+              title: 'Suggest UX Improvements',
+              description: 'Recommend better collaboration affordances and visual design',
+              order: 2,
+              estimatedTime: '5 minutes'
             }
           ]
         }
@@ -252,12 +312,12 @@ export async function POST(req: NextRequest) {
 
     // Example system information
     const exampleSystemInfo = {
-      title: 'ShopFast Mobile E-commerce App',
-      description: 'A mobile-first e-commerce platform designed for quick, efficient shopping across diverse user demographics',
-      requirements: 'Payment processing, inventory management, user authentication, address validation, multi-payment methods, mobile optimization',
-      constraints: 'Mobile-first design, 3-second load times, accessibility compliance, security standards, offline capability for cart',
-      targetPlatform: 'iOS and Android mobile applications with responsive web backup',
-      businessGoals: 'Reduce cart abandonment by 40%, increase conversion rate by 25%, improve user satisfaction scores, expand to senior and family demographics'
+      title: 'CollaborativeDoc Pro - Real-time Document Collaboration System',
+      description: 'A CSCW system enabling multiple users to simultaneously edit documents with real-time synchronization, conflict resolution, awareness indicators, and communication tools.',
+      requirements: 'Real-time collaborative editing, conflict resolution algorithms, user presence awareness, commenting system, version history, permission management, cross-platform synchronization',
+      constraints: 'Sub-200ms latency for real-time updates, handle up to 50 concurrent users per document, maintain data consistency, provide offline editing capabilities, ensure security and privacy',
+      targetPlatform: 'Web-based collaborative platform with mobile apps (iOS/Android) and desktop clients',
+      businessGoals: 'Enable effective team collaboration, reduce email communication overhead, improve document quality through peer review, support remote and hybrid work scenarios, ensure seamless workflow integration'
     };
 
     return NextResponse.json({

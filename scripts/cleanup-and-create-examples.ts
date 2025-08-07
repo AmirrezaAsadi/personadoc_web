@@ -51,7 +51,7 @@ async function cleanupAndCreateExamples() {
         interests: ['Family activities', 'Quick meal prep', 'Productivity tools', 'Online shopping'],
         gadgets: ['iPhone', 'Apple Watch', 'MacBook Air', 'AirPods'],
         tags: ['Parent', 'Working Mom', 'Time-conscious', 'Mobile-first'],
-        introduction: 'Working mother of two young kids who needs to get things done quickly while juggling multiple responsibilities',
+        introduction: 'Working mother of two young kids who needs to get things done quickly while juggling multiple responsibilities. Uses collaboration tools for quick reviews and urgent feedback during brief breaks.',
         isPublic: false,
         createdBy: user.id
       },
@@ -65,7 +65,7 @@ async function cleanupAndCreateExamples() {
         interests: ['Gaming', 'Coding', 'Social media', 'Finding deals and discounts', 'Tech reviews'],
         gadgets: ['Gaming PC', 'Mechanical keyboard', 'Multiple monitors', 'Smartphone', 'Wireless headphones'],
         tags: ['Student', 'Tech-savvy', 'Budget-conscious', 'Gamer'],
-        introduction: 'College student who is very tech-savvy but budget-conscious, always looking for the best deals and ways to optimize systems',
+        introduction: 'College student who is very tech-savvy but budget-conscious, always looking for the best deals and ways to optimize systems. Power user who tests edge cases in collaborative software.',
         isPublic: false,
         createdBy: user.id
       },
@@ -79,7 +79,7 @@ async function cleanupAndCreateExamples() {
         interests: ['Reading', 'Gardening', 'Spending time with grandchildren', 'Learning new technologies slowly'],
         gadgets: ['iPad', 'Reading glasses', 'Simple smartphone', 'Desktop computer'],
         tags: ['Senior', 'Retired', 'Cautious', 'Methodical'],
-        introduction: 'Retired educator who is learning to use digital systems, prefers clear instructions and confirmation at each step',
+        introduction: 'Retired educator who is learning to use digital systems, prefers clear instructions and confirmation at each step. Needs strong awareness features to understand what others are doing in collaborative tools.',
         isPublic: false,
         createdBy: user.id
       },
@@ -93,7 +93,7 @@ async function cleanupAndCreateExamples() {
         interests: ['Business analytics', 'Process optimization', 'Team management', 'Professional development'],
         gadgets: ['MacBook Pro', 'iPhone', 'iPad Pro', 'Apple Pencil', 'Wireless mouse'],
         tags: ['Business', 'Executive', 'Data-driven', 'Professional'],
-        introduction: 'Senior business professional who needs tools that integrate well with enterprise systems and provide detailed reporting',
+        introduction: 'Senior business professional who needs tools that integrate well with enterprise systems and provide detailed reporting. Manages collaborative workflows and coordinates team projects.',
         isPublic: false,
         createdBy: user.id
       },
@@ -107,7 +107,7 @@ async function cleanupAndCreateExamples() {
         interests: ['Design trends', 'User research', 'Creative tools', 'Art galleries', 'Design communities'],
         gadgets: ['MacBook Pro', 'iPad Pro', 'Apple Pencil', 'Wacom tablet', 'High-res monitor'],
         tags: ['Designer', 'Creative', 'UX/UI', 'Visual'],
-        introduction: 'UX designer who evaluates systems from both user experience and visual design perspectives, highly sensitive to design flaws',
+        introduction: 'UX designer who evaluates systems from both user experience and visual design perspectives, highly sensitive to design flaws. Specializes in collaboration UX and awareness design.',
         isPublic: false,
         createdBy: user.id
       }
