@@ -125,6 +125,9 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
   const [framework, setFramework] = useState<'typescript' | 'google-adk' | 'langgraph'>('google-adk');
   const [googleADKHealth, setGoogleADKHealth] = useState<boolean>(false);
   const [langGraphHealth, setLangGraphHealth] = useState<boolean>(false);
+  const [streamingEvents, setStreamingEvents] = useState<any[]>([]);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingSession, setStreamingSession] = useState<any>(null);
 
   // Use workflow data if provided, otherwise load from API
   useEffect(() => {
@@ -186,14 +189,18 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
     }
 
     setCreating(true);
+    
+    // For Google ADK, offer streaming option
+    if (framework === 'google-adk') {
+      return await createStreamingGoogleADKSession();
+    }
+    
     try {
-      const endpoint = framework === 'google-adk' 
-        ? '/api/multi-agent-sessions/google-adk'
-        : framework === 'langgraph'
+      const endpoint = framework === 'langgraph'
         ? '/api/multi-agent-sessions/langgraph'
         : '/api/multi-agent-sessions';
         
-      const requestBody = framework === 'google-adk' || framework === 'langgraph'
+      const requestBody = framework === 'langgraph'
         ? {
             userQuery: sessionDescription || userMessage,
             personaIds: selectedPersonas,
@@ -216,10 +223,10 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
       const data = await response.json();
       
       if (data.success || data.sessionId) {
-        const newSession = framework === 'google-adk' || framework === 'langgraph'
+        const newSession = framework === 'langgraph'
           ? {
               id: data.sessionId,
-              name: `${framework === 'google-adk' ? 'Google ADK' : 'LangGraph'} Analysis - ${new Date().toLocaleString()}`,
+              name: `LangGraph Analysis - ${new Date().toLocaleString()}`,
               description: sessionDescription,
               status: data.status,
               startedAt: new Date().toISOString(),
@@ -246,6 +253,108 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
     } catch (error: any) {
       console.error('Failed to create session:', error);
       alert(`Failed to create session: ${error.message || 'Unknown error'}`);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const createStreamingGoogleADKSession = async () => {
+    try {
+      setIsStreaming(true);
+      setStreamingEvents([]);
+      
+      const sessionId = `google_adk_stream_${Date.now()}`;
+      setStreamingSession({
+        id: sessionId,
+        name: `Google ADK Streaming - ${new Date().toLocaleString()}`,
+        description: sessionDescription,
+        status: 'active',
+        startedAt: new Date().toISOString(),
+        framework: 'google-adk',
+        personas: selectedPersonas.map(id => personas.find(p => p.id === id)).filter(Boolean)
+      });
+
+      const response = await fetch('/api/multi-agent-sessions/google-adk/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userQuery: sessionDescription || userMessage,
+          personaIds: selectedPersonas,
+          sessionId: sessionId
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Streaming failed: ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('No response reader available');
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          
+          // Process complete lines
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+          for (const line of lines) {
+            if (line.trim().startsWith('data: ')) {
+              try {
+                const eventData = JSON.parse(line.slice(6));
+                setStreamingEvents(prev => [...prev, eventData]);
+
+                // Handle completion
+                if (eventData.type === 'completed') {
+                  const completedSession = {
+                    id: sessionId,
+                    name: `Google ADK Analysis - ${new Date().toLocaleString()}`,
+                    description: sessionDescription,
+                    status: 'completed' as const,
+                    startedAt: new Date().toISOString(),
+                    agents: [],
+                    messages: [],
+                    framework: 'google-adk',
+                    synthesis: eventData.result?.synthesis,
+                    personaResponses: eventData.result?.persona_responses,
+                    coordinationEvents: streamingEvents,
+                    analysis: eventData.result?.analysis
+                  };
+                  
+                  setCurrentSession(completedSession);
+                  setSessions(prev => [completedSession, ...prev]);
+                  setIsStreaming(false);
+                }
+              } catch (e) {
+                console.error('Error parsing streaming event:', e);
+              }
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+
+      // Reset form
+      setSessionName('');
+      setSessionDescription('');
+      setSelectedPersonas([]);
+      setUserMessage('');
+
+    } catch (error: any) {
+      console.error('Streaming session failed:', error);
+      alert(`Streaming session failed: ${error.message || 'Unknown error'}`);
+      setIsStreaming(false);
     } finally {
       setCreating(false);
     }
@@ -311,6 +420,148 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
   const formatTime = (timestamp: number) => {
     return new Date(timestamp).toLocaleTimeString();
   };
+
+  if (isStreaming && streamingSession) {
+    return (
+      <div className="max-w-6xl mx-auto p-6 space-y-6">
+        {/* Streaming Session Header */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                {streamingSession.name}
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">{streamingSession.description}</p>
+              <div className="flex items-center gap-2 mt-2">
+                <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                  Google ADK Streaming
+                </Badge>
+                <Badge variant="default" className="bg-green-50 text-green-700">
+                  Active
+                </Badge>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => {
+                setIsStreaming(false);
+                setStreamingSession(null);
+                setStreamingEvents([]);
+              }}>
+                Stop Streaming
+              </Button>
+            </div>
+          </CardHeader>
+        </Card>
+
+        {/* Real-time Coordination Events */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Workflow className="h-5 w-5" />
+              Live Coordination Process
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-96">
+              <div className="space-y-3">
+                {streamingEvents.map((event, index) => (
+                  <div key={index} className={`p-3 rounded-lg border-l-4 ${
+                    event.type === 'start' ? 'border-blue-500 bg-blue-50' :
+                    event.type === 'persona_thinking' ? 'border-yellow-500 bg-yellow-50' :
+                    event.type === 'persona_responding' ? 'border-purple-500 bg-purple-50' :
+                    event.type === 'persona_completed' ? 'border-green-500 bg-green-50' :
+                    event.type === 'synthesis_start' ? 'border-indigo-500 bg-indigo-50' :
+                    event.type === 'completed' ? 'border-emerald-500 bg-emerald-50' :
+                    event.type === 'error' ? 'border-red-500 bg-red-50' :
+                    'border-gray-300 bg-gray-50'
+                  }`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="font-medium flex items-center gap-2">
+                        {event.type === 'start' && <Play className="w-4 h-4" />}
+                        {event.type === 'persona_thinking' && <Brain className="w-4 h-4" />}
+                        {event.type === 'persona_responding' && <MessageSquare className="w-4 h-4" />}
+                        {event.type === 'persona_completed' && <Users className="w-4 h-4" />}
+                        {event.type === 'synthesis_start' && <Zap className="w-4 h-4" />}
+                        {event.type === 'completed' && <Square className="w-4 h-4" />}
+                        
+                        {event.persona ? event.persona.name : 
+                         event.type === 'start' ? 'System' :
+                         event.type === 'synthesis_start' ? 'AI Synthesizer' :
+                         event.type === 'completed' ? 'Coordinator' :
+                         'Event'}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(event.timestamp).toLocaleTimeString()}
+                      </div>
+                    </div>
+                    <div className="text-sm">{event.message}</div>
+                    
+                    {/* Show persona response if available */}
+                    {event.response && (
+                      <div className="mt-2 p-2 bg-white rounded border">
+                        <div className="text-xs text-muted-foreground mb-1">Response:</div>
+                        <div className="text-sm">{event.response}</div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                
+                {streamingEvents.length === 0 && (
+                  <div className="text-center text-muted-foreground py-8">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                    Initializing Google ADK coordination...
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+
+        {/* Active Personas */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Active Personas ({streamingSession.personas?.length || 0})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {(streamingSession.personas || []).map((persona: any) => {
+                const personaEvents = streamingEvents.filter(e => e.persona?.id === persona.id);
+                const lastEvent = personaEvents[personaEvents.length - 1];
+                const status = lastEvent?.type === 'persona_completed' ? 'completed' :
+                              lastEvent?.type === 'persona_responding' ? 'responding' :
+                              lastEvent?.type === 'persona_thinking' ? 'thinking' :
+                              'waiting';
+                
+                return (
+                  <div key={persona.id} className="p-3 border rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="font-medium">{persona.name}</div>
+                      <div className={`w-2 h-2 rounded-full ${
+                        status === 'completed' ? 'bg-green-500' :
+                        status === 'responding' ? 'bg-purple-500' :
+                        status === 'thinking' ? 'bg-yellow-500' :
+                        'bg-gray-300'
+                      }`} />
+                    </div>
+                    <div className="text-xs text-muted-foreground capitalize">
+                      {status === 'waiting' ? 'Waiting to start' : status}
+                    </div>
+                    {lastEvent?.message && (
+                      <div className="text-xs mt-1 text-gray-600">{lastEvent.message}</div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (currentSession) {
     // Check if this is a Google ADK session
