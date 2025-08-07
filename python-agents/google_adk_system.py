@@ -42,9 +42,10 @@ class GrokAPI:
                     json={
                         "model": self.model,
                         "messages": messages,
-                        "temperature": 0.7
+                        "temperature": 0.7,
+                        "max_tokens": 500  # Shorter responses
                     },
-                    timeout=30.0
+                    timeout=15.0  # Shorter timeout
                 )
                 
                 if response.status_code == 200:
@@ -433,10 +434,10 @@ class GoogleADKAgent:
         """
 
 class GoogleADKMultiAgentSystem:
-    """Google ADK-based multi-agent system for PersonaDoc"""
+    """Minimal, reliable Google ADK-based multi-agent system"""
     
     def __init__(self):
-        self.agents = {}
+        self.grok = GrokAPI()
         
     async def run_analysis(
         self, 
@@ -444,111 +445,100 @@ class GoogleADKMultiAgentSystem:
         user_query: str, 
         personas: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
-        """Run multi-agent analysis using Google ADK"""
+        """Run minimal multi-agent analysis"""
         
-        print(f"🚀 Starting Google ADK multi-agent analysis for session {session_id}")
-        
-        # Initialize state
-        state = GoogleADKAgentState(
-            session_id=session_id,
-            user_query=user_query,
-            personas=personas,
-            status="running"
-        )
+        print(f"🚀 Starting minimal Google ADK analysis for session {session_id}")
         
         try:
-            # Initialize Google ADK coordinator for orchestration
-            coordinator = GoogleADKCoordinator()
+            # Simple parallel execution - just get responses from each persona
+            persona_responses = {}
             
-            # Store for debugging
-            self._last_coordinator = coordinator
-            
-            # Phase 1: Create and register agents
-            agents = []
-            
-            # Create coordinator agent
-            coord_agent = GoogleADKAgent(AgentConfig(
-                name="coordinator",
-                role="Analysis Coordinator",
-                temperature=0.3
-            ))
-            await coordinator.register_agent(coord_agent)
-            agents.append(coord_agent)
-            
-            print(f"✅ Coordinator agent registered")
-            
-            # Phase 2: Create persona agents
+            # Create simple tasks for each persona
             for persona in personas:
-                agent = GoogleADKAgent(
-                    AgentConfig(
-                        name=persona.get('name', 'Unknown'),
-                        role="Persona Analyst",
-                        persona_id=persona.get('id'),
-                        temperature=0.7
-                    ),
-                    persona_data=persona
-                )
-                await coordinator.register_agent(agent)
-                agents.append(agent)
+                persona_name = persona.get('name', 'Unknown')
+                print(f"💭 Generating response for {persona_name}...")
+                
+                try:
+                    # Simple persona prompt
+                    prompt = f"""
+                    You are {persona_name}, a {persona.get('occupation', 'person')} from {persona.get('location', 'somewhere')}.
+                    
+                    Personal traits: {', '.join(persona.get('personalityTraits', []))}
+                    Interests: {', '.join(persona.get('interests', []))}
+                    
+                    Question: {user_query}
+                    
+                    Respond in 2-3 sentences from your perspective:
+                    """
+                    
+                    response = await self.grok.complete(
+                        prompt=prompt,
+                        system_prompt=f"You are {persona_name}. Give a brief, authentic response."
+                    )
+                    
+                    persona_responses[persona_name] = {
+                        "response": response,
+                        "persona_id": persona.get('id'),
+                        "timestamp": datetime.now().isoformat()
+                    }
+                    
+                    print(f"✅ {persona_name} responded ({len(response)} chars)")
+                    
+                except Exception as e:
+                    print(f"❌ Error with {persona_name}: {e}")
+                    persona_responses[persona_name] = {
+                        "response": f"Unable to generate response: {str(e)}",
+                        "persona_id": persona.get('id'),
+                        "timestamp": datetime.now().isoformat(),
+                        "error": True
+                    }
             
-            print(f"✅ {len(personas)} persona agents registered")
-            
-            # Phase 3: Create synthesizer agent
-            synthesizer_agent = GoogleADKAgent(AgentConfig(
-                name="synthesizer",
-                role="Response Synthesizer",
-                temperature=0.4
-            ))
-            await coordinator.register_agent(synthesizer_agent)
-            agents.append(synthesizer_agent)
-            
-            print(f"✅ Synthesizer agent registered")
-            
-            # Phase 4: Execute coordination using Google ADK patterns
-            final_state = await coordinator.coordinate_agents(state)
-            
-            print(f"✅ Google ADK coordination complete")
-            
-            # Final result
-            final_state.status = "completed"
+            # Simple synthesis
+            if persona_responses:
+                synthesis_prompt = f"""
+                Question: {user_query}
+                
+                Responses:
+                """
+                for name, data in persona_responses.items():
+                    synthesis_prompt += f"\n{name}: {data['response']}\n"
+                
+                synthesis_prompt += "\nSynthesize these perspectives into a brief, balanced summary:"
+                
+                try:
+                    synthesis = await self.grok.complete(
+                        prompt=synthesis_prompt,
+                        system_prompt="Provide a balanced synthesis of the different perspectives."
+                    )
+                    print(f"📝 Synthesis completed ({len(synthesis)} chars)")
+                except Exception as e:
+                    synthesis = f"Multiple perspectives were shared, but synthesis failed: {str(e)}"
+                    print(f"❌ Synthesis error: {e}")
+            else:
+                synthesis = "No valid responses were generated."
             
             return {
                 "session_id": session_id,
-                "synthesis": final_state.synthesis,
-                "persona_responses": {
-                    name: data.get("response", "") 
-                    for name, data in final_state.agent_responses.items()
-                },
-                "coordination_events": final_state.coordination_events,
+                "synthesis": synthesis,
+                "persona_responses": persona_responses,
+                "coordination_events": [],
                 "analysis": {
-                    "total_agents": len(agents),
-                    "execution_framework": "google-adk-with-grok3",
-                    "model_used": "grok-3",
-                    "coordination_system": "google-adk"
+                    "total_personas": len(personas),
+                    "successful_responses": len([r for r in persona_responses.values() if not r.get('error')]),
+                    "execution_framework": "google-adk-minimal",
+                    "model_used": "grok-3"
                 },
-                "status": final_state.status
+                "status": "completed"
             }
             
         except Exception as e:
-            print(f"❌ Google ADK analysis failed: {e}")
-            
-            error_event = {
-                "timestamp": datetime.now().isoformat(),
-                "agent": "system",
-                "action": "system_error",
-                "error": str(e),
-                "framework": "google-adk"
-            }
-            
-            state.coordination_events.append(error_event)
-            state.status = "failed"
-            
+            print(f"❌ Minimal Google ADK analysis failed: {e}")
             return {
                 "session_id": session_id,
                 "synthesis": f"Analysis failed: {str(e)}",
                 "persona_responses": {},
-                "coordination_events": state.coordination_events,
-                "analysis": {"error": str(e), "framework": "google-adk"},
+                "coordination_events": [],
+                "analysis": {"error": str(e), "framework": "google-adk-minimal"},
                 "status": "failed"
             }
 
