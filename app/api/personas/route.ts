@@ -4,8 +4,36 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { researchRAG } from '@/lib/research-rag'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Check for internal service API token
+    const authHeader = request.headers.get('authorization');
+    const isInternalService = authHeader === `Bearer ${process.env.API_TOKEN || 'internal-service'}`;
+    
+    let userId: string | undefined;
+    
+    if (isInternalService) {
+      // For internal service calls, return all personas
+      const personas = await prisma.persona.findMany({
+        select: {
+          id: true,
+          name: true,
+          age: true,
+          occupation: true,
+          location: true,
+          personalityTraits: true,
+          interests: true,
+          gadgets: true,
+          tags: true,
+          introduction: true,
+          isPublic: true,
+          createdBy: true,
+        }
+      });
+      return NextResponse.json(personas);
+    }
+    
+    // Regular user session check
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.email) {
@@ -13,7 +41,7 @@ export async function GET() {
     }
 
     // For credentials provider, use the session user ID directly
-    let userId = (session.user as any).id
+    userId = (session.user as any).id
 
     // For OAuth providers, find user by email
     if (!userId) {
