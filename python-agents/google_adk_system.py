@@ -20,33 +20,43 @@ class GrokAPI:
     """Grok-3 API client for AI completions"""
     
     def __init__(self):
-        self.api_key = os.getenv("OPENAI_API_KEY")  # Using OpenAI interface for Grok
+        self.api_key = os.getenv("GROK_API_KEY")  # Using X.AI API key for Grok
         self.base_url = "https://api.x.ai/v1"
         self.model = "grok-3"
     
     async def complete(self, prompt: str, system_prompt: Optional[str] = None) -> str:
         """Get completion from Grok-3"""
-        async with httpx.AsyncClient() as client:
-            messages = []
-            if system_prompt:
-                messages.append({"role": "system", "content": system_prompt})
-            messages.append({"role": "user", "content": prompt})
-            
-            response = await client.post(
-                f"{self.base_url}/chat/completions",
-                headers={"Authorization": f"Bearer {self.api_key}"},
-                json={
-                    "model": self.model,
-                    "messages": messages,
-                    "temperature": 0.7
-                }
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                return data["choices"][0]["message"]["content"]
-            else:
-                raise Exception(f"Grok API error: {response.status_code}")
+        try:
+            if not self.api_key:
+                raise Exception("GROK_API_KEY not set")
+                
+            async with httpx.AsyncClient() as client:
+                messages = []
+                if system_prompt:
+                    messages.append({"role": "system", "content": system_prompt})
+                messages.append({"role": "user", "content": prompt})
+                
+                response = await client.post(
+                    f"{self.base_url}/chat/completions",
+                    headers={"Authorization": f"Bearer {self.api_key}"},
+                    json={
+                        "model": self.model,
+                        "messages": messages,
+                        "temperature": 0.7
+                    },
+                    timeout=30.0
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    return data["choices"][0]["message"]["content"]
+                else:
+                    error_text = response.text
+                    print(f"Grok API error {response.status_code}: {error_text}")
+                    raise Exception(f"Grok API error {response.status_code}: {error_text}")
+        except Exception as e:
+            print(f"Grok completion error: {str(e)}")
+            raise Exception(f"Grok completion failed: {str(e)}")
 
 @dataclass
 class AgentConfig:
