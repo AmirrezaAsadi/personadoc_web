@@ -15,15 +15,29 @@ export async function POST(request: NextRequest) {
     const pythonServiceUrl = process.env.PYTHON_AGENT_SERVICE_URL || 'http://localhost:8000';
     
     try {
-      const healthResponse = await fetch(`${pythonServiceUrl}/health`);
+      const healthResponse = await fetch(`${pythonServiceUrl}/health`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+        signal: AbortSignal.timeout(10000), // 10 second timeout
+      });
+      
       if (!healthResponse.ok) {
+        console.error(`Health check failed with status: ${healthResponse.status}`);
         throw new Error('Google ADK service unavailable');
       }
+      
+      const healthData = await healthResponse.json();
+      console.log('Health check response:', healthData);
+      
     } catch (error) {
+      console.error('Health check error:', error);
       return NextResponse.json(
         { 
           error: 'Google ADK multi-agent service is unavailable. Please ensure Python service is running.',
-          details: 'Start the service with: cd python-agents && python main.py'
+          details: 'Start the service with: cd python-agents && python main.py',
+          debug: error instanceof Error ? error.message : 'Unknown error'
         },
         { status: 503 }
       );
