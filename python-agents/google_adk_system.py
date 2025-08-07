@@ -119,43 +119,24 @@ class GoogleADKCoordinator:
     async def _analyze_coordination_needs(self, state: GoogleADKAgentState) -> Dict[str, Any]:
         """Use Grok-3 to analyze coordination requirements"""
         
-        prompt = f"""
-        Analyze this multi-agent scenario and create a coordination plan:
+        print(f"🧠 Using simplified coordination plan for {len(self.agents)} agents")
         
-        User Query: {state.user_query}
-        Available Agents: {list(self.agents.keys())}
-        Agent Roles: {[agent.config.role for agent in self.agents.values()]}
+        # For now, use a simple reliable coordination plan
+        # This bypasses the Grok-3 coordination planning which might be causing JSON parsing issues
+        agent_names = list(self.agents.keys())
         
-        Create a coordination plan with:
-        1. Execution order (sequential/parallel)
-        2. Information dependencies between agents
-        3. Synchronization points
-        4. Conflict resolution strategy
+        # Filter out coordinator and synthesizer from parallel execution
+        persona_agents = [name for name in agent_names if name not in ['coordinator', 'synthesizer']]
         
-        Return as JSON with steps array.
-        """
+        coordination_plan = {
+            "steps": [
+                {"type": "parallel_execution", "agents": persona_agents},
+                {"type": "synthesis", "agent": "synthesizer"}
+            ]
+        }
         
-        system_prompt = "You are a multi-agent coordination specialist. Create efficient coordination plans."
-        
-        print(f"🧠 Analyzing coordination needs with Grok-3...")
-        
-        try:
-            response = await self.grok.complete(prompt, system_prompt)
-            print(f"📋 Grok-3 coordination response: {response}")
-            
-            coordination_plan = json.loads(response)
-            print(f"✅ Parsed coordination plan successfully")
-            return coordination_plan
-        except Exception as e:
-            print(f"❌ Error in coordination analysis: {e}")
-            print(f"🔄 Using fallback coordination plan")
-            # Fallback coordination plan
-            return {
-                "steps": [
-                    {"type": "parallel_execution", "agents": list(self.agents.keys())},
-                    {"type": "synthesis", "agent": "coordinator"}
-                ]
-            }
+        print(f"📋 Simple coordination plan: {coordination_plan}")
+        return coordination_plan
     
     async def _execute_coordination_step(self, step: Dict[str, Any], state: GoogleADKAgentState):
         """Execute a coordination step"""
@@ -246,18 +227,23 @@ class GoogleADKAgent:
     async def execute(self, state: GoogleADKAgentState) -> Dict[str, Any]:
         """Execute agent logic using Grok-3 for intelligence"""
         
+        print(f"🤖 Executing agent: {self.config.name} ({self.config.role})")
+        
         # Build persona-specific prompt
         if self.persona_data:
             persona_prompt = f"""
-            You are {self.persona_data.get('name', 'Unknown')}.
-            Background: {self.persona_data.get('background', '')}
-            Perspective: {self.persona_data.get('perspective', '')}
-            Values: {self.persona_data.get('values', '')}
+            You are {self.persona_data.get('name', 'Unknown')}, a {self.persona_data.get('occupation', 'person')} from {self.persona_data.get('location', 'somewhere')}.
+            
+            Background: 
+            - Age: {self.persona_data.get('age', 'unknown')}
+            - Personality: {', '.join(self.persona_data.get('personalityTraits', []))}
+            - Interests: {', '.join(self.persona_data.get('interests', []))}
+            - Introduction: {self.persona_data.get('introduction', '')}
             
             Respond to this query from your unique perspective:
             {state.user_query}
             
-            Be authentic to your persona while providing valuable insights.
+            Be authentic to your persona while providing valuable insights. Provide a thoughtful 2-3 paragraph response.
             """
         else:
             persona_prompt = f"""
@@ -265,31 +251,36 @@ class GoogleADKAgent:
             
             Analyze this query and provide your expert perspective:
             {state.user_query}
+            
+            Provide a thoughtful 2-3 paragraph analysis.
             """
         
         # Get response from Grok-3
         try:
+            print(f"💭 Generating response for {self.config.name}...")
             response = await self.grok.complete(
                 prompt=persona_prompt,
                 system_prompt=f"You are {self.config.name}, an expert {self.config.role}. Provide thoughtful, persona-appropriate responses."
             )
             
+            print(f"✅ {self.config.name} generated response: {len(response)} characters")
+            
             return {
                 "agent": self.config.name,
                 "role": self.config.role,
                 "response": response,
-                "persona_id": self.config.persona_id,
+                "persona_id": getattr(self.config, 'persona_id', None),
                 "timestamp": datetime.now().isoformat(),
                 "model_used": "grok-3"
             }
             
         except Exception as e:
-            print(f"Error executing agent {self.config.name}: {e}")
+            print(f"❌ Error executing agent {self.config.name}: {e}")
             return {
                 "agent": self.config.name,
                 "role": self.config.role,
                 "response": f"Error: Unable to generate response ({str(e)})",
-                "persona_id": self.config.persona_id,
+                "persona_id": getattr(self.config, 'persona_id', None),
                 "timestamp": datetime.now().isoformat(),
                 "model_used": "grok-3",
                 "error": True
