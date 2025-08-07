@@ -462,22 +462,6 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
-      {/* Header */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Multi-Agent Workflow Analysis System
-          </CardTitle>
-          <p className="text-muted-foreground">
-            {workflow 
-              ? `Execute workflow "${workflow.name}" with AI personas and analyze the results`
-              : "Design a workflow in the Workflow Designer tab, then return here to execute it with AI agents"
-            }
-          </p>
-        </CardHeader>
-      </Card>
-
       {/* Workflow Status */}
       {!workflow && (
         <Card className="border-amber-200 bg-amber-50">
