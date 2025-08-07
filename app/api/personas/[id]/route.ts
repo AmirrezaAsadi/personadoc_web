@@ -9,6 +9,41 @@ export async function GET(
 ) {
   try {
     const { id } = await params
+    
+    // Check for internal service API token
+    const authHeader = request.headers.get('authorization');
+    const isInternalService = authHeader === `Bearer ${process.env.API_TOKEN || 'internal-service'}`;
+    
+    let userId: string | undefined;
+    
+    if (isInternalService) {
+      // For internal service calls, allow access to any persona
+      const persona = await prisma.persona.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          name: true,
+          age: true,
+          occupation: true,
+          location: true,
+          personalityTraits: true,
+          interests: true,
+          gadgets: true,
+          tags: true,
+          introduction: true,
+          isPublic: true,
+          createdBy: true,
+        },
+      })
+
+      if (!persona) {
+        return NextResponse.json({ error: 'Persona not found' }, { status: 404 })
+      }
+
+      return NextResponse.json(persona)
+    }
+    
+    // Regular user authentication
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.email) {
@@ -16,7 +51,7 @@ export async function GET(
     }
 
     // For credentials provider, use the session user ID directly
-    let userId = (session.user as any).id
+    userId = (session.user as any).id
 
     // For OAuth providers, find user by email
     if (!userId) {
