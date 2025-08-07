@@ -117,15 +117,21 @@ async def run_google_adk_analysis(request: MultiAgentRequest, background_tasks: 
     try:
         # Fetch persona data from TypeScript API
         personas = []
+        # Use environment variable for API base URL, fallback to localhost for development
+        api_base_url = os.getenv('TYPESCRIPT_API_URL', 'http://localhost:3000')
+        
         async with httpx.AsyncClient() as client:
             for persona_id in request.persona_ids:
                 try:
                     response = await client.get(
-                        f"http://localhost:3000/api/personas/{persona_id}",
-                        headers={"Authorization": f"Bearer {os.getenv('API_TOKEN')}"}
+                        f"{api_base_url}/api/personas/{persona_id}",
+                        headers={"Authorization": f"Bearer {os.getenv('API_TOKEN')}"},
+                        timeout=10.0
                     )
                     if response.status_code == 200:
                         personas.append(response.json())
+                    else:
+                        print(f"Failed to fetch persona {persona_id}: {response.status_code}")
                 except Exception as e:
                     print(f"Error fetching persona {persona_id}: {e}")
         
