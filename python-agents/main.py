@@ -67,10 +67,14 @@ async def health_check():
 @app.get("/debug/environment")
 async def debug_environment():
     """Debug endpoint to check environment variables"""
+    grok_key = os.getenv('GROK_API_KEY', 'not_set')
     return {
         "TYPESCRIPT_API_URL": os.getenv('TYPESCRIPT_API_URL', 'not_set'),
         "API_TOKEN": "***" if os.getenv('API_TOKEN') else 'not_set',
-        "has_grok_api_key": bool(os.getenv('GROK_API_KEY')),
+        "has_grok_api_key": bool(grok_key),
+        "grok_key_length": len(grok_key) if grok_key != 'not_set' else 0,
+        "grok_key_prefix": grok_key[:10] + "..." if len(grok_key) > 10 else grok_key,
+        "grok_key_suffix": "..." + grok_key[-10:] if len(grok_key) > 10 else grok_key,
     }
 
 @app.get("/debug/persona-fetch/{persona_id}")
@@ -95,6 +99,40 @@ async def debug_persona_fetch(persona_id: str):
         return {
             "url": f"{api_base_url}/api/personas/{persona_id}",
             "error": str(e)
+        }
+
+@app.get("/debug/grok-test")
+async def debug_grok_test():
+    """Debug endpoint to test Grok API directly"""
+    grok_api_key = os.getenv('GROK_API_KEY')
+    
+    if not grok_api_key:
+        return {"error": "GROK_API_KEY not set"}
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://api.x.ai/v1/chat/completions",
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {grok_api_key}"
+                },
+                json={
+                    "messages": [{"role": "user", "content": "Test message from Railway"}],
+                    "model": "grok-3",
+                    "stream": False
+                },
+                timeout=30.0
+            )
+            return {
+                "status_code": response.status_code,
+                "response": response.json() if response.status_code == 200 else response.text,
+                "api_key_prefix": grok_api_key[:10] + "..." if grok_api_key else "None"
+            }
+    except Exception as e:
+        return {
+            "error": str(e),
+            "api_key_prefix": grok_api_key[:10] + "..." if grok_api_key else "None"
         }
 
 class MultiAgentRequest(BaseModel):
