@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Users, MessageSquare, Bot, Play, Square, Loader2, Workflow } from 'lucide-react';
+import { Users, MessageSquare, Bot, Play, Square, Loader2, Workflow, Zap, Settings } from 'lucide-react';
 
 interface Persona {
   id: string;
@@ -122,6 +122,9 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
   const [userMessage, setUserMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [framework, setFramework] = useState<'typescript' | 'google-adk'>('google-adk');
+  const [langGraphHealth, setLangGraphHealth] = useState<boolean>(false);
+  const [googleADKHealth, setGoogleADKHealth] = useState<boolean>(false);
 
   // Use workflow data if provided, otherwise load from API
   useEffect(() => {
@@ -131,7 +134,18 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
       loadPersonas();
     }
     loadSessions();
+    checkLangGraphHealth();
   }, [propPersonas]);
+
+  // Check Google ADK service health
+  const checkLangGraphHealth = async () => {
+    try {
+      const response = await fetch('/api/multi-agent-sessions/google-adk/health');
+      setGoogleADKHealth(response.ok);
+    } catch {
+      setGoogleADKHealth(false);
+    }
+  };
 
   // Auto-populate session details from workflow
   useEffect(() => {
@@ -173,29 +187,63 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
 
     setCreating(true);
     try {
-      const response = await fetch('/api/multi-agent-sessions', {
+      const endpoint = framework === 'google-adk' 
+        ? '/api/multi-agent-sessions/google-adk'
+        : '/api/multi-agent-sessions';
+        
+      const requestBody = framework === 'google-adk'
+        ? {
+            userQuery: sessionDescription || userMessage,
+            personaIds: selectedPersonas,
+            sessionId: `${framework}_${Date.now()}`
+          }
+        : {
+            name: sessionName,
+            description: sessionDescription,
+            personaIds: selectedPersonas,
+            workflow,
+            systemInfo
+          };
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: sessionName,
-          description: sessionDescription,
-          personaIds: selectedPersonas,
-          workflow,
-          systemInfo
-        })
+        body: JSON.stringify(requestBody)
       });
 
       const data = await response.json();
-      if (data.success) {
-        setCurrentSession(data.session);
-        setSessions([data.session, ...sessions]);
+      
+      if (data.success || data.sessionId) {
+        const newSession = framework === 'google-adk' 
+          ? {
+              id: data.sessionId,
+              name: `Google ADK Analysis - ${new Date().toLocaleString()}`,
+              description: sessionDescription,
+              status: data.status,
+              startedAt: new Date().toISOString(),
+              agents: [],
+              messages: [],
+              framework: 'google-adk',
+              synthesis: data.synthesis,
+              personaResponses: data.personaResponses,
+              coordinationEvents: data.coordinationEvents
+            }
+          : data.session;
+          
+        setCurrentSession(newSession);
+        setSessions([newSession, ...sessions]);
+        
         // Reset form
         setSessionName('');
         setSessionDescription('');
         setSelectedPersonas([]);
+        setUserMessage('');
+      } else {
+        throw new Error(data.error || 'Failed to create session');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create session:', error);
+      alert(`Failed to create session: ${error.message || 'Unknown error'}`);
     } finally {
       setCreating(false);
     }
@@ -521,6 +569,64 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
                 </div>
               </div>
             )}
+
+            {/* Framework Selection */}
+            <div>
+              <label className="text-sm font-medium">Multi-Agent Framework</label>
+              <div className="grid grid-cols-2 gap-3 mt-2">
+                <div 
+                  className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                    framework === 'google-adk' 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                  onClick={() => setFramework('google-adk')}
+                >
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-4 h-4" />
+                    <span className="font-medium">Google ADK</span>
+                    {googleADKHealth ? (
+                      <Badge variant="outline" className="text-xs bg-green-50 text-green-700">
+                        Online
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-xs bg-red-50 text-red-700">
+                        Offline
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Google ADK coordination + Grok-3 intelligence
+                  </p>
+                </div>
+                
+                <div 
+                  className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                    framework === 'typescript' 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                  onClick={() => setFramework('typescript')}
+                >
+                  <div className="flex items-center gap-2">
+                    <Settings className="w-4 h-4" />
+                    <span className="font-medium">TypeScript</span>
+                    <Badge variant="outline" className="text-xs bg-green-50 text-green-700">
+                      Built-in
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Custom implementation with swim lane workflows
+                  </p>
+                </div>
+              </div>
+              
+              {framework === 'google-adk' && !googleADKHealth && (
+                <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm">
+                  ⚠️ Google ADK service is offline. Run: <code className="bg-gray-100 px-1 rounded">cd python-agents && python main.py</code>
+                </div>
+              )}
+            </div>
 
             <div>
               <label className="text-sm font-medium">

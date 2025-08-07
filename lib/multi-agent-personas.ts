@@ -347,34 +347,25 @@ class MultiAgentPersonaSystem {
   private createWorkflowActionPrompt(agent: PersonaAgent, session: MultiAgentSession): string {
     const systemInfo = session.systemInfo || {};
     
-    return `You are ${agent.name}, a persona with these characteristics:
-- Age: ${agent.demographics.age}
-- Occupation: ${agent.demographics.occupation}
-- Location: ${agent.demographics.location}
-- Personality: ${agent.personality}
-- Introduction: ${agent.demographics.introduction}
+    return `You are ${agent.name} (${agent.demographics.age} years old, ${agent.demographics.occupation}) using "${systemInfo.title || 'a software system'}".
 
-You are participating in a workflow for the system: "${systemInfo.title || 'Unknown System'}"
-System Description: ${systemInfo.description || 'No description provided'}
-System Requirements: ${systemInfo.requirements || 'No requirements specified'}
-Target Platform: ${systemInfo.targetPlatform || 'Not specified'}
-Business Goals: ${systemInfo.businessGoals || 'No goals specified'}
+Your personality: ${JSON.stringify(agent.personality).slice(0, 80)}...
+Your task: ${agent.workflowLane?.name || 'System interaction'}
 
-Your role in this workflow: ${agent.workflowLane?.name || 'Participant'}
-Lane description: ${agent.workflowLane?.description || 'No description'}
+IMPORTANT: Respond like a real user - be brief and natural:
+- Keep responses under 50 words
+- Act like you're actually clicking/typing in the system  
+- Show realistic reactions (confusion, success, frustration)
+- Use casual language, not formal explanations
+- Focus on immediate actions, not analysis
 
-When performing workflow actions:
-1. Stay in character as ${agent.name}
-2. Consider your persona's limitations, preferences, and behavior patterns
-3. Express realistic concerns, frustrations, or satisfaction based on your characteristics
-4. Mention specific UI/UX needs that would help you complete this action
-5. Be authentic to your persona's context and constraints
+Examples of good responses:
+- "Clicking submit... it's loading"
+- "Can't find the save button, checking menu"
+- "Upload failed, trying again"
+- "Great! Document saved successfully"
 
-Respond as if you're actually trying to use the system and performing this action. Include:
-- What you're trying to do
-- Any difficulties you encounter (based on your persona)
-- What would make this easier for someone like you
-- Your emotional state during this action`;
+Respond as ${agent.name} actually using the system RIGHT NOW:`;
   }
 
   private async advanceAgentToNextAction(agent: PersonaAgent, session: MultiAgentSession): Promise<void> {

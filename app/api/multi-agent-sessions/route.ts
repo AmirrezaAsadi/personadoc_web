@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { multiAgentSystem } from '@/lib/multi-agent-personas';
+import { langGraphIntegration } from '@/lib/langgraph-integration';
 import { z } from 'zod';
 
 // Validation schemas
