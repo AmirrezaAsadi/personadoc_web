@@ -110,7 +110,7 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
       setSessionDescription(`${systemInfo.title}: ${workflow.description}`);
       
       // Auto-select personas from workflow swim lanes
-      const workflowPersonaIds = workflow.swimLanes.map(lane => lane.personaId).filter(Boolean);
+      const workflowPersonaIds = workflow.swimLanes?.map(lane => lane.personaId).filter(Boolean) || [];
       setSelectedPersonas(workflowPersonaIds);
     }
   }, [workflow, systemInfo]);
@@ -265,11 +265,11 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bot className="h-5 w-5" />
-                Active Agents ({currentSession.agents.length})
+                Active Agents ({currentSession.agents?.length || 0})
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {currentSession.agents.map((agent) => (
+              {(currentSession.agents || []).map((agent) => (
                 <div key={agent.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
                     <div className="font-medium">{agent.name}</div>
@@ -291,14 +291,14 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
-                Conversation ({currentSession.messages.length} messages)
+                Conversation ({currentSession.messages?.length || 0} messages)
               </CardTitle>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-96 mb-4">
                 <div className="space-y-3">
-                  {currentSession.messages.map((message, index) => {
-                    const agent = currentSession.agents.find(a => a.id === message.fromAgentId);
+                  {(currentSession.messages || []).map((message, index) => {
+                    const agent = (currentSession.agents || []).find(a => a.id === message.fromAgentId);
                     const isSystem = message.fromAgentId === 'system';
                     const isUser = message.fromAgentId === 'user';
                     
@@ -421,7 +421,7 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
                   </div>
                   <p className="text-sm text-gray-600 mb-2">{workflow.description}</p>
                   <div className="text-xs text-gray-500">
-                    {workflow.swimLanes.length} swim lanes • {workflow.collaborationType} execution
+                    {workflow.swimLanes?.length || 0} swim lanes • {workflow.collaborationType} execution
                   </div>
                 </div>
               </div>
@@ -433,7 +433,7 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
               </label>
               <ScrollArea className="h-32 border rounded-md p-2">
                 <div className="space-y-2">
-                  {personas.map((persona) => (
+                  {(personas || []).map((persona) => (
                     <label key={persona.id} className="flex items-center space-x-2">
                       <input
                         type="checkbox"
@@ -497,7 +497,7 @@ export default function MultiAgentSystemInterface({ workflow, systemInfo, person
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="text-xs text-muted-foreground">
-                        {session.agents.length} agents • {session.messages.length} messages
+                        {session.agents?.length || 0} agents • {session.messages?.length || 0} messages
                       </div>
                       <div className="flex gap-2">
                         <Button size="sm" variant="outline" onClick={() => loadSession(session.id)}>
